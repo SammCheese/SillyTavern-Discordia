@@ -30,6 +30,10 @@
 
     #channels-list-container, #characters-list {
         scrollbar-width: none;
+        -ms-overflow-style: none;
+        &::-webkit-scrollbar {
+            display: none;
+        }
     }
 }
 
@@ -175,6 +179,7 @@
 
 #send_textarea {
     margin: auto !important;
+    max-height: var(--profile-container-height) !important;
 }
 
 #sendLeftForm {
@@ -182,11 +187,13 @@
 }
 
 #rightSendForm, #leftSendForm {
+    align-content: baseline;
     width: unset !important;
 }
 
 #form_sheld {
-    margin: 0px !important;
+    margin: 0px;
+    overflow: clip;
 }
 
 #chat, #extensionTopBar, #extensionConnectionProfiles {
