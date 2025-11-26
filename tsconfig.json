@@ -1,0 +1,50 @@
+{
+  "compilerOptions": {
+    "rootDir": "../../../../",
+    "outDir": "./dist",
+
+    "module": "esnext",
+    "target": "esnext",
+    "types": [
+      "lodash",
+      "node",
+      "react",
+      "react-dom",
+      "jquery",
+    ],
+
+    "sourceMap": false,
+    "declaration": false,
+    "declarationMap": false,
+
+    // Stricter Typechecking Options
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+
+    // Style Options
+    // "noImplicitReturns": true,
+    // "noImplicitOverride": true,
+    // "noUnusedLocals": true,
+    // "noUnusedParameters": true,
+    // "noFallthroughCasesInSwitch": true,
+    // "noPropertyAccessFromIndexSignature": true,
+    "noImplicitAny": false,
+    "strictNullChecks": true,
+
+    "strict": true,
+    "jsx": "react",
+    "verbatimModuleSyntax": true,
+    "isolatedModules": true,
+    "noUncheckedSideEffectImports": true,
+    "moduleDetection": "force",
+    "skipLibCheck": true,
+
+    // JS Interop
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "allowJs": true,
+    "checkJs": false,
+  },
+  "include": ["src/**/*", "global.d.ts"],
+    "exclude": ["node_modules", "dist"]
+}
