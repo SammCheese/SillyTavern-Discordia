@@ -8,6 +8,7 @@ const PATH_MAP: Record<string, string> = {
   '@scripts/personas': '../../../../personas.js',
   '@scripts/chats': '../../../../chats.js',
   '@scripts/powerUser': '../../../../power-user.js',
+  '@scripts/extensions': '../../../../extensions.js',
 };
 
 export const  imports = async <T = any>(mod: string): Promise<T> => {

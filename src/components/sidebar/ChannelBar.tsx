@@ -1,14 +1,18 @@
 
-import React from "react";
-import ChannelEntry from "../channels/ChannelEntry";
-import SearchBar from "../search/search";
-import type { Icon } from "./SideBar";
-import { Divider } from "../Divider/Divider";
-import { makeReactGroupAvatar } from "../../utils/utils";
+import React, { lazy }from "react";
+
+import { PageContext } from "../../providers/pageProvider";
+
+const Divider = React.lazy(() => import("../Divider/Divider"));
+const ChannelEntry = lazy(() => import('../channels/ChannelEntry'));
+const SearchBar = lazy(() => import('../search/search'));
+const ExtensionSettings = lazy(() => import('../../pages/settings/extensions/ExtensionSettings'));
 
 const { getThumbnailUrl } = await imports('@script');
 
 const Channelbar = ({ title = "Recent Chats", icons, chats, setOpen }: { title: string, icons: Icon[] | null, chats: any[], setOpen: (value: boolean) => void }) => {
+  const pageContext = React.useContext(PageContext);
+
 
   const makeAvatar = (chat?: any ) => {
     if (chat && chat?.avatar) {
@@ -29,6 +33,17 @@ const Channelbar = ({ title = "Recent Chats", icons, chats, setOpen }: { title: 
     return getThumbnailUrl('avatar', character ? character.avatar : 'ai4.png');
   }
 
+  const handleToolclick = (icon: Icon) => {
+    const id = icon.id;
+    switch (id) {
+      case "#extensions-settings-button":
+        pageContext.openPage(<ExtensionSettings />);
+        break;
+      default:
+        console.log(`No action defined for icon with id: ${id}`);
+    }
+  };
+
   return (
     <div id="channel-container" className="px-1">
       <SearchBar
@@ -46,6 +61,7 @@ const Channelbar = ({ title = "Recent Chats", icons, chats, setOpen }: { title: 
                 className="discord-channel-header"
                 title={icon.title}
                 key={index}
+                onClick={() => handleToolclick(icon)}
               >
                 <div className={icon.className} />
                 <div>{icon.title}</div>

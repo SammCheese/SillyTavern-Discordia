@@ -1,22 +1,19 @@
 import React from 'react';
-import type { Entity } from '../components/sidebar/SideBar';
 
 const {
-  this_chid,
   characters,
   getRequestHeaders,
   getThumbnailUrl,
   system_avatar,
   default_avatar,
   openCharacterChat,
-  getPastCharacterChats,
   setActiveCharacter,
   setActiveGroup,
   getCurrentChatId,
   saveSettingsDebounced,
   selectCharacterById
 } = await imports('@script');
-const { groups, getGroupAvatar,  openGroupById, getGroupPastChats, openGroupChat } = await imports('@scripts/groupChats');
+const { groups, openGroupById, openGroupChat } = await imports('@scripts/groupChats');
 const { sortMoments, timestampToMoment, isDataURL } = await imports(
   '@scripts/utils'
 );

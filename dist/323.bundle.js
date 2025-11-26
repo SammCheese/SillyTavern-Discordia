@@ -1,0 +1,2 @@
+"use strict";(self.webpackChunkst_discordia=self.webpackChunkst_discordia||[]).push([[323],{323:(e,t,s)=>{s.r(t),s.d(t,{default:()=>c});var a=s(363);s(841);const c=({children:e})=>a.createElement("div",{id:"open-page-container",className:"w-dvw h-dvh absolute z-50 top-0 start-0 flex flex-col justify-center items-center bg-opacity-90 text-white"},e)}}]);
+//# sourceMappingURL=323.bundle.js.map

@@ -1,10 +1,10 @@
 import React from 'react';
 import { PageContext } from '../../providers/pageProvider';
-import type { Icon } from './SideBar';
-import UserSettings from '../../pages/settings/user/UserSettings';
+
+const UserSettings = React.lazy(() => import('../../pages/settings/user/UserSettings'));
+
 
 const { getThumbnailUrl, name1, user_avatar } = await imports('@script');
-
 
 const ProfileMount = ({
   avatar,

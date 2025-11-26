@@ -1,11 +1,12 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import SideBar from './components/sidebar/SideBar';
 import { PageProvider } from './providers/pageProvider';
+
+const SideBar = React.lazy(() => import('./components/sidebar/SideBar'));
 
 // @ts-ignore
 import './styles.css';
-import { CharProvider } from './providers/charProvider';
+
 
 // Insert sidebar before top bar
 const topBar = document.getElementById('top-bar');
@@ -21,9 +22,7 @@ topBar?.remove();
 // Create React root
 const root = ReactDOM.createRoot(rootContainer);
 root.render(<React.StrictMode>
-  <CharProvider>
     <PageProvider>
       <SideBar />
     </PageProvider>
-  </CharProvider>
 </React.StrictMode>);

@@ -1,6 +1,6 @@
 import React from "react";
 
-export const Divider = ({ width = "w-full", className = "" }) => {
+const Divider = ({ width = "w-full", className = "" }) => {
   return (
     <>
       <div style={{
@@ -9,3 +9,5 @@ export const Divider = ({ width = "w-full", className = "" }) => {
     </>
   );
 }
+
+export default Divider;

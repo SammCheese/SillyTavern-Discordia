@@ -1,0 +1,2 @@
+"use strict";(self.webpackChunkst_discordia=self.webpackChunkst_discordia||[]).push([[886],{886:(e,t,a)=>{a.r(t),a.d(t,{default:()=>n});var c=a(363);const n=({onSearch:e})=>{const[t,a]=c.useState("");return c.createElement("div",{id:"search-bar-container",className:"p-1 mx-2 flex content-center"},c.createElement("div",null),c.createElement("input",{type:"text",id:"search-input",placeholder:"Search...",className:"p-1 rounded-lg w-full pl-4",value:t,onChange:t=>{const c=t.target.value;a(c),e(c)}}))}}}]);
+//# sourceMappingURL=886.bundle.js.map

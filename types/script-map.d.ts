@@ -4,3 +4,4 @@ export * as chats from '../../../../chats';
 export * as powerUser from '../../../../power-user';
 export * as welcomeScreen from '../../../../welcome-screen';
 export * as personas from '../../../../personas';
+export * as extensions from '../../../../extensions';

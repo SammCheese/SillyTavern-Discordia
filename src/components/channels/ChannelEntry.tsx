@@ -1,6 +1,5 @@
 import React from "react";
 
-
 const { selectCharacterById, openCharacterChat } = await imports('@script');
 
 

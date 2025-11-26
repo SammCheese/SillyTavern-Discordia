@@ -1,8 +1,9 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
-import OpenPage from '../pages/index';
+
 import { rootContainer } from '../index';
 
+const OpenPage = React.lazy(() => import('../pages/index'));
 
 export const PageContext = React.createContext<{
   openPage: (page: React.ReactNode) => void;

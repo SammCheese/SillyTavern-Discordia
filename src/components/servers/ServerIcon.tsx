@@ -1,16 +1,7 @@
 import React from "react";
-import type { Entity } from "../sidebar/SideBar";
 import { makeReactGroupAvatar } from "../../utils/utils";
 
-const { getGroupAvatar } = await imports("@scripts/groupChats");
-const { getThumbnailUrl, selectCharacterById, openCharacterChat } =
-  await imports('@script');
-
-
-const GroupAvatar = ({ group }: { group: any }) => {
-  const avatars = getGroupAvatar(group);
-};
-
+const { getThumbnailUrl} = await imports('@script');
 
 const ServerIcon = ({ entity, isSelected, onSelect, isHome, isNewCharacterButton }:
   { entity: Entity, isSelected: boolean, onSelect?: (id: string) => void, isHome?: boolean, isNewCharacterButton?: boolean }) => {

@@ -1,7 +1,7 @@
 import React from 'react';
-import type { Entity } from '../sidebar/SideBar';
-import ServerIcon from './ServerIcon';
 import { selectCharacter, selectGroup } from '../../utils/utils';
+
+const ServerIcon = React.lazy(() => import('./ServerIcon'));
 
 const { getGroupPastChats} =
   await imports('@scripts/groupChats');

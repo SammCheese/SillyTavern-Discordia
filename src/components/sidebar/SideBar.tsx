@@ -1,25 +1,10 @@
 import React, { useState } from 'react';
-import ProfileMount from './ProfileMount';
-import Serverbar from '../servers/ServerBar';
-import Channelbar from './ChannelBar';
 import { getRecentChats } from '../../utils/utils';
-import { CharContext } from '../../providers/charProvider';
 
-export type Entity = {
-  item: any;
-  id: string | number;
-  type: 'character' | 'group' | 'tag';
-  entities?: Entity[] | null;
-  hidden?: number | null;
-  isUseless?: boolean | null;
-};
+const ProfileMount = React.lazy(() => import('./ProfileMount'));
+const ChannelBar = React.lazy(() => import('./ChannelBar'));
+const ServerBar = React.lazy(() => import('../servers/ServerBar'));
 
-export type Icon = {
-  className: string;
-  title: string;
-  showInProfile: boolean;
-  id: string;
-};
 
 const { getGroupPastChats } = await imports('@scripts/groupChats');
 
@@ -154,8 +139,8 @@ const SideBar = () => {
     return (
       <div id="sidebar-container">
         <div id="server-container">
-          <Serverbar entities={state.entities} setOpen={setOpen} onHomeClick={resetWithNewData} />
-          <Channelbar
+          <ServerBar entities={state.entities} setOpen={setOpen} onHomeClick={resetWithNewData} />
+          <ChannelBar
             title={(characterId || groupId) ? 'Chats' : 'Recent Chats'}
             icons={state.icons}
             chats={state.chats}

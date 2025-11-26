@@ -39,8 +39,8 @@ const SettingsFrame = ({ title, children }) => {
 
   return (
     <div className="w-full h-full p-[5%] bg-gray-800 text-white">
-      <div className="settings-header flex justify-between items-center p-4 border-b border-gray-700">
-        <h2>{title}</h2>
+      <div className="settings-header flex justify-between items-center p-4 mb-4 border-b border-gray-700">
+        <h2 className='text-3xl font-semibold'>{title}</h2>
         <button className='group' onClick={handleClose}>{closeButton()}</button>
       </div>
       <div className="settings-content">{children}</div>
