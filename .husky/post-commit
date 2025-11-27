@@ -1,0 +1,3 @@
+# Ensure every build includes the distributables
+
+npm run build && git add dist/ && git commit --amend --no-edit

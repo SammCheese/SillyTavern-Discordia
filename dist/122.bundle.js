@@ -1,0 +1,2 @@
+"use strict";(self.webpackChunkst_discordia=self.webpackChunkst_discordia||[]).push([[122],{122:(e,a,s)=>{s.r(a),s.d(a,{default:()=>l});var t=s(363);const l=({width:e="w-full",className:a=""})=>t.createElement(t.Fragment,null,t.createElement("div",{style:{backgroundColor:"rgba(255, 255, 255, 0.1)"},className:`${e} h-px my-2 ml-auto mr-auto ${a}`}))}}]);
+//# sourceMappingURL=122.bundle.js.map

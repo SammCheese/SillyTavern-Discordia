@@ -1,19 +1,19 @@
 import React from 'react';
+import { List } from 'react-virtualized';
 import { selectCharacter, selectGroup } from '../../utils/utils';
 
-const ServerIcon = React.lazy(() => import('./ServerIcon'));
+const MemoizedServerIcon = React.lazy(() => import('./ServerIcon'));
 
-const { getGroupPastChats} =
-  await imports('@scripts/groupChats');
-const {
-  setCharacterId,
-  getPastCharacterChats,
-  characters
-} = await imports('@script');
+const { openWelcomeScreen } = await imports('@scripts/welcomeScreen');
+const { getGroupPastChats } = await imports('@scripts/groupChats');
+const { setCharacterId, getPastCharacterChats, characters, eventSource } =
+  await imports('@script');
 
-const HomeIcon = ({ onClick }: { onClick?: Function | undefined }) => {
+const HomeIcon = ({ onClick }: { onClick?: (() => void) | undefined }) => {
   const handleClick = () => {
-    onClick && onClick();
+    if (onClick) {
+      onClick();
+    }
   };
   return (
     <div
@@ -41,14 +41,20 @@ const HomeIcon = ({ onClick }: { onClick?: Function | undefined }) => {
   );
 };
 
-const AddCharacterIcon = ({ onClick }: { onClick: Function | undefined }) => {
+const AddCharacterIcon = ({
+  onClick,
+}: {
+  onClick: (() => void) | undefined;
+}) => {
   return (
     <div
       className="discord-entity-item avatar new-character-button"
       id="new-character-button"
       title="Add Character"
       onClick={() => {
-        onClick && onClick();
+        if (onClick) {
+          onClick();
+        }
       }}
     >
       <svg
@@ -73,28 +79,21 @@ const AddCharacterIcon = ({ onClick }: { onClick: Function | undefined }) => {
   );
 };
 
-const Serverbar = ({
-  entities,
-  setOpen,
-  onHomeClick,
-  onAddCharacterClick,
-}: {
-  entities: Entity[];
-  setOpen: (open: boolean) => void;
-  onHomeClick?: () => void;
-  onAddCharacterClick?: Function;
-}) => {
+const Serverbar = ({ entities }: { entities: Entity[] }) => {
   const [selectedIndex, setSelectedIndex] = React.useState<number | null>(null);
 
-  const onHomeClickHandler = () => {
+  const onHomeClickHandler = async () => {
     setSelectedIndex(null);
     setCharacterId(undefined);
-    onHomeClick && onHomeClick();
+    await eventSource.emit('chat_id_changed', {});
+    await openWelcomeScreen({ force: true });
   };
 
   const handleCharacterSelect = async (entity: Entity) => {
     try {
-      const char_id = characters.findIndex((c) => c.avatar === entity.item.avatar);
+      const char_id = characters.findIndex(
+        (c) => c.avatar === entity?.item?.avatar,
+      );
       if (char_id === -1) {
         console.error('Character not found for entity:', entity);
         return;
@@ -123,19 +122,65 @@ const Serverbar = ({
     const { characterId, groupId } = SillyTavern.getContext();
     if (groupId !== null && typeof groupId !== 'undefined') {
       const groupIndex = entities.findIndex(
-        (e) => e.type === 'group' && e.id.toString() === groupId.toString()
+        (e) => e.type === 'group' && e.id.toString() === groupId.toString(),
       );
       setSelectedIndex(groupIndex !== -1 ? groupIndex : null);
       return;
-    } else if (typeof characterId !== 'undefined' && parseInt(characterId) >= 0) {
+    } else if (
+      typeof characterId !== 'undefined' &&
+      parseInt(characterId) >= 0
+    ) {
       const charIndex = entities.findIndex(
-        (e) => e.type === 'character' && e.id.toString() === characterId.toString()
+        (e) =>
+          e.type === 'character' && e.id.toString() === characterId.toString(),
       );
       setSelectedIndex(charIndex !== -1 ? charIndex : null);
     } else {
       setSelectedIndex(null);
     }
   }, [entities]);
+
+  // Virtualized list row renderer for Large number of entities
+  const rowRenderer = ({ index, key, style }: Parameters<typeof List>[0]) => {
+    const entity = entities[index];
+
+    return entity ? (
+      <div
+        key={key}
+        style={style}
+        className="discord-entity-item character-button w-full h-fit"
+        id={`character-button-${entity?.id}`}
+        title={entity?.item?.name || entity?.id}
+        onClick={() => {
+          // Set selected Entity on Server Bar
+          setSelectedIndex(index);
+
+          if (entity?.type === 'group') {
+            handleGroupSelect(entity);
+            return;
+          } else {
+            handleCharacterSelect(entity);
+            return;
+          }
+        }}
+      >
+        <MemoizedServerIcon
+          entity={entity}
+          isSelected={selectedIndex === index}
+        />
+      </div>
+    ) : (
+      <div
+        key={key}
+        style={style}
+        className="w-full h-fit flex flex-col items-center"
+      >
+        <div id="characters-divider" className="divider"></div>
+
+        <AddCharacterIcon onClick={() => {}} />
+      </div>
+    );
+  };
 
   return (
     <div id="character-container">
@@ -145,33 +190,50 @@ const Serverbar = ({
       </div>
 
       <div id="characters-list" className="pt-0.5">
-        {entities.map((entity, index) => (
-          <div
-            className="discord-entity-item character-button w-full h-fit"
-            id={`character-button-${entity.id}`}
-            title={entity.item?.name || entity.id}
-            key={index}
-            onClick={() => {
-              // Set selected Entity on Server Bar
-              setSelectedIndex(index);
+        {/* A little trickery in performance */}
+        {entities.length < 50 ? (
+          <>
+            {entities.map((entity, index) => (
+              <div
+                className="discord-entity-item character-button w-full h-fit"
+                id={`character-button-${entity.id}`}
+                title={entity.item?.name || entity.id}
+                key={index}
+                onClick={() => {
+                  // Set selected Entity on Server Bar
+                  setSelectedIndex(index);
 
-              if (entity.type === 'group') {
-                handleGroupSelect(entity);
-                return;
-              } else {
-                handleCharacterSelect(entity);
-                return;
-              }
-              //setOpen(false);
-            }}
-          >
-            <ServerIcon entity={entity} isSelected={selectedIndex === index} />
-          </div>
-        ))}
+                  if (entity.type === 'group') {
+                    handleGroupSelect(entity);
+                    return;
+                  } else {
+                    handleCharacterSelect(entity);
+                    return;
+                  }
+                }}
+              >
+                <MemoizedServerIcon
+                  entity={entity}
+                  isSelected={selectedIndex === index}
+                />
+              </div>
+            ))}
 
-        <div id="characters-divider" className="divider"></div>
+            <div id="characters-divider" className="divider"></div>
 
-        <AddCharacterIcon onClick={onAddCharacterClick} />
+            <AddCharacterIcon onClick={() => {}} />
+          </>
+        ) : (
+          <List
+            width={80}
+            height={window.innerHeight - 120}
+            rowCount={entities.length + 1}
+            rowHeight={60}
+            rowRenderer={rowRenderer}
+            overscanRowCount={5}
+            scrollToIndex={selectedIndex !== null ? selectedIndex : undefined}
+          />
+        )}
       </div>
     </div>
   );

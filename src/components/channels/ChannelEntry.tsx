@@ -3,20 +3,21 @@ import React from "react";
 const { selectCharacterById, openCharacterChat } = await imports('@script');
 
 
+
 const ChannelEntry = (
-  { avatar, channel, isSelected, onSelect, setOpen }:
-  { avatar: string; channel: any; isSelected: boolean; onSelect?: (id: string) => void; setOpen: (value: boolean) => void }
+  { avatar, chat, isSelected, onSelect, setOpen }:
+  { avatar: string; chat: Chat; isSelected: boolean; onSelect?: (id?: string) => void; setOpen: (value: boolean) => void }
 ) => {
 
 
   const handleClick = async () => {
     if (isSelected) return;
-    if (channel.char_id === undefined) return;
-    if (SillyTavern.getContext().getCurrentChatId() === channel.file_id) return;
+    if (chat.char_id === undefined) return;
+    if (SillyTavern.getContext().getCurrentChatId() === chat.file_id) return;
 
-    await selectCharacterById(channel.char_id);
-    await openCharacterChat(channel.file_id);
-    onSelect?.(channel.file_id);
+    await selectCharacterById(chat.char_id);
+    await openCharacterChat(chat.file_id);
+    onSelect?.(chat?.file_id);
     if (window.innerWidth <= 1000) {
       setOpen(false);
     }
@@ -25,8 +26,8 @@ const ChannelEntry = (
   return (
     <li
       className="border-none relative ms-1 cursor-pointer rounded-lg hover:bg-lighter"
-      id={`recent-chat-${channel.file_id}`}
-      title={channel.file_id}
+      id={`recent-chat-${chat.file_id}`}
+      title={chat.file_id}
     >
       <div className="items-stretch flex w-full box-border">
         <div
@@ -42,7 +43,7 @@ const ChannelEntry = (
                 avatar
               }
             />
-            <div className="truncate">{channel?.file_id ?? channel.file_name}</div>
+            <div className="truncate">{chat?.file_id ?? chat.file_name}</div>
           </div>
         </div>
         <div className="items-center flex flex-row shrink-0 justify-end box-border ps-px-[16px]">
@@ -58,4 +59,6 @@ const ChannelEntry = (
   );
 }
 
-export default ChannelEntry;
+const MemoizedChannelEntry = React.memo(ChannelEntry);
+
+export default MemoizedChannelEntry;

@@ -1,11 +1,19 @@
 import React from 'react';
 
-const Divider = React.lazy(() => import('../../../components/Divider/Divider'));
-const Accordion = React.lazy(() => import('../../../components/common/Accordion/Accordion'));
-const Toggle = React.lazy(() => import('../../../components/common/Toggle/Toggle'));
+const Divider = React.lazy(
+  () => import('../../../components/common/Divider/Divider'),
+);
+const Accordion = React.lazy(
+  () => import('../../../components/common/Accordion/Accordion'),
+);
+const Toggle = React.lazy(
+  () => import('../../../components/common/Toggle/Toggle'),
+);
 const SettingsFrame = React.lazy(() => import('../base/Base'));
 
-const { extension_settings, enableExtension, disableExtension  } = await imports('@scripts/extensions');
+const { extension_settings, enableExtension, disableExtension } = await imports(
+  '@scripts/extensions',
+);
 const { saveSettingsDebounced } = await imports('@script');
 
 interface ExtensionInfo {
@@ -36,31 +44,36 @@ interface ExtensionList {
   system: ExtensionInfo[];
 }
 
-const ExtensionAccordion: React.FC<{ extension: ExtensionInfo, enabled: boolean }> = ({ extension, enabled }) => {
-
+const ExtensionAccordion: React.FC<{ extension: ExtensionInfo }> = ({
+  extension,
+}: {
+  extension: ExtensionInfo;
+}) => {
   return (
-    <Accordion
-      title={`${extension.name}`}
-      isOpen={false}
-      onToggle={() => {}}
-    >
+    <Accordion title={`${extension.name}`} isOpen={false} onToggle={() => {}}>
       <div className="p-4 flex items-center justify-between">
         <label htmlFor={`${extension.name}-enabled`}> Enabled </label>
-        <Toggle isOn={!extension.disabled} handleToggle={() => {
-          if (extension.disabled) {
-            enableExtension(extension.name);
-          } else {
-            disableExtension(extension.name);
-          }
-        }} />
+        <Toggle
+          isOn={!extension.disabled}
+          handleToggle={() => {
+            if (extension.disabled) {
+              enableExtension(extension.name);
+            } else {
+              disableExtension(extension.name);
+            }
+          }}
+        />
       </div>
     </Accordion>
   );
 };
 
-
 const ExtensionSettings = () => {
-  const [extensions, setExtensions] = React.useState<ExtensionList>({ local: [], global: [], system: [] });
+  const [extensions, setExtensions] = React.useState<ExtensionList>({
+    local: [],
+    global: [],
+    system: [],
+  });
 
   React.useEffect(() => {
     const disabledExtensions: string[] = extension_settings.disabledExtensions;
@@ -68,11 +81,20 @@ const ExtensionSettings = () => {
       const categorized: ExtensionList = { local: [], global: [], system: [] };
       exts.forEach((ext) => {
         if (ext.type === 'local') {
-          categorized.local.push({...ext, disabled: disabledExtensions.includes(ext.name)});
+          categorized.local.push({
+            ...ext,
+            disabled: disabledExtensions.includes(ext.name),
+          });
         } else if (ext.type === 'global') {
-          categorized.global.push({...ext, disabled: disabledExtensions.includes(ext.name)});
+          categorized.global.push({
+            ...ext,
+            disabled: disabledExtensions.includes(ext.name),
+          });
         } else if (ext.type === 'system') {
-          categorized.system.push({...ext, disabled: disabledExtensions.includes(ext.name)});
+          categorized.system.push({
+            ...ext,
+            disabled: disabledExtensions.includes(ext.name),
+          });
         }
       });
       setExtensions(categorized);
@@ -84,7 +106,6 @@ const ExtensionSettings = () => {
     };
   }, [extension_settings]);
 
-
   return (
     <SettingsFrame title="Extension Settings">
       <div
@@ -94,33 +115,21 @@ const ExtensionSettings = () => {
         <h3 className="text-2xl font-semibold mb-4">System Extensions</h3>
         <ul>
           {extensions.system.map((ext) => (
-            <ExtensionAccordion
-              key={ext.name}
-              extension={ext}
-              enabled={false}
-            />
+            <ExtensionAccordion key={ext.name} extension={ext} />
           ))}
         </ul>
         <Divider />
         <h3 className="text-2xl font-semibold mb-4">Global Extensions</h3>
         <ul>
           {extensions.global.map((ext) => (
-            <ExtensionAccordion
-              key={ext.name}
-              extension={ext}
-              enabled={false}
-            />
+            <ExtensionAccordion key={ext.name} extension={ext} />
           ))}
         </ul>
         <Divider />
         <h3 className="text-2xl font-semibold mb-4">Local Extensions</h3>
         <ul>
           {extensions.local.map((ext) => (
-            <ExtensionAccordion
-              key={ext.name}
-              extension={ext}
-              enabled={false}
-            />
+            <ExtensionAccordion key={ext.name} extension={ext} />
           ))}
         </ul>
       </div>

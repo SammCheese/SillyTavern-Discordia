@@ -1,5 +1,5 @@
 type Entity = {
-  item: any;
+  item?: Character | Group | null;
   id: string | number;
   type: 'character' | 'group' | 'tag';
   entities?: Entity[] | null;
@@ -12,4 +12,12 @@ type Icon = {
   title: string;
   showInProfile: boolean;
   id: string;
+};
+
+
+type Chat = {
+  file_id?: string;
+  file_name?: string;
+  char_id?: number;
+  avatar?: string;
 };

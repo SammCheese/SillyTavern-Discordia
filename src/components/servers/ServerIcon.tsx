@@ -1,11 +1,18 @@
-import React from "react";
-import { makeReactGroupAvatar } from "../../utils/utils";
+import React from 'react';
+import { makeReactGroupAvatar } from '../../utils/utils';
 
-const { getThumbnailUrl} = await imports('@script');
+const { getThumbnailUrl } = await imports('@script');
 
-const ServerIcon = ({ entity, isSelected, onSelect, isHome, isNewCharacterButton }:
-  { entity: Entity, isSelected: boolean, onSelect?: (id: string) => void, isHome?: boolean, isNewCharacterButton?: boolean }) => {
-  let [hovered, setHovered] = React.useState(false);
+const ServerIcon = ({
+  entity,
+  isSelected,
+  onSelect,
+}: {
+  entity: Entity;
+  isSelected: boolean;
+  onSelect?: (id: string) => void;
+}) => {
+  const [hovered, setHovered] = React.useState(false);
 
   // Precaution
   React.useEffect(() => {
@@ -19,6 +26,14 @@ const ServerIcon = ({ entity, isSelected, onSelect, isHome, isNewCharacterButton
       if (hoverTimeout) clearTimeout(hoverTimeout);
     };
   }, [hovered]);
+
+  // Memoize group avatar to avoid unnecessary re-renders
+  const memoizedGroupAvatar = React.useMemo(() => {
+    if (entity.type === 'group') {
+      return makeReactGroupAvatar(entity.item);
+    }
+    return null;
+  }, [entity]);
 
   return (
     <div className="flex m-0 relative w-full h-fit">
@@ -41,11 +56,8 @@ const ServerIcon = ({ entity, isSelected, onSelect, isHome, isNewCharacterButton
         }}
         className="cursor-pointer w-full h-fit flex justify-center items-center"
       >
-        {
-          entity.type === "group" ? (
-            <>
-            {makeReactGroupAvatar(entity.item)}
-            </>
+        {entity.type === 'group' ? (
+          <>{memoizedGroupAvatar}</>
         ) : (
           <img
             className={`rounded-xl h-12 w-12 object-cover hover:outline-1 outline-white ${
@@ -54,11 +66,12 @@ const ServerIcon = ({ entity, isSelected, onSelect, isHome, isNewCharacterButton
             src={getThumbnailUrl('avatar', entity.item?.avatar || entity.id)}
             onClick={() => onSelect && onSelect(entity.id.toString())}
           />
-          )
-        }
+        )}
       </div>
     </div>
   );
 };
 
-export default ServerIcon;
+const MemoizedServerIcon = React.memo(ServerIcon);
+
+export default MemoizedServerIcon;

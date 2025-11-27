@@ -30,7 +30,7 @@ const closeButton = () => {
   );
 }
 
-const SettingsFrame = ({ title, children }) => {
+const SettingsFrame = ({ title, children }: { title: string; children: React.ReactNode }) => {
   const pageContext = React.useContext(PageContext);
 
   const handleClose = () => {

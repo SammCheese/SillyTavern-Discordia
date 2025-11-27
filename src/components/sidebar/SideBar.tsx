@@ -5,15 +5,10 @@ const ProfileMount = React.lazy(() => import('./ProfileMount'));
 const ChannelBar = React.lazy(() => import('./ChannelBar'));
 const ServerBar = React.lazy(() => import('../servers/ServerBar'));
 
-
 const { getGroupPastChats } = await imports('@scripts/groupChats');
 
-const {
-  getEntitiesList,
-  eventSource,
-  event_types,
-  getPastCharacterChats,
-} = await imports('@script');
+const { getEntitiesList, eventSource, event_types, getPastCharacterChats } =
+  await imports('@script');
 
 const SideBar = () => {
   const channelMenu = [
@@ -27,9 +22,10 @@ const SideBar = () => {
   const [state, setState] = useState<{
     open: boolean;
     entities: Entity[];
-    chats: any[];
+    chats: Chat[];
     icons: Icon[] | null;
-  }>({ open: true, entities: [], chats: [], icons: [] });
+    width?: number | undefined;
+  }>({ open: true, entities: [], chats: [], icons: [], width: undefined });
 
   React.useEffect(() => {
     processMenuIcons();
@@ -38,16 +34,39 @@ const SideBar = () => {
     eventSource.on('chat_id_changed', updateData);
     eventSource.on(event_types.CHAT_DELETED, updateData);
     eventSource.on(event_types.CHAT_CREATED, updateData);
+    eventSource.on(event_types.SETTINGS_UPDATED, handleSettingsUpdate);
+
+    return () => {
+      eventSource.removeListener(event_types.APP_READY, resetWithNewData);
+      eventSource.removeListener('chat_id_changed', updateData);
+      eventSource.removeListener(event_types.CHAT_DELETED, updateData);
+      eventSource.removeListener(event_types.CHAT_CREATED, updateData);
+      eventSource.removeListener(
+        event_types.SETTINGS_UPDATED,
+        handleSettingsUpdate,
+      );
+    };
   }, []);
 
+  const handleSettingsUpdate = () => {
+    // Also called when window resizes
+    // Ensure sidebar is open on large screens
+    if (window.innerWidth > 1000 && !state.open) {
+      setOpen(true);
+    }
+  };
+
   const updateData = async () => {
-    const {characterId, groupId} = SillyTavern.getContext();
+    const { characterId, groupId } = SillyTavern.getContext();
     if (groupId !== null && typeof groupId !== 'undefined') {
       getGroupPastChats(groupId.toString()).then((chats) => {
         setState((prevState) => ({ ...prevState, chats: chats ?? [] }));
       });
       return;
-    } else if (typeof characterId !== 'undefined' && parseInt(characterId) >= 0) {
+    } else if (
+      typeof characterId !== 'undefined' &&
+      parseInt(characterId) >= 0
+    ) {
       getPastCharacterChats().then((chats) => {
         setState((prevState) => ({ ...prevState, chats: chats ?? [] }));
       });
@@ -56,32 +75,34 @@ const SideBar = () => {
         setState((prevState) => ({ ...prevState, chats }));
       });
     }
-  }
+  };
 
   const registerSwipeListener = () => {
     const THRESHOLD = 100;
-    const sheld = $('body');
-    if (!sheld) return;
+    const body = $('body');
+    if (!body) return;
 
     let touchStartX: number = 0;
     let touchEndX: number = 0;
 
-    sheld.on('pointerdown', (e) => {
+    body.on('pointerdown', (e) => {
       touchStartX = e.clientX ?? 0;
     });
 
-    sheld.on('pointermove', (e) => {
+    body.on('pointermove', (e) => {
       touchEndX = e.clientX ?? 0;
     });
-    sheld.on('touchstart', (e) => {
+    body.on('touchstart', (e) => {
       touchStartX = e.originalEvent?.touches[0]?.clientX ?? 0;
     });
 
-    sheld.on('touchmove', (e) => {
+    body.on('touchmove', (e) => {
       touchEndX = e.originalEvent?.touches[0]?.clientX ?? 0;
     });
 
-    sheld.on('touchend pointerup', () => {
+    body.on('touchend pointerup', () => {
+      if (touchStartX === 0 || touchEndX === 0) return;
+
       if (touchEndX > touchStartX + THRESHOLD) {
         // Swipe right
         setOpen(true);
@@ -117,10 +138,6 @@ const SideBar = () => {
     setState((prevState) => ({ ...prevState, icons }));
   };
 
-  const toggleOpen = () => {
-    setState((prevState) => ({ ...prevState, open: !prevState.open }));
-  };
-
   const setOpen = (value: boolean) => {
     setState((prevState) => ({ ...prevState, open: value }));
   };
@@ -139,9 +156,9 @@ const SideBar = () => {
     return (
       <div id="sidebar-container">
         <div id="server-container">
-          <ServerBar entities={state.entities} setOpen={setOpen} onHomeClick={resetWithNewData} />
+          <ServerBar entities={state.entities} />
           <ChannelBar
-            title={(characterId || groupId) ? 'Chats' : 'Recent Chats'}
+            title={characterId || groupId ? 'Chats' : 'Recent Chats'}
             icons={state.icons}
             chats={state.chats}
             setOpen={setOpen}

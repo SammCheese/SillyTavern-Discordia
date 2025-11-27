@@ -1,6 +1,8 @@
 import React from "react";
 
-const Divider = ({ width = "w-full", className = "" }) => {
+const Divider = ({ width = "w-full", className = "" }:
+  { width?: string; className?: string }
+) => {
   return (
     <>
       <div style={{
