@@ -19,13 +19,14 @@ const SideBar = () => {
     { name: 'Advanced Formatting', id: '#advanced-formatting-button' },
     { name: 'World Info', id: '#WI-SP-button' },
   ];
+
   const [state, setState] = useState<{
     open: boolean;
     entities: Entity[];
     chats: Chat[];
     icons: Icon[] | null;
     width?: number | undefined;
-  }>({ open: true, entities: [], chats: [], icons: [], width: undefined });
+  }>({ open: false, entities: [], chats: [], icons: [], width: undefined });
 
   React.useEffect(() => {
     processMenuIcons();
@@ -37,6 +38,13 @@ const SideBar = () => {
     eventSource.on(event_types.SETTINGS_UPDATED, handleSettingsUpdate);
 
     return () => {
+      const body = $('body');
+      if (body) {
+        body.off('pointerdown touchstart');
+        body.off('pointermove touchmove');
+        body.off('touchend touchcancel pointerup');
+      }
+
       eventSource.removeListener(event_types.APP_READY, resetWithNewData);
       eventSource.removeListener('chat_id_changed', updateData);
       eventSource.removeListener(event_types.CHAT_DELETED, updateData);
@@ -143,6 +151,7 @@ const SideBar = () => {
   };
 
   const resetWithNewData = () => {
+    setState((prevState) => ({ ...prevState, open: true }));
     getRecentChats().then((chats) => {
       setState((prevState) => ({ ...prevState, chats }));
     });
@@ -151,27 +160,28 @@ const SideBar = () => {
     setState((prevState) => ({ ...prevState, entities }));
   };
 
-  if (state.open) {
-    const { characterId, groupId } = SillyTavern.getContext();
-    return (
-      <div id="sidebar-container">
-        <div id="server-container">
-          <ServerBar entities={state.entities} />
-          <ChannelBar
-            title={characterId || groupId ? 'Chats' : 'Recent Chats'}
-            icons={state.icons}
-            chats={state.chats}
-            setOpen={setOpen}
-          />
-        </div>
-        <div id="user-container">
-          <ProfileMount avatar={null} icons={state.icons} />
-        </div>
+  const { characterId, groupId } = SillyTavern.getContext();
+  return (
+    <div
+      id="sidebar-container"
+      className={`fixed top-0 left-0 h-full  transition-transform duration-150 ease-in-out ${
+        state.open ? 'translate-x-0' : '-translate-x-full'
+      }`}
+    >
+      <div id="server-container">
+        <ServerBar entities={state.entities} />
+        <ChannelBar
+          title={characterId || groupId ? 'Chats' : 'Recent Chats'}
+          icons={state.icons}
+          chats={state.chats}
+          setOpen={setOpen}
+        />
       </div>
-    );
-  } else {
-    return null;
-  }
+      <div id="user-container">
+        <ProfileMount avatar={null} icons={state.icons} />
+      </div>
+    </div>
+  );
 };
 
 export default SideBar;

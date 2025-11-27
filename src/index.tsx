@@ -39,14 +39,44 @@ if (rightSendForm) {
 
 // Group Both Icons into one
 if (leftSendForm) {
-  leftSendForm.empty();
+  const extensionsMenu = $('#extensionsMenu').addClass('font-family-reset');
+  const optionsMenu = $('#options').addClass('font-family-reset');
+
   const extrasMenu = $(`
     <div id="extras_menu_button" class="fa-solid fa-plus">
-      <div id="options_button" class="extras-menu-content">
-      </div>
-      <div id="extensionsMenuButton">
+      <div id="unified_extras_menu" class="extras_menu_dropdown">
       </div>
     </div>
     `);
+
+  extrasMenu.find('#unified_extras_menu').append(optionsMenu, extensionsMenu);
+
+  extrasMenu.on('click', () => {
+    if (extensionsMenu.is(':visible') || optionsMenu.is(':visible')) {
+      window.removeEventListener('click', handleExtraListener);
+      extensionsMenu.hide();
+      optionsMenu.hide();
+      return;
+    }
+
+    window.addEventListener('click', handleExtraListener);
+    $('#extensionsMenu').show();
+    $('#options').show();
+  });
+  leftSendForm.empty();
   leftSendForm.append(extrasMenu);
+}
+
+function handleExtraListener(event: MouseEvent) {
+  const extensionsMenu = $('#extensionsMenu');
+  const optionsMenu = $('#options');
+
+  if (
+    !(event?.target as HTMLElement).closest('#extras_menu_button') &&
+    !(event?.target as HTMLElement).closest('#extensionsMenu') &&
+    !(event?.target as HTMLElement).closest('#options')
+  ) {
+    extensionsMenu.hide();
+    optionsMenu.hide();
+  }
 }

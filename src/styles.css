@@ -201,6 +201,37 @@
   }
 }
 
+#extensionsMenu,
+#options {
+  transform: translateX(0px) !important;
+  position: relative !important;
+  box-shadow: none !important;
+}
+
+#options .options-content {
+  border-bottom-right-radius: 0px !important;
+  border-bottom-left-radius: 0px !important;
+  border-bottom: none !important;
+}
+
+#options {
+  border-radius: 0px !important;
+}
+
+#extensionsMenu.options-content {
+  border-top-right-radius: 0px !important;
+  border-top-left-radius: 0px !important;
+  border-top: none !important;
+}
+
+#unified_extras_menu {
+  bottom: var(--profile-container-height);
+  left: 0px;
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+}
+
 #options_button {
   margin-left: 0px;
   width: unset;
