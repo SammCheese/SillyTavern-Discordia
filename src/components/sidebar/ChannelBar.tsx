@@ -49,14 +49,14 @@ const Channelbar = ({
     if (memoizedIsSelectedChat(chat)) return;
 
     // Recent Chat handler
-    if (chat?.char_id || chat?.is_group) {
+    if ((chat?.char_id !== undefined && chat?.char_id >= 0) || chat?.is_group) {
       await closeCurrentChat();
       if (chat.is_group) {
         await selectGroup({
           id: chat.group,
           chat_id: chat.file_id,
         });
-      } else if (chat.char_id) {
+      } else if (chat?.char_id !== undefined) {
         await selectCharacter(chat.char_id, chat.file_id);
       }
       return;
