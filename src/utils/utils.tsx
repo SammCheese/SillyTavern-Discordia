@@ -13,13 +13,13 @@ const {
   setActiveGroup,
   getCurrentChatId,
   saveSettingsDebounced,
-  selectCharacterById
+  selectCharacterById,
 } = await imports('@script');
-const { groups, openGroupById, openGroupChat } = await imports('@scripts/groupChats');
-const { sortMoments, timestampToMoment, isDataURL } = await imports(
-  '@scripts/utils'
+const { groups, openGroupById, openGroupChat } = await imports(
+  '@scripts/groupChats',
 );
-
+const { sortMoments, timestampToMoment, isDataURL } =
+  await imports('@scripts/utils');
 
 export async function getRecentChats() {
   const response = await fetch('/api/chats/recent', {
@@ -41,7 +41,7 @@ export async function getRecentChats() {
 
   const dataWithEntities = data
     .sort((a, b) =>
-      sortMoments(timestampToMoment(a.last_mes), timestampToMoment(b.last_mes))
+      sortMoments(timestampToMoment(a.last_mes), timestampToMoment(b.last_mes)),
     )
     .map((chat) => ({
       chat,
@@ -69,8 +69,6 @@ export async function getRecentChats() {
   return dataWithEntities.map((t) => t.chat);
 }
 
-
-
 export async function resetScrollHeight(element) {
   $(element).css('height', '0px');
   $(element).css('height', $(element).prop('scrollHeight') + 3 + 'px');
@@ -79,14 +77,14 @@ export async function resetScrollHeight(element) {
 export function toggleDrawer(drawer, expand = true) {
   /** @type {HTMLElement} */
   const icon = drawer.querySelector(
-    ':scope > .inline-drawer-header .inline-drawer-icon'
+    ':scope > .inline-drawer-header .inline-drawer-icon',
   );
   /** @type {HTMLElement} */
   const content = drawer.querySelector(':scope > .inline-drawer-content');
 
   if (!icon || !content) {
     console.debug(
-      'toggleDrawer: No icon or content found in the drawer element.'
+      'toggleDrawer: No icon or content found in the drawer element.',
     );
     return;
   }
@@ -102,7 +100,7 @@ export function toggleDrawer(drawer, expand = true) {
   }
 
   drawer.dispatchEvent(
-    new CustomEvent('inline-drawer-toggle', { bubbles: true })
+    new CustomEvent('inline-drawer-toggle', { bubbles: true }),
   );
 
   // Set the height of "autoSetHeight" textareas within the inline-drawer to their scroll height
@@ -148,7 +146,7 @@ export function makeReactGroupAvatar(groupItem: any): React.ReactElement {
       if (charIndex !== -1 && characters[charIndex]?.avatar !== 'none') {
         const avatar = getThumbnailUrl(
           'avatar',
-          characters[charIndex]?.avatar || default_avatar
+          characters[charIndex]?.avatar || default_avatar,
         );
         memberAvatars.push(avatar);
       }
@@ -177,7 +175,7 @@ export function makeReactGroupAvatar(groupItem: any): React.ReactElement {
         className: `collage_${avatarCount} group-avatar`,
         title: `[Group] ${groupItem.name}`,
       },
-      ...imgElements
+      ...imgElements,
     );
     return groupAvatar;
   }
@@ -195,28 +193,40 @@ export function makeReactGroupAvatar(groupItem: any): React.ReactElement {
       className: `collage_1 group-avatar`,
       title: `[Group] ${groupItem.name}`,
     },
-    React.createElement('img', { className: 'img_1', src: system_avatar })
+    React.createElement('img', { className: 'img_1', src: system_avatar }),
   );
   return groupAvatar;
 }
 
-
 export const selectCharacter = async (char_id: number, chat_id?: string) => {
-    try {
-      await selectCharacterById(char_id);
-      setActiveCharacter(char_id);
-      saveSettingsDebounced();
-      if (getCurrentChatId() === chat_id) return;
-
-      await openCharacterChat(chat_id);
-    } catch (error) {
-      console.error('Error selecting character:', error);
-    }
-  };
-
-export const selectGroup = async (group: Entity, chat_id?: string) => {
   try {
-    const groupId = group.id.toString();
+    await selectCharacterById(char_id);
+    setActiveCharacter(char_id);
+    saveSettingsDebounced();
+    if (getCurrentChatId() === chat_id) return;
+
+    await openCharacterChat(chat_id);
+  } catch (error) {
+    console.error('Error selecting character:', error);
+  }
+};
+
+export const selectGroup = async ({
+  group,
+  chat_id,
+  id,
+}: {
+  group?: Entity;
+  chat_id?: string | undefined;
+  id?: string | null | undefined;
+}) => {
+  try {
+    if (!group && !id) return;
+
+    const groupId = id || group?.id.toString() || '';
+
+    if (!groupId) return;
+
     await openGroupById(groupId);
     setActiveGroup(groupId);
     saveSettingsDebounced();
@@ -226,4 +236,38 @@ export const selectGroup = async (group: Entity, chat_id?: string) => {
   } catch (error) {
     console.error('Error selecting group:', error);
   }
-}
+};
+
+export const makeAvatar = ({
+  chat,
+  charId,
+  groupId,
+}: {
+  chat?: Chat;
+  charId?: number | string;
+  groupId?: number | string | null;
+}): string => {
+  if (chat && chat?.avatar) {
+    return getThumbnailUrl('avatar', chat?.avatar);
+  }
+
+  if (!charId && !groupId) {
+    charId = SillyTavern.getContext().characterId;
+    groupId = SillyTavern.getContext().groupId;
+  }
+
+  if (groupId !== null && typeof groupId !== 'undefined') {
+    const group = SillyTavern.getContext().groups.find(
+      (g) => g.id.toString() === groupId.toString(),
+    );
+    return group.avatar_url;
+  }
+
+  const charIdNum =
+    typeof charId === 'string' ? parseInt(charId) : (charId ?? -1);
+  const character = SillyTavern.getContext().characters[charIdNum];
+
+  if (!character) return system_avatar;
+
+  return getThumbnailUrl('avatar', character.avatar);
+};

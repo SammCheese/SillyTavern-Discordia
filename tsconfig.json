@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "rootDir": "../../../../",
+    "rootDir": "./src",
     "outDir": "./dist",
 
     "module": "esnext",
@@ -28,7 +28,7 @@
     "strict": true,
     "jsx": "react",
     "verbatimModuleSyntax": true,
-    "isolatedModules": true,
+    "isolatedModules": false,
     "noUncheckedSideEffectImports": true,
     "moduleDetection": "force",
     "moduleResolution": "bundler",
@@ -40,5 +40,5 @@
     "allowJs": true,
     "checkJs": false
   },
-  "include": ["src/**/*", "global.d.ts"]
+  "include": ["./src/**/*", "global.d.ts"]
 }

@@ -7,11 +7,11 @@ import tseslint from 'typescript-eslint';
 
 export default defineConfig(
   eslint.configs.recommended,
-  tseslint.configs.strict,
   tseslint.configs.recommended,
   react.configs.flat['recommended'],
   prettier,
   {
+    extends: [],
     settings: {
       react: {
         version: 'detect',
@@ -22,5 +22,6 @@ export default defineConfig(
         node: true,
       },
     },
+    ignores: ['dist/**', 'node_modules/**', '**/*.config.js', '**/*.json'],
   },
 );

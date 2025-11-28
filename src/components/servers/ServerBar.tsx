@@ -4,9 +4,9 @@ import { selectCharacter, selectGroup } from '../../utils/utils';
 
 const MemoizedServerIcon = React.lazy(() => import('./ServerIcon'));
 
-const { openWelcomeScreen } = await imports('@scripts/welcomeScreen');
+//const { openWelcomeScreen } = await imports('@scripts/welcomeScreen');
 const { getGroupPastChats } = await imports('@scripts/groupChats');
-const { setCharacterId, getPastCharacterChats, characters, eventSource } =
+const { getPastCharacterChats, characters, closeCurrentChat } =
   await imports('@script');
 
 const HomeIcon = ({ onClick }: { onClick?: (() => void) | undefined }) => {
@@ -84,9 +84,8 @@ const Serverbar = ({ entities }: { entities: Entity[] }) => {
 
   const onHomeClickHandler = async () => {
     setSelectedIndex(null);
-    setCharacterId(undefined);
-    await eventSource.emit('chat_id_changed', {});
-    await openWelcomeScreen({ force: true });
+    await closeCurrentChat();
+    // await openWelcomeScreen({ force: true });
   };
 
   const handleCharacterSelect = async (entity: Entity) => {
@@ -99,6 +98,8 @@ const Serverbar = ({ entities }: { entities: Entity[] }) => {
         return;
       }
 
+      await closeCurrentChat();
+
       getPastCharacterChats(char_id).then(async (chats) => {
         await selectCharacter(char_id, chats[0]?.file_id);
       });
@@ -110,8 +111,19 @@ const Serverbar = ({ entities }: { entities: Entity[] }) => {
   const handleGroupSelect = async (entity: Entity) => {
     try {
       const groupId = entity.id.toString();
+      const group = SillyTavern.getContext().groups.find(
+        (g) => g.id.toString() === groupId,
+      );
+
+      if (!group) {
+        console.error('Group not found for entity:', entity);
+        return;
+      }
+
+      await closeCurrentChat();
+
       getGroupPastChats(groupId).then(async (chats) => {
-        await selectGroup(entity, chats[0]?.file_id);
+        await selectGroup({ group: entity, chat_id: chats[0]?.file_id });
       });
     } catch (error) {
       console.error('Error selecting group:', error);

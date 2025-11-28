@@ -16,8 +16,11 @@ type Icon = {
 
 
 type Chat = {
-  file_id?: string;
-  file_name?: string;
+  file_id: string;
+  file_name: string;
   char_id?: number;
   avatar?: string;
+  is_group?: boolean;
+  group?: string;
 };
+

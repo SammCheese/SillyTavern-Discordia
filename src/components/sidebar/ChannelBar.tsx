@@ -1,5 +1,6 @@
 import React, { lazy } from 'react';
 import { PageContext } from '../../providers/pageProvider';
+import { makeAvatar, selectCharacter, selectGroup } from '../../utils/utils';
 
 const Divider = React.lazy(() => import('../common/Divider/Divider'));
 const MemoizedChannelEntry = lazy(() => import('../channels/ChannelEntry'));
@@ -8,7 +9,8 @@ const ExtensionSettings = lazy(
   () => import('../../pages/settings/extensions/ExtensionSettings'),
 );
 
-const { getThumbnailUrl } = await imports('@script');
+const { closeCurrentChat, openCharacterChat } = await imports('@script');
+const { openGroupChat } = await imports('@scripts/groupChats');
 
 const Channelbar = ({
   title = 'Recent Chats',
@@ -23,27 +25,6 @@ const Channelbar = ({
 }) => {
   const pageContext = React.useContext(PageContext);
 
-  const makeAvatar = (chat?: Chat) => {
-    if (chat && chat?.avatar) {
-      return getThumbnailUrl('avatar', chat?.avatar ?? 'ai4.png');
-    }
-    const { groupId, characterId } = SillyTavern.getContext();
-
-    if (groupId !== null && typeof groupId !== 'undefined') {
-      const group = SillyTavern.getContext().groups.find(
-        (g) => g.id.toString() === groupId.toString(),
-      );
-      return group.avatar_url;
-    }
-
-    const charIdNum =
-      typeof characterId === 'string'
-        ? parseInt(characterId)
-        : (characterId ?? -1);
-    const character = SillyTavern.getContext().characters[charIdNum];
-    return getThumbnailUrl('avatar', character ? character.avatar : 'ai4.png');
-  };
-
   const handleToolclick = (icon: Icon) => {
     const id = icon.id;
     switch (id) {
@@ -52,6 +33,45 @@ const Channelbar = ({
         break;
       default:
         console.log(`No action defined for icon with id: ${id}`);
+    }
+  };
+
+  const isSelectedChat = (chat: Chat): boolean => {
+    return SillyTavern.getContext().getCurrentChatId() === chat.file_id;
+  };
+
+  const memoizedIsSelectedChat = React.useCallback(isSelectedChat, [
+    SillyTavern.getContext().getCurrentChatId(),
+  ]);
+
+  const handleChannelClick = async (chat: Chat) => {
+    // if its the currently selected chat, do nothing
+    if (memoizedIsSelectedChat(chat)) return;
+
+    // Recent Chat handler
+    if (chat?.char_id || chat?.is_group) {
+      await closeCurrentChat();
+      if (chat.is_group) {
+        await selectGroup({
+          id: chat.group,
+          chat_id: chat.file_id,
+        });
+      } else if (chat.char_id) {
+        await selectCharacter(chat.char_id, chat.file_id);
+      }
+      return;
+    }
+
+    // Channel Switch within selected character/group
+    const { characterId, groupId } = SillyTavern.getContext();
+    if (groupId !== null) {
+      await openGroupChat(groupId, chat.file_id);
+    } else if (characterId) {
+      await openCharacterChat(chat.file_id);
+    }
+
+    if (window.innerWidth <= 1000) {
+      setOpen(false);
     }
   };
 
@@ -81,16 +101,14 @@ const Channelbar = ({
       <div id="channel-list">
         <div id="channels-list-container">
           {chats.map((chat, index) => (
-            <MemoizedChannelEntry
-              key={index}
-              chat={chat}
-              isSelected={false}
-              onSelect={() => {
-                console.log('Channel selected:', chat);
-              }}
-              avatar={makeAvatar(chat)}
-              setOpen={setOpen}
-            />
+            <div key={index} onClick={() => handleChannelClick(chat)}>
+              <MemoizedChannelEntry
+                chat={chat}
+                isSelected={memoizedIsSelectedChat(chat)}
+                avatar={makeAvatar({ chat })}
+                setOpen={setOpen}
+              />
+            </div>
           ))}
         </div>
       </div>

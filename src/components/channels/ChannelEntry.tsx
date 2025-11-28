@@ -1,31 +1,19 @@
-import React from "react";
+import React from 'react';
 
-const { selectCharacterById, openCharacterChat } = await imports('@script');
-
-
-
-const ChannelEntry = (
-  { avatar, chat, isSelected, onSelect, setOpen }:
-  { avatar: string; chat: Chat; isSelected: boolean; onSelect?: (id?: string) => void; setOpen: (value: boolean) => void }
-) => {
-
-
-  const handleClick = async () => {
-    if (isSelected) return;
-    if (chat.char_id === undefined) return;
-    if (SillyTavern.getContext().getCurrentChatId() === chat.file_id) return;
-
-    await selectCharacterById(chat.char_id);
-    await openCharacterChat(chat.file_id);
-    onSelect?.(chat?.file_id);
-    if (window.innerWidth <= 1000) {
-      setOpen(false);
-    }
-  };
-
+const ChannelEntry = ({
+  avatar,
+  chat,
+  isSelected,
+}: {
+  avatar: string;
+  chat: Chat;
+  isSelected: boolean;
+  onSelect?: (id?: string) => void;
+  setOpen: (value: boolean) => void;
+}) => {
   return (
     <li
-      className="border-none relative ms-1 cursor-pointer rounded-lg hover:bg-lighter"
+      className={`border-none relative ms-1 cursor-pointer rounded-lg hover:bg-lighter ${isSelected ? 'bg-lighter' : ''}`}
       id={`recent-chat-${chat.file_id}`}
       title={chat.file_id}
     >
@@ -33,15 +21,12 @@ const ChannelEntry = (
         <div
           style={{ flex: '1 1 auto', paddingRight: '8px', paddingLeft: '8px' }}
           className="items-center flex gap-2 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap w-full"
-          onClick={() => handleClick()}
         >
           <div className="h-12 items-center flex rounded-sm min-w-0 p-0">
             <img
-              style={{ flex: "0 0 auto"}}
+              style={{ flex: '0 0 auto' }}
               className="rounded-4xl h-9 w-9 object-cover flex me-3 justify-center"
-              src={
-                avatar
-              }
+              src={avatar}
             />
             <div className="truncate">{chat?.file_id ?? chat.file_name}</div>
           </div>
@@ -57,7 +42,7 @@ const ChannelEntry = (
       </div>
     </li>
   );
-}
+};
 
 const MemoizedChannelEntry = React.memo(ChannelEntry);
 

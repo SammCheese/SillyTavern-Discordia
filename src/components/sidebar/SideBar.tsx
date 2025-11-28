@@ -32,7 +32,7 @@ const SideBar = () => {
     processMenuIcons();
     registerSwipeListener();
     eventSource.on(event_types.APP_READY, resetWithNewData);
-    eventSource.on('chat_id_changed', updateData);
+    eventSource.on(event_types.CHAT_CHANGED, updateData);
     eventSource.on(event_types.CHAT_DELETED, updateData);
     eventSource.on(event_types.CHAT_CREATED, updateData);
     eventSource.on(event_types.SETTINGS_UPDATED, handleSettingsUpdate);
@@ -46,7 +46,7 @@ const SideBar = () => {
       }
 
       eventSource.removeListener(event_types.APP_READY, resetWithNewData);
-      eventSource.removeListener('chat_id_changed', updateData);
+      eventSource.removeListener(event_types.CHAT_CHANGED, updateData);
       eventSource.removeListener(event_types.CHAT_DELETED, updateData);
       eventSource.removeListener(event_types.CHAT_CREATED, updateData);
       eventSource.removeListener(
@@ -66,7 +66,8 @@ const SideBar = () => {
 
   const updateData = async () => {
     const { characterId, groupId } = SillyTavern.getContext();
-    if (groupId !== null && typeof groupId !== 'undefined') {
+
+    if (groupId !== null) {
       getGroupPastChats(groupId.toString()).then((chats) => {
         setState((prevState) => ({ ...prevState, chats: chats ?? [] }));
       });

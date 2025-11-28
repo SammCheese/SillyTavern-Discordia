@@ -1,5 +1,4 @@
 @import 'tailwindcss';
-@tailwind utilities;
 
 @theme {
   --color-lighter: rgba(255, 255, 255, 0.1);
