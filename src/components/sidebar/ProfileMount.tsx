@@ -5,7 +5,8 @@ const UserSettings = React.lazy(
   () => import('../../pages/settings/user/UserSettings'),
 );
 
-const { getThumbnailUrl, name1, user_avatar } = await imports('@script');
+const { getThumbnailUrl, name1, user_avatar, eventSource, event_types } =
+  await imports('@script');
 
 const ProfileMount = ({
   avatar,
@@ -14,7 +15,28 @@ const ProfileMount = ({
   avatar: string | null;
   icons: Icon[] | null;
 }) => {
+  const [connStatus, setConnStatus] = React.useState<string>('no_connection');
+
   const pageContext = React.useContext(PageContext);
+
+  React.useEffect(() => {
+    eventSource.on(event_types.ONLINE_STATUS_CHANGED, handleConnectionChange);
+
+    return () => {
+      eventSource.removeListener(
+        event_types.ONLINE_STATUS_CHANGED,
+        handleConnectionChange,
+      );
+    };
+  }, []);
+
+  const handleConnectionChange = () => {
+    if (SillyTavern.getContext().onlineStatus === 'no_connection') {
+      setConnStatus('no_connection');
+    } else {
+      setConnStatus('online');
+    }
+  };
 
   const handleIconClick = (icon: Icon) => {
     const id = icon.id;
@@ -37,6 +59,7 @@ const ProfileMount = ({
     <div id="user-profile-container">
       <div id="user-avatar">
         <img
+          loading="lazy"
           id="discordia-avatar"
           src={getThumbnailUrl(
             'persona',
@@ -62,18 +85,62 @@ const ProfileMount = ({
         {icons
           ?.filter((i) => i.showInProfile)
           ?.map((icon, index) => (
-            <div
-              className={icon.className}
-              title={icon.title}
+            <ProfileIcon
+              enabled={
+                icon.className.includes('fa-plug') &&
+                connStatus === 'no_connection'
+                  ? false
+                  : true
+              }
+              icon={icon}
               key={index}
-              onClick={() => {
-                handleIconClick(icon);
-              }}
+              onClick={() => handleIconClick(icon)}
             />
           ))}
       </div>
     </div>
   );
+};
+
+const ProfileIcon = ({
+  icon,
+  key,
+  onClick,
+  enabled = true,
+}: {
+  icon: Icon;
+  key: string | number;
+  onClick: () => void;
+  enabled?: boolean;
+}) => {
+  // connection thing is a special cookie
+  const isPlugIcon = icon.className.includes('fa-plug');
+
+  if (isPlugIcon) {
+    return (
+      <div
+        className={
+          enabled
+            ? icon.className
+                .replace('fa-plug-circle-exclamation', 'fa-plug')
+                .replace('redOverlayGlow', '')
+            : `${icon.className}`
+        }
+        title={icon.title}
+        key={key}
+        onClick={onClick}
+      />
+    );
+  } else {
+    return (
+      <div
+        className={icon.className}
+        title={icon.title}
+        key={key}
+        onClick={onClick}
+      />
+    );
+  }
 };
 
 export default ProfileMount;
