@@ -60,6 +60,7 @@ const ServerIcon = ({
           <>{memoizedGroupAvatar}</>
         ) : (
           <img
+            loading="lazy"
             className={`rounded-xl h-12 w-12 object-cover hover:outline-1 outline-white ${
               isSelected ? 'outline' : ''
             }`}

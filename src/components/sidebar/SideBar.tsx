@@ -32,9 +32,9 @@ const SideBar = () => {
     processMenuIcons();
     registerSwipeListener();
     eventSource.on(event_types.APP_READY, resetWithNewData);
-    eventSource.on(event_types.CHAT_CHANGED, updateData);
-    eventSource.on(event_types.CHAT_DELETED, updateData);
-    eventSource.on(event_types.CHAT_CREATED, updateData);
+    eventSource.on(event_types.CHAT_CHANGED, updateChatData);
+    eventSource.on(event_types.CHAT_DELETED, updateChatData);
+    eventSource.on(event_types.CHAT_CREATED, updateChatData);
     eventSource.on(event_types.SETTINGS_UPDATED, handleSettingsUpdate);
 
     return () => {
@@ -46,9 +46,9 @@ const SideBar = () => {
       }
 
       eventSource.removeListener(event_types.APP_READY, resetWithNewData);
-      eventSource.removeListener(event_types.CHAT_CHANGED, updateData);
-      eventSource.removeListener(event_types.CHAT_DELETED, updateData);
-      eventSource.removeListener(event_types.CHAT_CREATED, updateData);
+      eventSource.removeListener(event_types.CHAT_CHANGED, updateChatData);
+      eventSource.removeListener(event_types.CHAT_DELETED, updateChatData);
+      eventSource.removeListener(event_types.CHAT_CREATED, updateChatData);
       eventSource.removeListener(
         event_types.SETTINGS_UPDATED,
         handleSettingsUpdate,
@@ -64,26 +64,28 @@ const SideBar = () => {
     }
   };
 
-  const updateData = async () => {
+  const updateChatData = async () => {
     const { characterId, groupId } = SillyTavern.getContext();
+    let chats: Chat[] = [];
 
-    if (groupId !== null) {
-      getGroupPastChats(groupId.toString()).then((chats) => {
-        setState((prevState) => ({ ...prevState, chats: chats ?? [] }));
-      });
-      return;
-    } else if (
-      typeof characterId !== 'undefined' &&
-      parseInt(characterId) >= 0
-    ) {
-      getPastCharacterChats().then((chats) => {
-        setState((prevState) => ({ ...prevState, chats: chats ?? [] }));
-      });
-    } else {
-      getRecentChats().then((chats) => {
-        setState((prevState) => ({ ...prevState, chats }));
-      });
+    try {
+      if (groupId !== null) {
+        chats = await getGroupPastChats(groupId.toString());
+      } else if (
+        typeof characterId !== 'undefined' &&
+        parseInt(characterId) >= 0
+      ) {
+        chats = await getPastCharacterChats();
+      } else {
+        const entities = getEntitiesList({ doFilter: true, doSort: true });
+        chats = await getRecentChats(entities);
+      }
+    } catch (error) {
+      console.error('Error updating chat data:', error);
+      chats = [];
     }
+
+    setState((prevState) => ({ ...prevState, chats: chats ?? [] }));
   };
 
   const registerSwipeListener = () => {
@@ -151,14 +153,11 @@ const SideBar = () => {
     setState((prevState) => ({ ...prevState, open: value }));
   };
 
-  const resetWithNewData = () => {
-    setState((prevState) => ({ ...prevState, open: true }));
-    getRecentChats().then((chats) => {
-      setState((prevState) => ({ ...prevState, chats }));
-    });
-
+  const resetWithNewData = async () => {
     const entities = getEntitiesList({ doFilter: true, doSort: true });
-    setState((prevState) => ({ ...prevState, entities }));
+    const chats = await getRecentChats(entities);
+
+    setState((prevState) => ({ ...prevState, chats, entities, open: true }));
   };
 
   const { characterId, groupId } = SillyTavern.getContext();

@@ -21,11 +21,11 @@ const { groups, openGroupById, openGroupChat } = await imports(
 const { sortMoments, timestampToMoment, isDataURL } =
   await imports('@scripts/utils');
 
-export async function getRecentChats() {
+export async function getRecentChats(entities?: Entity[], amount = 20) {
   const response = await fetch('/api/chats/recent', {
     method: 'POST',
     headers: getRequestHeaders(),
-    body: JSON.stringify({ max: 15 }),
+    body: JSON.stringify({ max: amount }),
   });
 
   if (!response.ok) {
@@ -48,7 +48,21 @@ export async function getRecentChats() {
       character: characters.find((x) => x.avatar === chat.avatar),
       group: groups.find((x) => x.id === chat.group),
     }))
-    .filter((t) => t.character || t.group);
+    .filter((t) => t.character || t.group)
+    .filter((t) => {
+      if (!entities || entities.length === 0) return true;
+
+      const chatEntity = entities.find(
+        (e) =>
+          (t.character &&
+            e.type === 'character' &&
+            e.item.avatar.toString() === t.character!.avatar.toString()) ||
+          (t.group &&
+            e.type === 'group' &&
+            e.id.toString() === t.group!.id.toString()),
+      );
+      return !!chatEntity;
+    });
 
   dataWithEntities.forEach(({ chat, character, group }, index) => {
     const chatTimestamp = timestampToMoment(chat.last_mes);
@@ -60,7 +74,7 @@ export async function getRecentChats() {
       ? getThumbnailUrl('avatar', character.avatar)
       : system_avatar;
     chat.is_group = !!group;
-    chat.hidden = index >= 10;
+    chat.hidden = index >= 15;
     chat.avatar = chat.avatar || '';
     chat.group = chat.group || '';
     chat.char_id = character ? characters.indexOf(character) : undefined;
@@ -130,7 +144,7 @@ export function makeReactGroupAvatar(groupItem: any): React.ReactElement {
   if (isValidImageUrl(groupItem.avatar_url)) {
     return (
       <div className="avatar" title={`[Group] ${groupItem.name}`}>
-        <img src={groupItem.avatar_url} />
+        <img loading="lazy" src={groupItem.avatar_url} />
       </div>
     );
   }

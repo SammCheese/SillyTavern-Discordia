@@ -24,6 +24,7 @@ const ChannelEntry = ({
         >
           <div className="h-12 items-center flex rounded-sm min-w-0 p-0">
             <img
+              loading="lazy"
               style={{ flex: '0 0 auto' }}
               className="rounded-4xl h-9 w-9 object-cover flex me-3 justify-center"
               src={avatar}

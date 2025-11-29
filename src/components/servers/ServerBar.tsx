@@ -85,7 +85,6 @@ const Serverbar = ({ entities }: { entities: Entity[] }) => {
   const onHomeClickHandler = async () => {
     setSelectedIndex(null);
     await closeCurrentChat();
-    // await openWelcomeScreen({ force: true });
   };
 
   const handleCharacterSelect = async (entity: Entity) => {
@@ -132,12 +131,13 @@ const Serverbar = ({ entities }: { entities: Entity[] }) => {
 
   React.useEffect(() => {
     const { characterId, groupId } = SillyTavern.getContext();
+    let indexToSelect: number | null = null;
+
     if (groupId !== null && typeof groupId !== 'undefined') {
       const groupIndex = entities.findIndex(
         (e) => e.type === 'group' && e.id.toString() === groupId.toString(),
       );
-      setSelectedIndex(groupIndex !== -1 ? groupIndex : null);
-      return;
+      indexToSelect = groupIndex !== -1 ? groupIndex : null;
     } else if (
       typeof characterId !== 'undefined' &&
       parseInt(characterId) >= 0
@@ -146,10 +146,11 @@ const Serverbar = ({ entities }: { entities: Entity[] }) => {
         (e) =>
           e.type === 'character' && e.id.toString() === characterId.toString(),
       );
-      setSelectedIndex(charIndex !== -1 ? charIndex : null);
+      indexToSelect = charIndex !== -1 ? charIndex : null;
     } else {
-      setSelectedIndex(null);
+      indexToSelect = null;
     }
+    setSelectedIndex(indexToSelect);
   }, [entities]);
 
   // Virtualized list row renderer for Large number of entities
