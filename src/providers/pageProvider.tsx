@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { createPortal } from 'react-dom';
 
 import { rootContainer } from '../index';
@@ -14,15 +14,22 @@ export const PageContext = React.createContext<{
 });
 
 export function PageProvider({ children }: { children: React.ReactNode }) {
-  const [currentPage, setCurrentPage] = React.useState<React.ReactNode>(null);
+  const [content, setContent] = React.useState<React.ReactNode>(null);
+  const [isVisible, setIsVisible] = React.useState<boolean>(false);
 
-  const openPage = (page: React.ReactNode) => {
-    setCurrentPage(page);
-  };
+  const openPage = useCallback((page: React.ReactNode) => {
+    setContent(page);
+    requestAnimationFrame(() => {
+      setIsVisible(true);
+    });
+  }, []);
 
-  const closePage = () => {
-    setCurrentPage(null);
-  };
+  const closePage = useCallback(() => {
+    setIsVisible(false);
+    setTimeout(() => {
+      setContent(null);
+    }, 200);
+  }, []);
 
   // Close page on Escape key press or click outside
   React.useEffect(() => {
@@ -31,33 +38,20 @@ export function PageProvider({ children }: { children: React.ReactNode }) {
         closePage();
       }
     };
-
-    const handlePointerDown = (e: MouseEvent | TouchEvent) => {
-      const target = e.target as Node | null;
-      if (currentPage && target && !(rootContainer?.contains(target))) {
-        closePage();
-      }
-    };
-
     document.addEventListener('keydown', handleKeyDown);
-    document.addEventListener('mousedown', handlePointerDown);
-    document.addEventListener('touchstart', handlePointerDown);
-
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-      document.removeEventListener('mousedown', handlePointerDown);
-      document.removeEventListener('touchstart', handlePointerDown);
-    };
-  }, [currentPage]);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [closePage]);
 
   return (
     <PageContext.Provider value={{ openPage, closePage }}>
-      {currentPage &&
+      {content &&
         createPortal(
-          <div className="">
-            <OpenPage>{currentPage}</OpenPage>
+          <div>
+            <OpenPage isVisible={isVisible} onClose={closePage}>
+              {content}
+            </OpenPage>
           </div>,
-          rootContainer
+          rootContainer,
         )}
       {children}
     </PageContext.Provider>

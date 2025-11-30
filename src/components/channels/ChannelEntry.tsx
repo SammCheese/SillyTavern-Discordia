@@ -4,18 +4,27 @@ const ChannelEntry = ({
   avatar,
   chat,
   isSelected,
+  onClick,
 }: {
   avatar: string;
   chat: Chat;
   isSelected: boolean;
   onSelect?: (id?: string) => void;
   setOpen: (value: boolean) => void;
+  onClick?: (chat: Chat) => void;
 }) => {
+  const handleClick = () => {
+    if (onClick) {
+      onClick(chat);
+    }
+  };
+
   return (
     <li
       className={`border-none relative ms-1 cursor-pointer rounded-lg hover:bg-lighter ${isSelected ? 'bg-lighter' : ''}`}
       id={`recent-chat-${chat.file_id}`}
       title={chat.file_id}
+      onClick={handleClick}
     >
       <div className="items-stretch flex w-full box-border">
         <div
@@ -45,6 +54,4 @@ const ChannelEntry = ({
   );
 };
 
-const MemoizedChannelEntry = React.memo(ChannelEntry);
-
-export default MemoizedChannelEntry;
+export default React.memo(ChannelEntry);

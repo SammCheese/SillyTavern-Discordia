@@ -2,7 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { PageProvider } from './providers/pageProvider';
 
-const SideBar = React.lazy(() => import('./components/sidebar/SideBar'));
+const App = React.lazy(() => import('./App'));
 
 // @ts-expect-error Styles Import
 import './styles.css';
@@ -21,7 +21,7 @@ const root = ReactDOM.createRoot(rootContainer);
 root.render(
   <React.StrictMode>
     <PageProvider>
-      <SideBar />
+      <App />
     </PageProvider>
   </React.StrictMode>,
 );

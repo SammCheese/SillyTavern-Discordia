@@ -1,184 +1,43 @@
-import React, { useState } from 'react';
-import { getRecentChats } from '../../utils/utils';
+import React from 'react';
 
-const ProfileMount = React.lazy(() => import('./ProfileMount'));
-const ChannelBar = React.lazy(() => import('./ChannelBar'));
+const ProfileMount = React.lazy(() => import('../ProfileMount/ProfileMount'));
+const ChannelBar = React.lazy(() => import('../channels/ChannelBar'));
 const ServerBar = React.lazy(() => import('../servers/ServerBar'));
 
-const { getGroupPastChats } = await imports('@scripts/groupChats');
+interface SideBarProps {
+  open: boolean;
+  setOpen: (open: boolean) => void;
+  entities: Entity[];
+  chats: Chat[];
+  icons: Icon[] | null;
+}
 
-const { getEntitiesList, eventSource, event_types, getPastCharacterChats } =
-  await imports('@script');
-
-const SideBar = () => {
-  const channelMenu = [
-    { name: 'Backgrounds', id: '#backgrounds-button' },
-    { name: 'Persona Management', id: '#persona-management-button' },
-    { name: 'Character Selector', id: '#rightNavHolder' },
-    { name: 'Extensions Settings', id: '#extensions-settings-button' },
-    { name: 'Advanced Formatting', id: '#advanced-formatting-button' },
-    { name: 'World Info', id: '#WI-SP-button' },
-  ];
-
-  const [state, setState] = useState<{
-    open: boolean;
-    entities: Entity[];
-    chats: Chat[];
-    icons: Icon[] | null;
-    width?: number | undefined;
-  }>({ open: false, entities: [], chats: [], icons: [], width: undefined });
-
-  React.useEffect(() => {
-    processMenuIcons();
-    registerSwipeListener();
-    eventSource.on(event_types.APP_READY, resetWithNewData);
-    eventSource.on(event_types.CHAT_CHANGED, updateChatData);
-    eventSource.on(event_types.CHAT_DELETED, updateChatData);
-    eventSource.on(event_types.CHAT_CREATED, updateChatData);
-    eventSource.on(event_types.SETTINGS_UPDATED, handleSettingsUpdate);
-
-    return () => {
-      const body = $('body');
-      if (body) {
-        body.off('pointerdown touchstart');
-        body.off('pointermove touchmove');
-        body.off('touchend touchcancel pointerup');
-      }
-
-      eventSource.removeListener(event_types.APP_READY, resetWithNewData);
-      eventSource.removeListener(event_types.CHAT_CHANGED, updateChatData);
-      eventSource.removeListener(event_types.CHAT_DELETED, updateChatData);
-      eventSource.removeListener(event_types.CHAT_CREATED, updateChatData);
-      eventSource.removeListener(
-        event_types.SETTINGS_UPDATED,
-        handleSettingsUpdate,
-      );
-    };
-  }, []);
-
-  const handleSettingsUpdate = () => {
-    // Also called when window resizes
-    // Ensure sidebar is open on large screens
-    if (window.innerWidth > 1000 && !state.open) {
-      setOpen(true);
-    }
-  };
-
-  const updateChatData = async () => {
-    const { characterId, groupId } = SillyTavern.getContext();
-    let chats: Chat[] = [];
-
-    try {
-      if (groupId !== null) {
-        chats = await getGroupPastChats(groupId.toString());
-      } else if (
-        typeof characterId !== 'undefined' &&
-        parseInt(characterId) >= 0
-      ) {
-        chats = await getPastCharacterChats();
-      } else {
-        const entities = getEntitiesList({ doFilter: true, doSort: true });
-        chats = await getRecentChats(entities);
-      }
-    } catch (error) {
-      console.error('Error updating chat data:', error);
-      chats = [];
-    }
-
-    setState((prevState) => ({ ...prevState, chats: chats ?? [] }));
-  };
-
-  const registerSwipeListener = () => {
-    const THRESHOLD = 100;
-    const body = $('body');
-    if (!body) return;
-
-    let touchStartX: number = 0;
-    let touchEndX: number = 0;
-
-    body.on('pointerdown', (e) => {
-      touchStartX = e.clientX ?? 0;
-    });
-
-    body.on('pointermove', (e) => {
-      touchEndX = e.clientX ?? 0;
-    });
-    body.on('touchstart', (e) => {
-      touchStartX = e.originalEvent?.touches[0]?.clientX ?? 0;
-    });
-
-    body.on('touchmove', (e) => {
-      touchEndX = e.originalEvent?.touches[0]?.clientX ?? 0;
-    });
-
-    body.on('touchend pointerup', () => {
-      if (touchStartX === 0 || touchEndX === 0) return;
-
-      if (touchEndX > touchStartX + THRESHOLD) {
-        // Swipe right
-        setOpen(true);
-      } else if (touchEndX < touchStartX - THRESHOLD) {
-        // Swipe left
-        if (window.innerWidth > 1000) return;
-        setOpen(false);
-      }
-    });
-  };
-
-  const processMenuIcons = () => {
-    const settingsHolder = $('#top-settings-holder');
-    if (!settingsHolder) return null;
-
-    const icons: Icon[] = [];
-    settingsHolder.children().each((_, el) => {
-      const jEl = $(el);
-      const id = `#${jEl.attr('id')}`;
-      const infoEl = jEl.find('.drawer-icon');
-      icons.push({
-        className: infoEl.attr('class') || '',
-        // Background Options are special.
-        title:
-          infoEl.attr('title') ||
-          jEl.find('.drawer-toggle').attr('title') ||
-          '',
-        showInProfile: !channelMenu.some((item) => item.id === id),
-        id: id,
-      });
-    });
-    settingsHolder.attr('style', 'display: none !important;');
-    setState((prevState) => ({ ...prevState, icons }));
-  };
-
-  const setOpen = (value: boolean) => {
-    setState((prevState) => ({ ...prevState, open: value }));
-  };
-
-  const resetWithNewData = async () => {
-    const entities = getEntitiesList({ doFilter: true, doSort: true });
-    const chats = await getRecentChats(entities);
-
-    setState((prevState) => ({ ...prevState, chats, entities, open: true }));
-  };
+const SideBar = ({ open, setOpen, entities, chats, icons }: SideBarProps) => {
+  const memoizedEntities = React.useMemo(() => entities, [entities]);
+  const memoizedChats = React.useMemo(() => chats, [chats]);
+  const memoizedIcons = React.useMemo(() => icons, [icons]);
 
   const { characterId, groupId } = SillyTavern.getContext();
+  const title = characterId || groupId ? 'Chats' : 'Recent Chats';
+
   return (
     <div
       id="sidebar-container"
-      className={`fixed top-0 left-0 h-full  transition-transform duration-150 ease-in-out ${
-        state.open ? 'translate-x-0' : '-translate-x-full'
+      className={`fixed top-0 left-0 h-full z-50 transition-transform duration-150 ease-in-out ${
+        open ? 'translate-x-0' : '-translate-x-full'
       }`}
     >
       <div id="server-container">
-        <ServerBar entities={state.entities} />
+        <ServerBar entities={memoizedEntities} />
         <ChannelBar
-          title={characterId || groupId ? 'Chats' : 'Recent Chats'}
-          icons={state.icons}
-          chats={state.chats}
+          title={title}
+          icons={memoizedIcons}
+          chats={memoizedChats}
           setOpen={setOpen}
         />
       </div>
       <div id="user-container">
-        <ProfileMount avatar={null} icons={state.icons} />
+        <ProfileMount avatar={null} icons={memoizedIcons} />
       </div>
     </div>
   );

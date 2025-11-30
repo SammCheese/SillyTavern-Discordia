@@ -3,15 +3,19 @@ import { makeReactGroupAvatar } from '../../utils/utils';
 
 const { getThumbnailUrl } = await imports('@script');
 
+interface ServerIconProps {
+  entity: Entity;
+  isSelected: boolean;
+  onSelect?: (entity: Entity, index: number) => void;
+  index: number;
+}
+
 const ServerIcon = ({
   entity,
   isSelected,
   onSelect,
-}: {
-  entity: Entity;
-  isSelected: boolean;
-  onSelect?: (id: string) => void;
-}) => {
+  index,
+}: ServerIconProps) => {
   const [hovered, setHovered] = React.useState(false);
 
   // Precaution
@@ -22,9 +26,7 @@ const ServerIcon = ({
         setHovered(false);
       }, 3000);
     }
-    return () => {
-      if (hoverTimeout) clearTimeout(hoverTimeout);
-    };
+    return () => clearTimeout(hoverTimeout);
   }, [hovered]);
 
   // Memoize group avatar to avoid unnecessary re-renders
@@ -34,6 +36,12 @@ const ServerIcon = ({
     }
     return null;
   }, [entity]);
+
+  const handleClick = () => {
+    if (onSelect) {
+      onSelect(entity, index);
+    }
+  };
 
   return (
     <div className="flex m-0 relative w-full h-fit">
@@ -47,6 +55,7 @@ const ServerIcon = ({
           }
         ></span>
       </div>
+
       <div
         onMouseEnter={() => {
           setHovered(true);
@@ -54,6 +63,7 @@ const ServerIcon = ({
         onMouseLeave={() => {
           setHovered(false);
         }}
+        onClick={handleClick}
         className="cursor-pointer w-full h-fit flex justify-center items-center"
       >
         {entity.type === 'group' ? (
@@ -65,7 +75,6 @@ const ServerIcon = ({
               isSelected ? 'outline' : ''
             }`}
             src={getThumbnailUrl('avatar', entity.item?.avatar || entity.id)}
-            onClick={() => onSelect && onSelect(entity.id.toString())}
           />
         )}
       </div>

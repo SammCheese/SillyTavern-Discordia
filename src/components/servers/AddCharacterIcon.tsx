@@ -38,4 +38,6 @@ const AddCharacterIcon = ({
   );
 };
 
-export default AddCharacterIcon;
+const MemoizedAddCharacterIcon = React.memo(AddCharacterIcon);
+
+export default MemoizedAddCharacterIcon;

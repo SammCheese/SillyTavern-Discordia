@@ -1,12 +1,12 @@
 import React from 'react';
 import { PageContext } from '../../providers/pageProvider';
+import ProfilePersona from './ProfilePersona';
 
 const UserSettings = React.lazy(
   () => import('../../pages/settings/user/UserSettings'),
 );
 
-const { getThumbnailUrl, name1, user_avatar, eventSource, event_types } =
-  await imports('@script');
+const { name1, eventSource, event_types } = await imports('@script');
 
 const ProfileMount = ({
   avatar,
@@ -57,30 +57,7 @@ const ProfileMount = ({
 
   return (
     <div id="user-profile-container">
-      <div id="user-avatar">
-        <img
-          loading="lazy"
-          id="discordia-avatar"
-          src={getThumbnailUrl(
-            'persona',
-            avatar || user_avatar || 'user-default.png',
-          )}
-          style={{
-            width: '40px',
-            height: '40px',
-            borderRadius: '50%',
-            objectFit: 'cover',
-            cursor: 'pointer',
-          }}
-          alt="User Avatar"
-        />
-      </div>
-
-      <div id="user-info">
-        {' '}
-        <div id="user-name">{name1}</div>
-        <div id="user-status"></div>
-      </div>
+      <ProfilePersona name={name1} avatar={avatar} />
       <div id="user-settings-buttons">
         {icons
           ?.filter((i) => i.showInProfile)
@@ -94,7 +71,7 @@ const ProfileMount = ({
               }
               icon={icon}
               key={index}
-              onClick={() => handleIconClick(icon)}
+              onClick={handleIconClick}
             />
           ))}
       </div>
@@ -104,17 +81,21 @@ const ProfileMount = ({
 
 const ProfileIcon = ({
   icon,
-  key,
   onClick,
   enabled = true,
 }: {
   icon: Icon;
-  key: string | number;
-  onClick: () => void;
+  onClick: (icon: Icon) => void;
   enabled?: boolean;
 }) => {
   // connection thing is a special cookie
   const isPlugIcon = icon.className.includes('fa-plug');
+
+  const handleClick = () => {
+    if (enabled) {
+      onClick(icon);
+    }
+  };
 
   if (isPlugIcon) {
     return (
@@ -127,8 +108,7 @@ const ProfileIcon = ({
             : `${icon.className}`
         }
         title={icon.title}
-        key={key}
-        onClick={onClick}
+        onClick={handleClick}
       />
     );
   } else {
@@ -136,11 +116,10 @@ const ProfileIcon = ({
       <div
         className={icon.className}
         title={icon.title}
-        key={key}
-        onClick={onClick}
+        onClick={handleClick}
       />
     );
   }
 };
 
-export default ProfileMount;
+export default React.memo(ProfileMount);

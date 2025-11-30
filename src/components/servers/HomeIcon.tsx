@@ -32,4 +32,4 @@ const HomeIcon = ({ onClick }: { onClick?: (() => void) | undefined }) => {
   );
 };
 
-export default HomeIcon;
+export default React.memo(HomeIcon);

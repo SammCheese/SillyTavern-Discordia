@@ -1,19 +1,20 @@
-import React from "react";
+import React from 'react';
 
+interface SearchBarProps {
+  onInput: (query: string) => void;
+}
 
-const SearchBar = ({ onSearch }: { onSearch: (query: string) => void }) => {
-  const [query, setQuery] = React.useState("");
+const SearchBar = ({ onInput }: SearchBarProps) => {
+  const [query, setQuery] = React.useState('');
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newQuery = e.target.value;
     setQuery(newQuery);
-    onSearch(newQuery);
+    onInput(newQuery);
   };
 
   return (
-    <div id="search-bar-container"
-      className="p-1 mx-2 flex content-center"
-    >
+    <div id="search-bar-container" className="p-1 mx-2 flex content-center">
       <div></div>
       <input
         type="text"
@@ -25,6 +26,6 @@ const SearchBar = ({ onSearch }: { onSearch: (query: string) => void }) => {
       />
     </div>
   );
-}
+};
 
-export default SearchBar;
+export default React.memo(SearchBar);

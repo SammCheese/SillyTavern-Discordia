@@ -17,7 +17,6 @@
   }
 }
 
-// Mobile styles
 @media (max-width: 600px) {
   :root {
     --sidebar-width: 100dvw;

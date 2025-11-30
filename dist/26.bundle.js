@@ -1,0 +1,2 @@
+"use strict";(self.webpackChunkst_discordia=self.webpackChunkst_discordia||[]).push([[26],{26:(e,c,t)=>{t.r(c),t.d(c,{default:()=>s});var a=t(363);const s=({label:e,checked:c,onChange:t})=>a.createElement("label",{className:"inline-flex items-center cursor-pointer"},a.createElement("input",{type:"checkbox",className:"form-checkbox h-5 w-5 text-blue-600",checked:c,onChange:e=>{t(e.target.checked)}}),a.createElement("span",{className:"ml-2 text-gray-200"},e))}}]);
+//# sourceMappingURL=26.bundle.js.map
