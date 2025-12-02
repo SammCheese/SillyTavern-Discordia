@@ -12,6 +12,13 @@ const PATH_MAP: Record<string, string> = {
   '@scripts/powerUser': '../../../../power-user.js',
   '@scripts/extensions': '../../../../extensions.js',
   '@scripts/worldInfo': '../../../../world-info.js',
+  '@scripts/naiSettings': '../../../../nai-settings.js',
+  '@scripts/openai': '../../../../openai.js',
+  '@scripts/kaiSettings': '../../../../kai-settings.js',
+  '@scripts/horde': '../../../../horde.js',
+  "@scripts/textGenSettings": "../../../../textgen-settings.js",
+  "@scripts/presetManager": "../../../../preset-manager.js",
+  "@scripts/secrets": "../../../../secrets.js",
 };
 
 export const  imports = async <T = any>(mod: string): Promise<T> => {

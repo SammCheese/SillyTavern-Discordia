@@ -1,2 +1,2 @@
-"use strict";(self.webpackChunkst_discordia=self.webpackChunkst_discordia||[]).push([[122],{122:(e,a,s)=>{s.r(a),s.d(a,{default:()=>l});var t=s(363);const l=({width:e="w-full",className:a=""})=>t.createElement(t.Fragment,null,t.createElement("div",{style:{backgroundColor:"rgba(255, 255, 255, 0.1)"},className:`${e} h-px my-2 ml-auto mr-auto ${a}`}))}}]);
+export const __webpack_esm_id__=122;export const __webpack_esm_ids__=[122];export const __webpack_esm_modules__={122:(e,_,t)=>{t.r(_),t.d(_,{default:()=>s});var a=t(363);const s=({width:e="w-full",className:_=""})=>a.createElement(a.Fragment,null,a.createElement("div",{style:{backgroundColor:"rgba(255, 255, 255, 0.1)"},className:`${e} h-px my-2 ml-auto mr-auto ${_}`}))}};
 //# sourceMappingURL=122.bundle.js.map

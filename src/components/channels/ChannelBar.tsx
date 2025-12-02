@@ -6,13 +6,25 @@ import { List } from 'react-window';
 
 const Divider = React.lazy(() => import('../common/Divider/Divider'));
 const ChannelEntry = lazy(() => import('./ChannelEntry'));
-const SearchBar = lazy(() => import('../search/search'));
+const SearchBar = lazy(() => import('../common/search/search'));
 
 const ExtensionSettings = lazy(
   () => import('../../pages/settings/extensions/ExtensionSettings'),
 );
 const WorldInfoSettings = lazy(
   () => import('../../pages/settings/worldinfo/WorldInfoSettings'),
+);
+const AppearanceSettings = lazy(
+  () => import('../../pages/settings/appearance/AppearanceSettings'),
+);
+const PersonaSettings = lazy(
+  () => import('../../pages/settings/persona/PersonaSettings'),
+);
+const CharacterSettings = lazy(
+  () => import('../../pages/settings/character/CharacterSettings'),
+);
+const FormattingSettings = lazy(
+  () => import('../../pages/settings/formatting/FormattingSettings'),
 );
 
 const { closeCurrentChat, openCharacterChat } = await imports('@script');
@@ -35,11 +47,23 @@ const ChannelBar = ({
     (icon: Icon) => {
       const id = icon.id;
       switch (id) {
+        case '#advanced-formatting-button':
+          openPage(<FormattingSettings />);
+          break;
         case '#extensions-settings-button':
           openPage(<ExtensionSettings />);
           break;
         case '#WI-SP-button':
           openPage(<WorldInfoSettings />);
+          break;
+        case '#backgrounds-button':
+          openPage(<AppearanceSettings />);
+          break;
+        case '#persona-management-button':
+          openPage(<PersonaSettings />);
+          break;
+        case '#rightNavHolder':
+          openPage(<CharacterSettings />);
           break;
         default:
           console.log(`No action defined for icon with id: ${id}`);
@@ -114,9 +138,15 @@ const ChannelBar = ({
     );
   };
 
+  const handleSearchInput = React.useCallback((query: string) => {
+    console.log('Search query:', query);
+  }, []);
+
+  const chatsMemo = React.useMemo(() => chats, [chats]);
+
   return (
     <div id="channel-container" className="px-1">
-      <SearchBar onInput={() => {}} />
+      <SearchBar onInput={handleSearchInput} />
       <Divider />
       <div id="channel-header">
         <div id="channel-icons-container">
@@ -133,17 +163,17 @@ const ChannelBar = ({
       <div className="section-header">{title}</div>
       <div id="channel-list">
         <div id="channels-list-container">
-          {chats.length > 50 ? (
+          {chatsMemo.length > 50 ? (
             <List
               rowComponent={Row}
-              rowCount={chats.length}
+              rowCount={chatsMemo.length}
               rowHeight={48}
               rowProps={{}}
               overscanCount={5}
               style={{ width: '100%' }}
             />
           ) : (
-            chats.map((chat, index) => (
+            chatsMemo.map((chat, index) => (
               <ChannelEntry
                 chat={chat}
                 key={index}

@@ -37,7 +37,7 @@ const SideBar = ({ open, setOpen, entities, chats, icons }: SideBarProps) => {
         />
       </div>
       <div id="user-container">
-        <ProfileMount avatar={null} icons={memoizedIcons} />
+        <ProfileMount icons={memoizedIcons} />
       </div>
     </div>
   );

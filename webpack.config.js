@@ -11,6 +11,7 @@ module.exports = {
   entry: path.join(__dirname, 'src/index.tsx'),
   devtool: 'source-map',
   output: {
+    module: true,
     clean: true,
     path: path.join(__dirname, 'dist/'),
     filename: 'bundle.js',
@@ -20,6 +21,7 @@ module.exports = {
   },
   experiments: {
     topLevelAwait: true,
+    outputModule: true,
   },
   module: {
     rules: [

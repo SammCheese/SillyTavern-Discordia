@@ -40,5 +40,5 @@
     "allowJs": true,
     "checkJs": false
   },
-  "include": ["./src/**/*", "global.d.ts"]
+  "include": ["./src/**/*", "./global.d.ts"]
 }

@@ -1,0 +1,2 @@
+export const __webpack_esm_id__=71;export const __webpack_esm_ids__=[71];export const __webpack_esm_modules__={71:(e,t,s)=>{s.a(e,async(e,a)=>{try{s.r(t),s.d(t,{default:()=>i});var c=s(363),_=s(257).V;const e=c.lazy(()=>s.e(468).then(s.bind(s,468))),{saveSettingsDebounced:n}=await _("@script"),i=()=>(c.useEffect(()=>()=>{n()},[]),c.createElement(e,{title:"Character Settings"},c.createElement("div",{className:"settings-section"})));a()}catch(e){a(e)}},1)}};
+//# sourceMappingURL=71.bundle.js.map

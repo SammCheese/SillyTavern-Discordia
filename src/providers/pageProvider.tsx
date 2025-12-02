@@ -18,11 +18,19 @@ export function PageProvider({ children }: { children: React.ReactNode }) {
   const [isVisible, setIsVisible] = React.useState<boolean>(false);
 
   const openPage = useCallback((page: React.ReactNode) => {
+    setIsVisible(false);
     setContent(page);
-    requestAnimationFrame(() => {
-      setIsVisible(true);
-    });
   }, []);
+
+  React.useEffect(() => {
+    if (content) {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          setIsVisible(true);
+        });
+      });
+    }
+  }, [content]);
 
   const closePage = useCallback(() => {
     setIsVisible(false);

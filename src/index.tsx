@@ -4,8 +4,15 @@ import { PageProvider } from './providers/pageProvider';
 
 const App = React.lazy(() => import('./App'));
 
+const { main_api } = await imports('@script');
+
 // @ts-expect-error Styles Import
 import './styles.css';
+
+// Initialize My window prop
+window.discordia = {
+  main_api: main_api,
+};
 
 // Insert sidebar before top bar
 const topBar = document.getElementById('top-bar');

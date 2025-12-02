@@ -7,7 +7,7 @@ const Accordion = React.lazy(
   () => import('../../../components/common/Accordion/Accordion'),
 );
 const Toggle = React.lazy(
-  () => import('../../../components/common/Toggle/Toggle'),
+  () => import('../../../components/common/Switch/Switch'),
 );
 const SettingsFrame = React.lazy(() => import('../base/Base'));
 
@@ -44,29 +44,33 @@ interface ExtensionList {
   system: ExtensionInfo[];
 }
 
-const ExtensionAccordion: React.FC<{ extension: ExtensionInfo }> = ({
-  extension,
-}: {
-  extension: ExtensionInfo;
-}) => {
-  return (
-    <Accordion title={`${extension.name}`} isOpen={false} onToggle={() => {}}>
-      <div className="p-4 flex items-center justify-between">
-        <label htmlFor={`${extension.name}-enabled`}> Enabled </label>
-        <Toggle
-          isOn={!extension.disabled}
-          handleToggle={() => {
-            if (extension.disabled) {
-              enableExtension(extension.name);
-            } else {
-              disableExtension(extension.name);
-            }
-          }}
-        />
-      </div>
-    </Accordion>
-  );
-};
+const ExtensionAccordion: React.FC<{ extension: ExtensionInfo }> = React.memo(
+  function ExtensionAccordion({ extension }: { extension: ExtensionInfo }) {
+    const makeExtensionName = React.useCallback(() => {
+      return extension.name
+        .replace('third-party/', '')
+        .replace(/\//g, '_')
+        .replace(/\b\w/g, (c) => c.toUpperCase());
+    }, [extension.name]);
+
+    const toggleExtension = React.useCallback(() => {
+      if (extension.disabled) {
+        enableExtension(extension.name);
+      } else {
+        disableExtension(extension.name);
+      }
+    }, [extension.name, extension.disabled]);
+
+    return (
+      <Accordion title={makeExtensionName()} isOpen={false} onToggle={() => {}}>
+        <div className="p-4 flex items-center justify-between">
+          <label htmlFor={`${extension.name}-enabled`}> Enabled </label>
+          <Toggle isOn={!extension.disabled} handleToggle={toggleExtension} />
+        </div>
+      </Accordion>
+    );
+  },
+);
 
 const ExtensionSettings = () => {
   const [extensions, setExtensions] = React.useState<ExtensionList>({
@@ -79,24 +83,19 @@ const ExtensionSettings = () => {
     const disabledExtensions: string[] = extension_settings.disabledExtensions;
     discoverExtensions().then((exts) => {
       const categorized: ExtensionList = { local: [], global: [], system: [] };
-      exts.forEach((ext) => {
-        if (ext.type === 'local') {
-          categorized.local.push({
+      Object.values(exts)
+        .flat()
+        .forEach((ext) => {
+          if (!categorized[ext.type]) {
+            categorized[ext.type] = [];
+          }
+
+          categorized[ext.type].push({
             ...ext,
             disabled: disabledExtensions.includes(ext.name),
           });
-        } else if (ext.type === 'global') {
-          categorized.global.push({
-            ...ext,
-            disabled: disabledExtensions.includes(ext.name),
-          });
-        } else if (ext.type === 'system') {
-          categorized.system.push({
-            ...ext,
-            disabled: disabledExtensions.includes(ext.name),
-          });
-        }
-      });
+        });
+
       setExtensions(categorized);
     });
 

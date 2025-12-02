@@ -42,7 +42,7 @@ const SettingsFrame = ({
   return (
     <div
       onClick={(e) => e.stopPropagation()}
-      className="w-full h-full p-[5%] bg-gray-800 text-white"
+      className="w-full h-full p-[5%] bg-base-discordia text-white"
     >
       <div className="settings-header flex justify-between items-center p-4 mb-4 border-b border-gray-700">
         <h2 className="text-3xl font-semibold">{title}</h2>

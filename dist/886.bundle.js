@@ -1,2 +1,0 @@
-"use strict";(self.webpackChunkst_discordia=self.webpackChunkst_discordia||[]).push([[886],{886:(e,t,a)=>{a.r(t),a.d(t,{default:()=>c});var n=a(363);const c=n.memo(({onInput:e})=>{const[t,a]=n.useState("");return n.createElement("div",{id:"search-bar-container",className:"p-1 mx-2 flex content-center"},n.createElement("div",null),n.createElement("input",{type:"text",id:"search-input",placeholder:"Search...",className:"p-1 rounded-lg w-full pl-4",value:t,onChange:t=>{const n=t.target.value;a(n),e(n)}}))})}}]);
-//# sourceMappingURL=886.bundle.js.map

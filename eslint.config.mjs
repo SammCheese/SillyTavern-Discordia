@@ -2,7 +2,7 @@
 import eslint from '@eslint/js';
 import prettier from 'eslint-config-prettier/flat';
 import react from 'eslint-plugin-react';
-import { defineConfig } from 'eslint/config';
+import { defineConfig, globalIgnores } from 'eslint/config';
 import tseslint from 'typescript-eslint';
 
 export default defineConfig(
@@ -16,12 +16,7 @@ export default defineConfig(
       react: {
         version: 'detect',
       },
-      env: {
-        browser: true,
-        es2021: true,
-        node: true,
-      },
     },
-    ignores: ['dist/**', 'node_modules/**', '**/*.config.js', '**/*.json'],
   },
+  [globalIgnores(['dist/**', 'node_modules/**', '*.config.js', '**/*.json'])],
 );

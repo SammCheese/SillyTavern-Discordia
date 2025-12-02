@@ -5,19 +5,25 @@ import ProfilePersona from './ProfilePersona';
 const UserSettings = React.lazy(
   () => import('../../pages/settings/user/UserSettings'),
 );
+const SamplerSettings = React.lazy(
+  () => import('../../pages/settings/samplers/SamplerSettings'),
+);
+const ConnectionSettings = React.lazy(
+  () => import('../../pages/settings/connection/ConnectionSettings'),
+);
 
 const { name1, eventSource, event_types } = await imports('@script');
 
 const ProfileMount = ({
-  avatar,
-  icons,
+  avatar = null,
+  icons = null,
 }: {
-  avatar: string | null;
-  icons: Icon[] | null;
+  avatar?: string | null;
+  icons?: Icon[] | null;
 }) => {
   const [connStatus, setConnStatus] = React.useState<string>('no_connection');
 
-  const pageContext = React.useContext(PageContext);
+  const { openPage } = React.useContext(PageContext);
 
   React.useEffect(() => {
     eventSource.on(event_types.ONLINE_STATUS_CHANGED, handleConnectionChange);
@@ -42,18 +48,22 @@ const ProfileMount = ({
     const id = icon.id;
     switch (id) {
       case '#user-settings-button':
-        pageContext.openPage(<UserSettings />);
+        openPage(<UserSettings />);
         break;
       case '#ai-config-button':
-        console.log('AI Config Button Clicked');
+        openPage(<SamplerSettings />);
         break;
       case '#sys-settings-button':
-        console.log('System Settings Button Clicked');
+        openPage(<ConnectionSettings />);
         break;
       default:
         console.log(`No action defined for icon with id: ${id}`);
     }
   };
+
+  const isApiConnected = React.useMemo(() => {
+    return connStatus === 'online';
+  }, [connStatus]);
 
   return (
     <div id="user-profile-container">
@@ -63,12 +73,7 @@ const ProfileMount = ({
           ?.filter((i) => i.showInProfile)
           ?.map((icon, index) => (
             <ProfileIcon
-              enabled={
-                icon.className.includes('fa-plug') &&
-                connStatus === 'no_connection'
-                  ? false
-                  : true
-              }
+              apiConnected={isApiConnected}
               icon={icon}
               key={index}
               onClick={handleIconClick}
@@ -79,20 +84,24 @@ const ProfileMount = ({
   );
 };
 
+interface ProfileIconProps {
+  icon: Icon;
+  onClick: (icon: Icon) => void;
+  apiConnected?: boolean;
+  enabled?: boolean;
+}
+
 const ProfileIcon = ({
   icon,
   onClick,
+  apiConnected = false,
   enabled = true,
-}: {
-  icon: Icon;
-  onClick: (icon: Icon) => void;
-  enabled?: boolean;
-}) => {
+}: ProfileIconProps) => {
   // connection thing is a special cookie
   const isPlugIcon = icon.className.includes('fa-plug');
 
   const handleClick = () => {
-    if (enabled) {
+    if (onClick && enabled) {
       onClick(icon);
     }
   };
@@ -101,7 +110,7 @@ const ProfileIcon = ({
     return (
       <div
         className={
-          enabled
+          apiConnected
             ? icon.className
                 .replace('fa-plug-circle-exclamation', 'fa-plug')
                 .replace('redOverlayGlow', '')
