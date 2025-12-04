@@ -24,3 +24,13 @@ type Chat = {
   group?: string;
 };
 
+
+type ConnectAPIMap = {
+    selected: string;
+    button?: string | null;
+    type?: string | null;
+    source?: string | null;
+}
+
+
+

@@ -1,199 +1,162 @@
-import React from 'react';
-import { List } from 'react-virtualized';
+import React, { useCallback, useEffect, useMemo } from 'react';
+import { List, type RowComponentProps } from 'react-window';
 import { selectCharacter, selectGroup } from '../../utils/utils';
+import { useSearch } from '../../context/SearchContext';
 
-const MemoizedServerIcon = React.lazy(() => import('./ServerIcon'));
+const ServerIcon = React.lazy(() => import('./ServerIcon'));
+const AddCharacterIcon = React.lazy(() => import('./AddCharacterIcon'));
+const HomeIcon = React.lazy(() => import('./HomeIcon'));
 
 //const { openWelcomeScreen } = await imports('@scripts/welcomeScreen');
 const { getGroupPastChats } = await imports('@scripts/groupChats');
 const { getPastCharacterChats, characters, closeCurrentChat } =
   await imports('@script');
 
-const HomeIcon = ({ onClick }: { onClick?: (() => void) | undefined }) => {
-  const handleClick = () => {
-    if (onClick) {
-      onClick();
-    }
+const ServerRow = React.memo(
+  function ServerRow({
+    entity,
+    index,
+    isSelected,
+    style,
+    onClick,
+  }: {
+    entity: Entity;
+    index: number;
+    isSelected: boolean;
+    style: React.CSSProperties;
+    onClick: (entity: Entity, index: number) => void;
+  }) {
+    return (
+      <div
+        style={style}
+        className="discord-entity-item character-button w-full h-fit flex justify-center py-1"
+        id={`character-button-${entity.id}`}
+        title={entity.item?.name || entity.id}
+      >
+        <ServerIcon
+          entity={entity}
+          index={index}
+          isSelected={isSelected}
+          onSelect={onClick}
+        />
+      </div>
+    );
+  },
+  (prevProps, nextProps) => {
+    return (
+      prevProps.entity === nextProps.entity &&
+      prevProps.isSelected === nextProps.isSelected &&
+      prevProps.onClick === nextProps.onClick
+    );
+  },
+);
+
+interface RowData {
+  data: {
+    entities: Entity[];
+    selectedIndex: number | null;
+    handleItemClick: (entity: Entity, index: number) => void;
   };
-  return (
-    <div
-      className="discord-entity-item avatar home-button"
-      id="home-button"
-      title="Home"
-      onClick={handleClick}
-    >
-      <svg
-        aria-hidden="true"
-        width="32"
-        height="32"
-        role="img"
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        viewBox="0 0 24 24"
+}
+
+const Row = ({ index, style, data }: RowComponentProps<RowData>) => {
+  const { entities, selectedIndex, handleItemClick } = data;
+  const entity = entities[index];
+
+  if (!entity) {
+    return (
+      <div
+        style={style}
+        className="discord-entity-item character-button w-full h-fit flex justify-center py-1"
       >
-        <path
-          fill="currentColor"
-          d="M19.73 4.87a18.2 18.2 0 0 0-4.6-1.44c-.21.4-.4.8-.58 1.21-1.69-.25-3.4-.25-5.1 0-.18-.41-.37-.82-.59-1.2-1.6.27-3.14.75-4.6 1.43A19.04 19.04 0 0 0 .96 17.7a18.43 18.43 0 0 0 5.63 2.87c.46-.62.86-1.28 1.2-1.98-.65-.25-1.29-.55-1.9-.92.17-.12.32-.24.47-.37 3.58 1.7 7.7 1.7 11.28 0l.46.37c-.6.36-1.25.67-1.9.92.35.7.75 1.35 1.2 1.98 2.03-.63 3.94-1.6 5.64-2.87.47-4.87-.78-9.09-3.3-12.83ZM8.3 15.12c-1.1 0-2-1.02-2-2.27 0-1.24.88-2.26 2-2.26s2.02 1.02 2 2.26c0 1.25-.89 2.27-2 2.27Zm7.4 0c-1.1 0-2-1.02-2-2.27 0-1.24.88-2.26 2-2.26s2.02 1.02 2 2.26c0 1.25-.88 2.27-2 2.27Z"
-          className=""
-        ></path>
-      </svg>
-    </div>
+        <AddCharacterIcon onClick={() => {}} />
+      </div>
+    );
+  }
+
+  return (
+    <ServerRow
+      index={index}
+      entity={entity}
+      style={style}
+      isSelected={selectedIndex === index}
+      onClick={handleItemClick}
+    />
   );
 };
 
-const AddCharacterIcon = ({
-  onClick,
-}: {
-  onClick: (() => void) | undefined;
-}) => {
-  return (
-    <div
-      className="discord-entity-item avatar new-character-button"
-      id="new-character-button"
-      title="Add Character"
-      onClick={() => {
-        if (onClick) {
-          onClick();
-        }
-      }}
-    >
-      <svg
-        aria-hidden="true"
-        role="img"
-        xmlns="http://www.w3.org/2000/svg"
-        width="24"
-        height="24"
-        fill="none"
-        viewBox="0 0 24 24"
-      >
-        <circle cx="12" cy="12" r="10" fill="transparent" className=""></circle>
-        <path
-          fill="currentColor"
-          fillRule="evenodd"
-          d="M12 23a11 11 0 1 0 0-22 11 11 0 0 0 0 22Zm0-17a1 1 0 0 1 1 1v4h4a1 1 0 1 1 0 2h-4v4a1 1 0 1 1-2 0v-4H7a1 1 0 1 1 0-2h4V7a1 1 0 0 1 1-1Z"
-          clipRule="evenodd"
-          className=""
-        ></path>
-      </svg>
-    </div>
-  );
-};
-
-const Serverbar = ({ entities }: { entities: Entity[] }) => {
+const ServerBar = ({ entities }: { entities: Entity[] }) => {
   const [selectedIndex, setSelectedIndex] = React.useState<number | null>(null);
+  const { searchQuery } = useSearch();
 
-  const onHomeClickHandler = async () => {
+  const onHomeClickHandler = useCallback(async () => {
     setSelectedIndex(null);
     await closeCurrentChat();
-  };
+  }, []);
 
-  const handleCharacterSelect = async (entity: Entity) => {
+  const handleItemClick = useCallback(async (entity: Entity, index: number) => {
+    setSelectedIndex(index);
     try {
-      const char_id = characters.findIndex(
-        (c) => c.avatar === entity?.item?.avatar,
-      );
-      if (char_id === -1) {
-        console.error('Character not found for entity:', entity);
-        return;
-      }
+      if (entity.type === 'group') {
+        const groupId = entity.id.toString();
+        const group = SillyTavern.getContext().groups.find(
+          (g) => g.id.toString() === groupId,
+        );
 
-      await closeCurrentChat();
+        if (!group) return;
 
-      getPastCharacterChats(char_id).then(async (chats) => {
-        await selectCharacter(char_id, chats[0]?.file_id);
-      });
-    } catch (error) {
-      console.error('Error selecting character:', error);
-    }
-  };
-
-  const handleGroupSelect = async (entity: Entity) => {
-    try {
-      const groupId = entity.id.toString();
-      const group = SillyTavern.getContext().groups.find(
-        (g) => g.id.toString() === groupId,
-      );
-
-      if (!group) {
-        console.error('Group not found for entity:', entity);
-        return;
-      }
-
-      await closeCurrentChat();
-
-      getGroupPastChats(groupId).then(async (chats) => {
+        await closeCurrentChat();
+        const chats = await getGroupPastChats(groupId);
         await selectGroup({ group: entity, chat_id: chats[0]?.file_id });
-      });
-    } catch (error) {
-      console.error('Error selecting group:', error);
-    }
-  };
+      } else {
+        const char_id = characters.findIndex(
+          (c) => c.avatar === entity?.item?.avatar,
+        );
+        if (char_id === -1) return;
 
-  React.useEffect(() => {
+        await closeCurrentChat();
+        const chats = await getPastCharacterChats(char_id);
+        await selectCharacter(char_id, chats[0]?.file_id);
+      }
+    } catch (error) {
+      console.error('Error selecting entity:', error);
+    }
+  }, []);
+
+  useEffect(() => {
     const { characterId, groupId } = SillyTavern.getContext();
-    let indexToSelect: number | null = null;
 
     if (groupId !== null && typeof groupId !== 'undefined') {
-      const groupIndex = entities.findIndex(
+      const idx = entities.findIndex(
         (e) => e.type === 'group' && e.id.toString() === groupId.toString(),
       );
-      indexToSelect = groupIndex !== -1 ? groupIndex : null;
+      setSelectedIndex(idx !== -1 ? idx : null);
     } else if (
       typeof characterId !== 'undefined' &&
       parseInt(characterId) >= 0
     ) {
-      const charIndex = entities.findIndex(
+      const idx = entities.findIndex(
         (e) =>
           e.type === 'character' && e.id.toString() === characterId.toString(),
       );
-      indexToSelect = charIndex !== -1 ? charIndex : null;
+      setSelectedIndex(idx !== -1 ? idx : null);
     } else {
-      indexToSelect = null;
+      setSelectedIndex(null);
     }
-    setSelectedIndex(indexToSelect);
   }, [entities]);
 
-  // Virtualized list row renderer for Large number of entities
-  const rowRenderer = ({ index, key, style }: Parameters<typeof List>[0]) => {
-    const entity = entities[index];
+  const itemData = useMemo(
+    () => ({ entities, selectedIndex, handleItemClick }),
+    [entities, handleItemClick],
+  );
 
-    return entity ? (
-      <div
-        key={key}
-        style={style}
-        className="discord-entity-item character-button w-full h-fit"
-        id={`character-button-${entity?.id}`}
-        title={entity?.item?.name || entity?.id}
-        onClick={() => {
-          // Set selected Entity on Server Bar
-          setSelectedIndex(index);
-
-          if (entity?.type === 'group') {
-            handleGroupSelect(entity);
-            return;
-          } else {
-            handleCharacterSelect(entity);
-            return;
-          }
-        }}
-      >
-        <MemoizedServerIcon
-          entity={entity}
-          isSelected={selectedIndex === index}
-        />
-      </div>
-    ) : (
-      <div
-        key={key}
-        style={style}
-        className="w-full h-fit flex flex-col items-center"
-      >
-        <div id="characters-divider" className="divider"></div>
-
-        <AddCharacterIcon onClick={() => {}} />
-      </div>
-    );
-  };
+  const filteredEntities = useMemo(() => {
+    if (!searchQuery) return entities;
+    return entities.filter((entity) => {
+      const name = entity.item?.name || '';
+      return name.toLowerCase().includes(searchQuery.toLowerCase());
+    });
+  }, [entities, searchQuery]);
 
   return (
     <div id="character-container">
@@ -204,33 +167,21 @@ const Serverbar = ({ entities }: { entities: Entity[] }) => {
 
       <div id="characters-list" className="pt-0.5">
         {/* A little trickery in performance */}
-        {entities.length < 50 ? (
+        {filteredEntities.length < 50 ? (
           <>
-            {entities.map((entity, index) => (
-              <div
-                className="discord-entity-item character-button w-full h-fit"
-                id={`character-button-${entity.id}`}
-                title={entity.item?.name || entity.id}
-                key={index}
-                onClick={() => {
-                  // Set selected Entity on Server Bar
-                  setSelectedIndex(index);
-
-                  if (entity.type === 'group') {
-                    handleGroupSelect(entity);
-                    return;
-                  } else {
-                    handleCharacterSelect(entity);
-                    return;
-                  }
-                }}
-              >
-                <MemoizedServerIcon
+            {filteredEntities.map((entity) => {
+              const actualIndex = entities.indexOf(entity);
+              return (
+                <ServerRow
+                  key={entity.id.toString()}
                   entity={entity}
-                  isSelected={selectedIndex === index}
+                  index={actualIndex}
+                  isSelected={selectedIndex === actualIndex}
+                  onClick={handleItemClick}
+                  style={{}}
                 />
-              </div>
-            ))}
+              );
+            })}
 
             <div id="characters-divider" className="divider"></div>
 
@@ -238,13 +189,12 @@ const Serverbar = ({ entities }: { entities: Entity[] }) => {
           </>
         ) : (
           <List
-            width={80}
-            height={window.innerHeight - 120}
-            rowCount={entities.length + 1}
+            rowComponent={Row}
+            rowCount={filteredEntities.length + 1}
             rowHeight={60}
-            rowRenderer={rowRenderer}
-            overscanRowCount={5}
-            scrollToIndex={selectedIndex !== null ? selectedIndex : undefined}
+            rowProps={{ data: itemData }}
+            style={{ width: '100%' }}
+            overscanCount={5}
           />
         )}
       </div>
@@ -252,4 +202,4 @@ const Serverbar = ({ entities }: { entities: Entity[] }) => {
   );
 };
 
-export default Serverbar;
+export default React.memo(ServerBar);

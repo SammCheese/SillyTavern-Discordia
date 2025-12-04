@@ -1,38 +1,42 @@
-import React from 'react';
-import { makeReactGroupAvatar } from '../../utils/utils';
+import { memo, useEffect, useMemo, useState } from 'react';
+import GroupAvatar from '../groupAvatar/GroupAvatar';
 
 const { getThumbnailUrl } = await imports('@script');
+
+interface ServerIconProps {
+  entity: Entity;
+  isSelected: boolean;
+  onSelect?: (entity: Entity, index: number) => void;
+  index: number;
+}
 
 const ServerIcon = ({
   entity,
   isSelected,
   onSelect,
-}: {
-  entity: Entity;
-  isSelected: boolean;
-  onSelect?: (id: string) => void;
-}) => {
-  const [hovered, setHovered] = React.useState(false);
+  index,
+}: ServerIconProps) => {
+  const [hovered, setHovered] = useState(false);
 
   // Precaution
-  React.useEffect(() => {
+  useEffect(() => {
     let hoverTimeout: NodeJS.Timeout;
     if (hovered) {
       hoverTimeout = setTimeout(() => {
         setHovered(false);
       }, 3000);
     }
-    return () => {
-      if (hoverTimeout) clearTimeout(hoverTimeout);
-    };
+    return () => clearTimeout(hoverTimeout);
   }, [hovered]);
 
-  // Memoize group avatar to avoid unnecessary re-renders
-  const memoizedGroupAvatar = React.useMemo(() => {
-    if (entity.type === 'group') {
-      return makeReactGroupAvatar(entity.item);
+  const handleClick = () => {
+    if (onSelect) {
+      onSelect(entity, index);
     }
-    return null;
+  };
+
+  const memoizedSrc = useMemo(() => {
+    return getThumbnailUrl('avatar', entity.item?.avatar || entity.id);
   }, [entity]);
 
   return (
@@ -47,6 +51,7 @@ const ServerIcon = ({
           }
         ></span>
       </div>
+
       <div
         onMouseEnter={() => {
           setHovered(true);
@@ -54,18 +59,19 @@ const ServerIcon = ({
         onMouseLeave={() => {
           setHovered(false);
         }}
+        onClick={handleClick}
         className="cursor-pointer w-full h-fit flex justify-center items-center"
       >
         {entity.type === 'group' ? (
-          <>{memoizedGroupAvatar}</>
+          <GroupAvatar groupItem={entity.item} />
         ) : (
           <img
             loading="lazy"
+            alt={entity.item?.name || 'Character'}
             className={`rounded-xl h-12 w-12 object-cover hover:outline-1 outline-white ${
               isSelected ? 'outline' : ''
             }`}
-            src={getThumbnailUrl('avatar', entity.item?.avatar || entity.id)}
-            onClick={() => onSelect && onSelect(entity.id.toString())}
+            src={memoizedSrc}
           />
         )}
       </div>
@@ -73,6 +79,4 @@ const ServerIcon = ({
   );
 };
 
-const MemoizedServerIcon = React.memo(ServerIcon);
-
-export default MemoizedServerIcon;
+export default memo(ServerIcon);

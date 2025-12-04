@@ -4,9 +4,9 @@
   "requires": [],
   "optional": [],
   "js": "dist/bundle.js",
-  "css": "",
+  "css": "dist/main.css",
   "author": "SammCheese",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "homePage": "https://github.com/SammCheese/SillyTavern-Discordia",
   "auto_update": true
 }

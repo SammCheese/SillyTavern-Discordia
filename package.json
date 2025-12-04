@@ -6,15 +6,16 @@
     "re-resizable": "^6.11.2",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "react-virtualized": "^9.22.6"
+    "react-loading-skeleton": "^3.5.0",
+    "react-window": "^2.2.3"
   },
   "browser": {
     "fs": false,
     "path": false
   },
   "scripts": {
-    "watch": "webpack --mode development --watch",
-    "build": "webpack --mode production",
+    "watch": "cross-env NODE_ENV=production webpack --mode development --watch",
+    "build": "cross-env NODE_ENV=production webpack --mode production",
     "lint": "eslint 'src/**/*.{ts,tsx}'",
     "lint:fix": "eslint 'src/**/*.{ts,tsx}' --fix",
     "prepare": "husky"
@@ -28,8 +29,10 @@
     "@types/react": "^19.2.6",
     "@types/react-dom": "^19.2.3",
     "autoprefixer": "^10.4.22",
+    "cross-env": "^10.1.0",
     "css-loader": "^7.1.2",
     "css-minimizer-webpack-plugin": "^7.0.2",
+    "cssnano": "^7.1.2",
     "eslint": "^9.39.1",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-react": "^7.37.5",

@@ -2,10 +2,18 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { PageProvider } from './providers/pageProvider';
 
-const SideBar = React.lazy(() => import('./components/sidebar/SideBar'));
+const App = React.lazy(() => import('./App'));
+
+const { main_api } = await imports('@script');
 
 // @ts-expect-error Styles Import
 import './styles.css';
+import ModalProvider from './providers/modalProvider';
+
+// Initialize My window prop
+window.discordia = {
+  main_api: main_api,
+};
 
 // Insert sidebar before top bar
 const topBar = document.getElementById('top-bar');
@@ -21,7 +29,9 @@ const root = ReactDOM.createRoot(rootContainer);
 root.render(
   <React.StrictMode>
     <PageProvider>
-      <SideBar />
+      <ModalProvider>
+        <App />
+      </ModalProvider>
     </PageProvider>
   </React.StrictMode>,
 );

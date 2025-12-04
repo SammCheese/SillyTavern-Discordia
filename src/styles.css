@@ -3,6 +3,34 @@
 @theme {
   --color-lighter: rgba(255, 255, 255, 0.1);
   --color-darker: rgba(0, 0, 0, 0.1);
+
+  --color-base-discordia: color-mix(
+    in oklab,
+    hsl(230 calc(1 * 6.383%) 18.431% /1) 100%,
+    #000 0%
+  );
+  --color-input-bg: color-mix(
+    in oklab,
+    hsl(0 calc(1 * 0%) 0% /0.0784313725490196) 100%,
+    hsl(0 0% 0% /0.0784313725490196) 0%
+  );
+  --color-input-ring: color-mix(
+    in oklab,
+    hsl(234.935 calc(1 * 85.556%) 64.706% /1) 100%,
+    #000 0%
+  );
+  --color-input-outline: color-mix(
+    in oklab,
+    hsl(0 calc(1 * 0%) 100% /0.2) 100%,
+    hsl(0 0% 0% /0.2) 0%
+  );
+  --color-blurple: color-mix(
+    in oklab,
+    hsl(234.935 calc(1 * 85.556%) 64.706% /1) 100%,
+    #000 0%
+  );
+
+  --accordion-header-bg: hsl(240 calc(1 * 4%) 60.784% /0.0784313725490196);
 }
 
 @media (min-width: 601px) and (max-width: 1000px) {
@@ -17,7 +45,6 @@
   }
 }
 
-// Mobile styles
 @media (max-width: 600px) {
   :root {
     --sidebar-width: 100dvw;
@@ -77,6 +104,10 @@
     border-radius: 0 0 25% 25%;
     object-fit: cover;
   }
+}
+
+select {
+  padding: 8px !important;
 }
 
 #sidebar-container {
