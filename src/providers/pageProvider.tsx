@@ -39,7 +39,6 @@ export function PageProvider({ children }: { children: React.ReactNode }) {
     }, 200);
   }, []);
 
-  // Close page on Escape key press or click outside
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {

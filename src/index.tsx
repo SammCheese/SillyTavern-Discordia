@@ -8,6 +8,7 @@ const { main_api } = await imports('@script');
 
 // @ts-expect-error Styles Import
 import './styles.css';
+import ModalProvider from './providers/modalProvider';
 
 // Initialize My window prop
 window.discordia = {
@@ -28,7 +29,9 @@ const root = ReactDOM.createRoot(rootContainer);
 root.render(
   <React.StrictMode>
     <PageProvider>
-      <App />
+      <ModalProvider>
+        <App />
+      </ModalProvider>
     </PageProvider>
   </React.StrictMode>,
 );

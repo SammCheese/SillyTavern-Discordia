@@ -1,14 +1,15 @@
-import React, { useMemo } from 'react';
+import { useMemo, memo } from 'react';
 
 const { getThumbnailUrl, characters, default_avatar } =
   await imports('@script');
 const { isValidUrl } = await imports('@scripts/utils');
 
 interface GroupAvatarProps {
+  /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
   groupItem: any;
 }
 
-export const GroupAvatar = React.memo(({ groupItem }: GroupAvatarProps) => {
+const GroupAvatar = ({ groupItem }: GroupAvatarProps) => {
   const avatarElements = useMemo(() => {
     if (!groupItem) return <img src={default_avatar} />;
 
@@ -53,4 +54,6 @@ export const GroupAvatar = React.memo(({ groupItem }: GroupAvatarProps) => {
   }, [groupItem]);
 
   return <>{avatarElements}</>;
-});
+};
+
+export default memo(GroupAvatar);

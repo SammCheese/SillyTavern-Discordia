@@ -1,5 +1,8 @@
-import _ from 'lodash';
 import { useCallback, useEffect, useState } from 'react';
+
+
+const { lodash } = SillyTavern.libs;
+const _ = lodash;
 
 export interface ConnectionProfile {
   id: string;

@@ -1,8 +1,9 @@
-import React, { lazy } from 'react';
+import React, { lazy, useCallback, useContext, useMemo } from 'react';
 import { PageContext } from '../../providers/pageProvider';
 import { makeAvatar, selectCharacter, selectGroup } from '../../utils/utils';
 import type { RowComponentProps } from 'react-window';
 import { List } from 'react-window';
+import { useSearch } from '../../context/SearchContext';
 
 const Divider = React.lazy(() => import('../common/Divider/Divider'));
 const ChannelEntry = lazy(() => import('./ChannelEntry'));
@@ -44,9 +45,10 @@ const ChannelBar = ({
   setOpen,
   isLoadingChats = false,
 }: ChannelBarProps) => {
-  const { openPage } = React.useContext(PageContext);
+  const { openPage } = useContext(PageContext);
+  const { setSearchQuery } = useSearch();
 
-  const handleToolclick = React.useCallback(
+  const handleToolclick = useCallback(
     (icon: Icon) => {
       const id = icon.id;
       switch (id) {
@@ -75,14 +77,14 @@ const ChannelBar = ({
     [openPage],
   );
 
-  const isSelectedChat = React.useCallback(
+  const isSelectedChat = useCallback(
     (chat: Chat): boolean => {
-      return SillyTavern.getContext().getCurrentChatId() === chat.file_id;
+      return getContext().chatId === chat.file_id;
     },
-    [SillyTavern.getContext().getCurrentChatId()],
+    [getContext().chatId],
   );
 
-  const handleChannelClick = React.useCallback(
+  const handleChannelClick = useCallback(
     async (chat: Chat) => {
       if (!chat) return;
       // if its the currently selected chat, do nothing
@@ -141,13 +143,16 @@ const ChannelBar = ({
     );
   };
 
-  const handleSearchInput = React.useCallback((query: string) => {
-    console.log('Search query:', query);
-  }, []);
+  const handleSearchInput = useCallback(
+    (query: string) => {
+      setSearchQuery(query);
+    },
+    [setSearchQuery],
+  );
 
-  const chatsMemo = React.useMemo(() => chats, [chats]);
+  const chatsMemo = useMemo(() => chats, [chats]);
 
-  const shownTitle = React.useMemo(() => {
+  const shownTitle = useMemo(() => {
     const { characterId, groupId } = getContext();
     return isLoadingChats || characterId || groupId ? 'Chats' : 'Recent Chats';
   }, [isLoadingChats, getContext().characterId, getContext().groupId]);

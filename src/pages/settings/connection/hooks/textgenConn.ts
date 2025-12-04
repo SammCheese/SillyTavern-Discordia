@@ -1,5 +1,5 @@
 const { getTextGenServer, textgenerationwebui_settings, textgen_types } = await imports("@scripts/textGenSettings")
-const { getRequestHeaders, abortStatusCheck } = await imports("@script")
+const { getRequestHeaders } = await imports("@script")
 
 export const getTextGenStatus = async (server?: string): Promise<string|false>  => {
   const url = '/api/backends/text-completions/status';
@@ -23,7 +23,6 @@ export const getTextGenStatus = async (server?: string): Promise<string|false>  
         api_server: endpoint,
         api_type: textgenerationwebui_settings.type,
       }),
-      signal: abortStatusCheck.signal,
     });
 
     const data = await response.json();

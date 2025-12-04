@@ -8,10 +8,10 @@ import tseslint from 'typescript-eslint';
 export default defineConfig(
   eslint.configs.recommended,
   tseslint.configs.recommended,
-  react.configs.flat['recommended'],
+  react.configs.flat.recommended,
+  react.configs.flat['jsx-runtime'],
   prettier,
   {
-    extends: ['plugin:react/recommended', 'plugin:react/jsx-runtime'],
     settings: {
       react: {
         version: 'detect',

@@ -1,5 +1,5 @@
-import React, { memo, useEffect, useMemo, useState } from 'react';
-import { GroupAvatar } from '../groupAvatar/GroupAvatar';
+import { memo, useEffect, useMemo, useState } from 'react';
+import GroupAvatar from '../groupAvatar/GroupAvatar';
 
 const { getThumbnailUrl } = await imports('@script');
 

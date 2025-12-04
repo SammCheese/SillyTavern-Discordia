@@ -1,6 +1,7 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
 import { useSidebarState } from './hooks/useSidebarState';
+import { SearchProvider } from './context/SearchContext';
 
 import { rootContainer } from './index';
 
@@ -11,14 +12,16 @@ export const App = () => {
     useSidebarState();
 
   return createPortal(
-    <SideBar
-      open={open}
-      setOpen={setOpen}
-      entities={entities}
-      chats={chats}
-      icons={icons}
-      isLoadingChats={isLoadingChats}
-    />,
+    <SearchProvider>
+      <SideBar
+        open={open}
+        setOpen={setOpen}
+        entities={entities}
+        chats={chats}
+        icons={icons}
+        isLoadingChats={isLoadingChats}
+      />
+    </SearchProvider>,
     rootContainer,
   );
 };

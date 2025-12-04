@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo } from 'react';
 import { List, type RowComponentProps } from 'react-window';
 import { selectCharacter, selectGroup } from '../../utils/utils';
+import { useSearch } from '../../context/SearchContext';
 
 const ServerIcon = React.lazy(() => import('./ServerIcon'));
 const AddCharacterIcon = React.lazy(() => import('./AddCharacterIcon'));
@@ -11,35 +12,44 @@ const { getGroupPastChats } = await imports('@scripts/groupChats');
 const { getPastCharacterChats, characters, closeCurrentChat } =
   await imports('@script');
 
-const ServerRow = React.memo(function ServerRow({
-  entity,
-  index,
-  isSelected,
-  style,
-  onClick,
-}: {
-  entity: Entity;
-  index: number;
-  isSelected: boolean;
-  style: React.CSSProperties;
-  onClick: (entity: Entity, index: number) => void;
-}) {
-  return (
-    <div
-      style={style}
-      className="discord-entity-item character-button w-full h-fit flex justify-center py-1"
-      id={`character-button-${entity.id}`}
-      title={entity.item?.name || entity.id}
-    >
-      <ServerIcon
-        entity={entity}
-        index={index}
-        isSelected={isSelected}
-        onSelect={onClick}
-      />
-    </div>
-  );
-});
+const ServerRow = React.memo(
+  function ServerRow({
+    entity,
+    index,
+    isSelected,
+    style,
+    onClick,
+  }: {
+    entity: Entity;
+    index: number;
+    isSelected: boolean;
+    style: React.CSSProperties;
+    onClick: (entity: Entity, index: number) => void;
+  }) {
+    return (
+      <div
+        style={style}
+        className="discord-entity-item character-button w-full h-fit flex justify-center py-1"
+        id={`character-button-${entity.id}`}
+        title={entity.item?.name || entity.id}
+      >
+        <ServerIcon
+          entity={entity}
+          index={index}
+          isSelected={isSelected}
+          onSelect={onClick}
+        />
+      </div>
+    );
+  },
+  (prevProps, nextProps) => {
+    return (
+      prevProps.entity === nextProps.entity &&
+      prevProps.isSelected === nextProps.isSelected &&
+      prevProps.onClick === nextProps.onClick
+    );
+  },
+);
 
 interface RowData {
   data: {
@@ -77,6 +87,7 @@ const Row = ({ index, style, data }: RowComponentProps<RowData>) => {
 
 const ServerBar = ({ entities }: { entities: Entity[] }) => {
   const [selectedIndex, setSelectedIndex] = React.useState<number | null>(null);
+  const { searchQuery } = useSearch();
 
   const onHomeClickHandler = useCallback(async () => {
     setSelectedIndex(null);
@@ -136,10 +147,16 @@ const ServerBar = ({ entities }: { entities: Entity[] }) => {
 
   const itemData = useMemo(
     () => ({ entities, selectedIndex, handleItemClick }),
-    [entities, selectedIndex, handleItemClick],
+    [entities, handleItemClick],
   );
 
-  // Virtualized list row renderer for Large number of entities
+  const filteredEntities = useMemo(() => {
+    if (!searchQuery) return entities;
+    return entities.filter((entity) => {
+      const name = entity.item?.name || '';
+      return name.toLowerCase().includes(searchQuery.toLowerCase());
+    });
+  }, [entities, searchQuery]);
 
   return (
     <div id="character-container">
@@ -150,18 +167,21 @@ const ServerBar = ({ entities }: { entities: Entity[] }) => {
 
       <div id="characters-list" className="pt-0.5">
         {/* A little trickery in performance */}
-        {entities.length < 50 ? (
+        {filteredEntities.length < 50 ? (
           <>
-            {entities.map((entity, index) => (
-              <ServerRow
-                key={entity.id.toString()}
-                entity={entity}
-                index={index}
-                isSelected={selectedIndex === index}
-                onClick={handleItemClick}
-                style={{}}
-              />
-            ))}
+            {filteredEntities.map((entity) => {
+              const actualIndex = entities.indexOf(entity);
+              return (
+                <ServerRow
+                  key={entity.id.toString()}
+                  entity={entity}
+                  index={actualIndex}
+                  isSelected={selectedIndex === actualIndex}
+                  onClick={handleItemClick}
+                  style={{}}
+                />
+              );
+            })}
 
             <div id="characters-divider" className="divider"></div>
 
@@ -170,7 +190,7 @@ const ServerBar = ({ entities }: { entities: Entity[] }) => {
         ) : (
           <List
             rowComponent={Row}
-            rowCount={entities.length + 1}
+            rowCount={filteredEntities.length + 1}
             rowHeight={60}
             rowProps={{ data: itemData }}
             style={{ width: '100%' }}

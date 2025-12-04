@@ -11,7 +11,6 @@ interface SidebarState {
   chats: Chat[];
   icons: Icon[];
   isLoadingChats: boolean;
-  wantsHome: boolean;
 }
 
 const CHANNEL_MENU_CONFIG = [
@@ -31,16 +30,12 @@ export const useSidebarState = () => {
     chats: [],
     icons: [],
     isLoadingChats: true,
-    wantsHome: false,
   });
 
   const setOpen = useCallback((open: boolean) => {
     setState(prev => ({ ...prev, open }));
   }, []);
 
-  const handleHomeClick = useCallback(async () => {
-    setState(prev => ({ ...prev, wantsHome: true }));
-  }, []);
 
   const updateChatData = useCallback(async () => {
     setState(prev => ({ ...prev, isLoadingChats: true }));
@@ -52,16 +47,16 @@ export const useSidebarState = () => {
       // Group Chats
       if (groupId !== null) {
         chats = await getGroupPastChats(groupId.toString());
-        setState(prev => ({ ...prev, chats, isLoadingChats: false, wantsHome: false }));
+        setState(prev => ({ ...prev, chats, isLoadingChats: false}));
         // Character Chats
       } else if (typeof characterId !== 'undefined' && parseInt(characterId) >= 0) {
         chats = await getPastCharacterChats();
-        setState(prev => ({ ...prev, chats, isLoadingChats: false, wantsHome: false }));
+        setState(prev => ({ ...prev, chats, isLoadingChats: false }));
         // Home / Recent Chats
       } else {
         const entities = getEntitiesList({ doFilter: true, doSort: true });
         chats = await getRecentChats(entities);
-        setState(prev => ({ ...prev, chats, isLoadingChats: false, wantsHome: false }));
+        setState(prev => ({ ...prev, chats, isLoadingChats: false }));
       }
     } catch (error) {
       console.error('Error updating chat data:', error);
@@ -163,6 +158,5 @@ export const useSidebarState = () => {
   return {
     ...state,
     setOpen,
-    handleHomeClick
   };
 }

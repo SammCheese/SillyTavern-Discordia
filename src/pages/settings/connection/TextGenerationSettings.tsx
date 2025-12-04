@@ -14,8 +14,7 @@ interface TextGenerationSettingsProps {
 
 const genSet = await imports('@scripts/textGenSettings');
 const { saveSettingsDebounced, setOnlineStatus } = await imports('@script');
-const { getSecretLabelById, writeSecret, SECRET_KEYS } =
-  await imports('@scripts/secrets');
+const { getSecretLabelById } = await imports('@scripts/secrets');
 const { getContext } = SillyTavern;
 
 const TextGenerationSettings = ({ entries }: TextGenerationSettingsProps) => {
@@ -73,6 +72,7 @@ const TextGenerationSettings = ({ entries }: TextGenerationSettingsProps) => {
   };
 
   const handleApiKeyChange = (value: string) => {
+    setApiKeyInput(value);
     //updateCurrentProfile({ 'secret-id': value });
   };
 
