@@ -56,11 +56,11 @@ const WorldInfoSettings = () => {
         style={{ maxHeight: '70dvh' }}
       >
         <div>
-          <div>Active Global World Info</div>
+          <div>Active Global World Info (WIP)</div>
           <ul>
             {entries.map((entry, index) => (
               <li key={index} className="mb-2">
-                {entry}
+                {entry.world}
               </li>
             ))}
           </ul>
