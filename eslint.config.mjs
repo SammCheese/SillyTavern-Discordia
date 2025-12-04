@@ -11,7 +11,7 @@ export default defineConfig(
   react.configs.flat['recommended'],
   prettier,
   {
-    extends: [],
+    extends: ['plugin:react/recommended', 'plugin:react/jsx-runtime'],
     settings: {
       react: {
         version: 'detect',

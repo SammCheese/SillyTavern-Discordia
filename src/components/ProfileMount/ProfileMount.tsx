@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { PageContext } from '../../providers/pageProvider';
 import ProfilePersona from './ProfilePersona';
 
@@ -22,7 +22,6 @@ const ProfileMount = ({
   icons?: Icon[] | null;
 }) => {
   const [connStatus, setConnStatus] = React.useState<string>('no_connection');
-
   const { openPage } = React.useContext(PageContext);
 
   React.useEffect(() => {
@@ -36,15 +35,15 @@ const ProfileMount = ({
     };
   }, []);
 
-  const handleConnectionChange = () => {
+  const handleConnectionChange = useCallback(() => {
     if (SillyTavern.getContext().onlineStatus === 'no_connection') {
       setConnStatus('no_connection');
     } else {
       setConnStatus('online');
     }
-  };
+  }, []);
 
-  const handleIconClick = (icon: Icon) => {
+  const handleIconClick = useCallback((icon: Icon) => {
     const id = icon.id;
     switch (id) {
       case '#user-settings-button':
@@ -59,26 +58,28 @@ const ProfileMount = ({
       default:
         console.log(`No action defined for icon with id: ${id}`);
     }
-  };
+  }, []);
 
   const isApiConnected = React.useMemo(() => {
-    return connStatus === 'online';
+    return connStatus !== 'no_connection';
   }, [connStatus]);
+
+  const iconsToShow = React.useMemo(() => {
+    return icons?.filter((i) => i.showInProfile) || [];
+  }, [icons]);
 
   return (
     <div id="user-profile-container">
       <ProfilePersona name={name1} avatar={avatar} />
       <div id="user-settings-buttons">
-        {icons
-          ?.filter((i) => i.showInProfile)
-          ?.map((icon, index) => (
-            <ProfileIcon
-              apiConnected={isApiConnected}
-              icon={icon}
-              key={index}
-              onClick={handleIconClick}
-            />
-          ))}
+        {iconsToShow.map((icon, index) => (
+          <ProfileIcon
+            apiConnected={isApiConnected}
+            icon={icon}
+            key={index}
+            onClick={handleIconClick}
+          />
+        ))}
       </div>
     </div>
   );

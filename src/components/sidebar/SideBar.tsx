@@ -10,15 +10,20 @@ interface SideBarProps {
   entities: Entity[];
   chats: Chat[];
   icons: Icon[] | null;
+  isLoadingChats: boolean;
 }
 
-const SideBar = ({ open, setOpen, entities, chats, icons }: SideBarProps) => {
+const SideBar = ({
+  open,
+  setOpen,
+  entities,
+  chats,
+  icons,
+  isLoadingChats,
+}: SideBarProps) => {
   const memoizedEntities = React.useMemo(() => entities, [entities]);
   const memoizedChats = React.useMemo(() => chats, [chats]);
   const memoizedIcons = React.useMemo(() => icons, [icons]);
-
-  const { characterId, groupId } = SillyTavern.getContext();
-  const title = characterId || groupId ? 'Chats' : 'Recent Chats';
 
   return (
     <div
@@ -30,10 +35,10 @@ const SideBar = ({ open, setOpen, entities, chats, icons }: SideBarProps) => {
       <div id="server-container">
         <ServerBar entities={memoizedEntities} />
         <ChannelBar
-          title={title}
           icons={memoizedIcons}
           chats={memoizedChats}
           setOpen={setOpen}
+          isLoadingChats={isLoadingChats}
         />
       </div>
       <div id="user-container">

@@ -1,5 +1,5 @@
-import React from 'react';
-import { makeReactGroupAvatar } from '../../utils/utils';
+import React, { memo, useEffect, useMemo, useState } from 'react';
+import { GroupAvatar } from '../groupAvatar/GroupAvatar';
 
 const { getThumbnailUrl } = await imports('@script');
 
@@ -16,10 +16,10 @@ const ServerIcon = ({
   onSelect,
   index,
 }: ServerIconProps) => {
-  const [hovered, setHovered] = React.useState(false);
+  const [hovered, setHovered] = useState(false);
 
   // Precaution
-  React.useEffect(() => {
+  useEffect(() => {
     let hoverTimeout: NodeJS.Timeout;
     if (hovered) {
       hoverTimeout = setTimeout(() => {
@@ -29,19 +29,15 @@ const ServerIcon = ({
     return () => clearTimeout(hoverTimeout);
   }, [hovered]);
 
-  // Memoize group avatar to avoid unnecessary re-renders
-  const memoizedGroupAvatar = React.useMemo(() => {
-    if (entity.type === 'group') {
-      return makeReactGroupAvatar(entity.item);
-    }
-    return null;
-  }, [entity]);
-
   const handleClick = () => {
     if (onSelect) {
       onSelect(entity, index);
     }
   };
+
+  const memoizedSrc = useMemo(() => {
+    return getThumbnailUrl('avatar', entity.item?.avatar || entity.id);
+  }, [entity]);
 
   return (
     <div className="flex m-0 relative w-full h-fit">
@@ -67,14 +63,15 @@ const ServerIcon = ({
         className="cursor-pointer w-full h-fit flex justify-center items-center"
       >
         {entity.type === 'group' ? (
-          <>{memoizedGroupAvatar}</>
+          <GroupAvatar groupItem={entity.item} />
         ) : (
           <img
             loading="lazy"
+            alt={entity.item?.name || 'Character'}
             className={`rounded-xl h-12 w-12 object-cover hover:outline-1 outline-white ${
               isSelected ? 'outline' : ''
             }`}
-            src={getThumbnailUrl('avatar', entity.item?.avatar || entity.id)}
+            src={memoizedSrc}
           />
         )}
       </div>
@@ -82,6 +79,4 @@ const ServerIcon = ({
   );
 };
 
-const MemoizedServerIcon = React.memo(ServerIcon);
-
-export default MemoizedServerIcon;
+export default memo(ServerIcon);

@@ -9,16 +9,20 @@ const ProfilePersona = ({
   name: string;
   avatar: string | null;
 }) => {
+  const imageSrc = React.useMemo(() => {
+    return getThumbnailUrl(
+      'persona',
+      avatar || user_avatar || 'user-default.png',
+    );
+  }, [avatar]);
+
   return (
     <>
       <div id="user-avatar">
         <img
           loading="lazy"
           id="discordia-avatar"
-          src={getThumbnailUrl(
-            'persona',
-            avatar || user_avatar || 'user-default.png',
-          )}
+          src={imageSrc}
           style={{
             width: '40px',
             height: '40px',

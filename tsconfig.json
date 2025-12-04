@@ -26,7 +26,7 @@
     "strictNullChecks": true,
 
     "strict": true,
-    "jsx": "react",
+    "jsx": "react-jsx",
     "verbatimModuleSyntax": true,
     "isolatedModules": false,
     "noUncheckedSideEffectImports": true,
@@ -38,7 +38,11 @@
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "allowJs": true,
-    "checkJs": false
+    "checkJs": false,
+
+    // no write, we have webpack
+    "noEmit": true
   },
-  "include": ["./src/**/*", "./global.d.ts"]
+  "include": ["./src/**/*", "./global.d.ts"],
+  "exclude": ["../../../../**/.*.js"]
 }

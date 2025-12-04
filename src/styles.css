@@ -29,6 +29,8 @@
     hsl(234.935 calc(1 * 85.556%) 64.706% /1) 100%,
     #000 0%
   );
+
+  --accordion-header-bg: hsl(240 calc(1 * 4%) 60.784% /0.0784313725490196);
 }
 
 @media (min-width: 601px) and (max-width: 1000px) {
@@ -102,6 +104,10 @@
     border-radius: 0 0 25% 25%;
     object-fit: cover;
   }
+}
+
+select {
+  padding: 8px !important;
 }
 
 #sidebar-container {

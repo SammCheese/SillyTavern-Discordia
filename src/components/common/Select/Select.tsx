@@ -26,7 +26,7 @@ const Select: React.FC<SelectProps> = ({
 
   return (
     <select
-      className="border border-gray-300 rounded px-2 py-1 bg-white disabled:bg-gray-100 disabled:cursor-not-allowed"
+      className="border border-gray-300 rounded bg-white disabled:bg-gray-100 disabled:cursor-not-allowed"
       value={value}
       onChange={handleChange}
       disabled={disabled}

@@ -1,14 +1,29 @@
 import React from 'react';
 
+interface ToggleProps {
+  isOn: boolean;
+  onToggle?: () => void;
+  onColor?: string;
+}
+
 const Toggle = ({
   isOn,
-  handleToggle,
+  onToggle,
   onColor = 'var(--color-blurple)',
-}: {
-  isOn: boolean;
-  handleToggle: () => void;
-  onColor?: string;
-}) => {
+}: ToggleProps) => {
+  const [onState, setOnState] = React.useState(isOn);
+
+  React.useEffect(() => {
+    setOnState(isOn);
+  }, [isOn]);
+
+  const handleToggle = () => {
+    setOnState(!onState);
+    if (onToggle) {
+      onToggle();
+    }
+  };
+
   return (
     <div
       onClick={handleToggle}
@@ -17,7 +32,7 @@ const Toggle = ({
         width: '50px',
         height: '25px',
         borderRadius: '15px',
-        backgroundColor: isOn ? onColor : '#ccc',
+        backgroundColor: onState ? onColor : '#ccc',
         position: 'relative',
         transition: 'background-color 0.2s',
       }}
@@ -26,7 +41,7 @@ const Toggle = ({
         style={{
           position: 'absolute',
           top: '2.5px',
-          left: isOn ? '27.5px' : '2.5px',
+          left: onState ? '27.5px' : '2.5px',
           width: '20px',
           height: '20px',
           borderRadius: '50%',

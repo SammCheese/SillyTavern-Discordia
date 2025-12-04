@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { getRecentChats } from "../utils/utils";
+import React from 'react';
 
 const { getGroupPastChats } = await imports('@scripts/groupChats');
 const { getEntitiesList, eventSource, event_types, getPastCharacterChats } = await imports('@script');
@@ -9,44 +10,69 @@ interface SidebarState {
   entities: Entity[];
   chats: Chat[];
   icons: Icon[];
+  isLoadingChats: boolean;
+  wantsHome: boolean;
 }
 
-export const useSidebarState = (channelMenu: { id: string }[]) => {
+const CHANNEL_MENU_CONFIG = [
+  { name: 'Backgrounds', id: '#backgrounds-button' },
+  { name: 'Persona Management', id: '#persona-management-button' },
+  { name: 'Character Selector', id: '#rightNavHolder' },
+  { name: 'Extensions Settings', id: '#extensions-settings-button' },
+  { name: 'Advanced Formatting', id: '#advanced-formatting-button' },
+  { name: 'World Info', id: '#WI-SP-button' },
+];
+
+
+export const useSidebarState = () => {
   const [state, setState] = useState<SidebarState>({
     open: false,
     entities: [],
     chats: [],
     icons: [],
+    isLoadingChats: true,
+    wantsHome: false,
   });
 
   const setOpen = useCallback((open: boolean) => {
     setState(prev => ({ ...prev, open }));
   }, []);
 
+  const handleHomeClick = useCallback(async () => {
+    setState(prev => ({ ...prev, wantsHome: true }));
+  }, []);
+
   const updateChatData = useCallback(async () => {
+    setState(prev => ({ ...prev, isLoadingChats: true }));
+
     const { characterId, groupId } = SillyTavern.getContext();
     let chats: Chat[] = [];
 
     try {
+      // Group Chats
       if (groupId !== null) {
         chats = await getGroupPastChats(groupId.toString());
+        setState(prev => ({ ...prev, chats, isLoadingChats: false, wantsHome: false }));
+        // Character Chats
       } else if (typeof characterId !== 'undefined' && parseInt(characterId) >= 0) {
         chats = await getPastCharacterChats();
+        setState(prev => ({ ...prev, chats, isLoadingChats: false, wantsHome: false }));
+        // Home / Recent Chats
       } else {
         const entities = getEntitiesList({ doFilter: true, doSort: true });
         chats = await getRecentChats(entities);
+        setState(prev => ({ ...prev, chats, isLoadingChats: false, wantsHome: false }));
       }
     } catch (error) {
       console.error('Error updating chat data:', error);
+      setState(prev => ({ ...prev, isLoadingChats: false }));
     }
-
-    setState(prev => ({ ...prev, chats: chats ?? [] }));
   }, []);
 
-    const resetWithNewData = useCallback(async () => {
+  const resetWithNewData = useCallback(async () => {
     const entities = getEntitiesList({ doFilter: true, doSort: true });
     const chats = await getRecentChats(entities);
-    setState(prev => ({ ...prev, chats, entities, open: true }));
+    setState(prev => ({ ...prev, chats, entities, open: true, isLoadingChats: false }));
   }, []);
 
   const processMenuIcons = useCallback(() => {
@@ -62,16 +88,16 @@ export const useSidebarState = (channelMenu: { id: string }[]) => {
       icons.push({
         className: infoEl.attr('class') || '',
         title: infoEl.attr('title') || jEl.find('.drawer-toggle').attr('title') || '',
-        showInProfile: !channelMenu.some((item) => item.id === id),
+        showInProfile: !CHANNEL_MENU_CONFIG.some((item) => item.id === id),
         id: id,
       });
     });
 
     settingsHolder.attr('style', 'display: none !important;');
     setState(prev => ({ ...prev, icons }));
-  }, [channelMenu]);
+  }, []);
 
-    useEffect(() => {
+  React.useEffect(() => {
     processMenuIcons();
 
 
@@ -137,5 +163,6 @@ export const useSidebarState = (channelMenu: { id: string }[]) => {
   return {
     ...state,
     setOpen,
+    handleHomeClick
   };
 }

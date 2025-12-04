@@ -12,7 +12,7 @@ const TextGenerationSettings = React.lazy(
 );
 
 const script = await imports('@script');
-const { saveSettingsDebounced, CONNECT_API_MAP } = script;
+const { CONNECT_API_MAP } = script;
 
 export type ApiBucket = {
   name: string;
@@ -103,14 +103,12 @@ const ConnectionSettings = () => {
       setCurrentApi(api);
       setCurrentApiState(api);
     }
-    saveSettingsDebounced();
   };
 
   const handleApiChange = (value: string) => {
     const apiValue = value as MainAPIValues;
     setCurrentApi(apiValue);
     setCurrentApiState(apiValue);
-    saveSettingsDebounced();
   };
 
   return (

@@ -1,4 +1,4 @@
-import React from 'react';
+import { memo, useState, useMemo, useCallback } from 'react';
 import type { ApiBucket } from './ConnectionSettings';
 import Select from '../../../components/common/Select/Select';
 import Input from '../../../components/common/Input/Input';
@@ -6,25 +6,28 @@ import Checkbox from '../../../components/common/Checkbox/Checkbox';
 import Button from '../../../components/common/Button/Button';
 import Divider from '../../../components/common/Divider/Divider';
 import { useConnectionManager } from './hooks/connectionManager';
+import { getTextGenStatus } from './hooks/textgenConn';
 
 interface TextGenerationSettingsProps {
   entries: ApiBucket[];
 }
 
 const genSet = await imports('@scripts/textGenSettings');
-const { saveSettingsDebounced } = await imports('@script');
-const { getSecretLabelById } = await imports('@scripts/secrets');
+const { saveSettingsDebounced, setOnlineStatus } = await imports('@script');
+const { getSecretLabelById, writeSecret, SECRET_KEYS } =
+  await imports('@scripts/secrets');
 const { getContext } = SillyTavern;
 
 const TextGenerationSettings = ({ entries }: TextGenerationSettingsProps) => {
-  const { profiles, selectedProfile, getCurrentApi, setProfiles } =
-    useConnectionManager();
-
-  const [settings, setSettings] = React.useState(
+  const { selectedProfile, updateCurrentProfile } = useConnectionManager();
+  const [textSettings, setTextSettings] = useState(
     genSet.textgenerationwebui_settings,
   );
+  const [connectionStatus, setConnectionStatus] = useState<
+    string | false | undefined
+  >(undefined);
 
-  const options = React.useMemo(
+  const options = useMemo(
     () =>
       entries.map((entry) => ({
         value: entry.name,
@@ -33,43 +36,74 @@ const TextGenerationSettings = ({ entries }: TextGenerationSettingsProps) => {
     [entries],
   );
 
-  const setSetting = (
-    key: keyof typeof settings,
-    value: string | number | boolean,
-  ) => {
-    const newSettings = { ...settings, [key]: value };
-    setSettings(newSettings);
-    genSet.textgenerationwebui_settings = newSettings;
-    saveSettingsDebounced();
-  };
+  const updateGlobalSetting = useCallback(
+    (key: keyof typeof textSettings, value: unknown) => {
+      setTextSettings((prev: typeof textSettings) => ({
+        ...prev,
+        [key]: value,
+      }));
+      getContext().textCompletionSettings[key] = value as never;
+      saveSettingsDebounced();
+    },
+    [],
+  );
 
+  const [autoConnect, setAutoConnectState] = useState(
+    getContext().extensionSettings.autoConnect,
+  );
+  const [deriveContext, setDeriveContextState] = useState(
+    getContext().powerUserSettings.context_size_derived,
+  );
+  const [apiKeyInput, setApiKeyInput] = useState('');
+
+  // Handlers
   const handleTypeChange = (value: string) => {
-    setSetting('type', value);
-  };
-
-  const setAutoConnect = (checked: boolean) => {
-    getContext().extensionSettings.autoConnect = checked;
-    saveSettingsDebounced();
-  };
-
-  const getAutoConnect = () => {
-    return getContext().extensionSettings.autoConnect;
+    updateCurrentProfile({ api: value });
+    updateGlobalSetting('type', value);
   };
 
   const handleApiUrlChange = (value: string) => {
-    if (!selectedProfile) return;
-    const updatedProfiles = profiles.map((p) =>
-      p.id === selectedProfile.id ? { ...p, 'api-url': value } : p,
-    );
-    setProfiles(updatedProfiles);
+    setConnectionStatus(undefined);
+    const apitype = selectedProfile?.api || textSettings.type;
+    updateGlobalSetting('server_urls', {
+      ...textSettings.server_urls,
+      [apitype]: value,
+    });
+    updateCurrentProfile({ 'api-url': value });
   };
 
   const handleApiKeyChange = (value: string) => {
-    if (!selectedProfile) return;
-    const updatedProfiles = profiles.map((p) =>
-      p.id === selectedProfile.id ? { ...p, 'secret-id': value } : p,
-    );
-    setProfiles(updatedProfiles);
+    //updateCurrentProfile({ 'secret-id': value });
+  };
+
+  const handleConnectClick = async () => {
+    // Reset status on new connect attempt
+    setConnectionStatus(undefined);
+
+    const url = selectedProfile?.['api-url'];
+    if (!url) return;
+
+    const status = await getTextGenStatus(url);
+
+    setConnectionStatus(status);
+    setOnlineStatus(status ? status : 'no_connection');
+
+    if (!status) return;
+
+    // Api returned a model name, store it in profile
+    updateCurrentProfile({ model: status });
+  };
+
+  const handleAutoConnectClick = (value: boolean) => {
+    setAutoConnectState(value);
+    getContext().extensionSettings.autoConnect = value;
+    saveSettingsDebounced();
+  };
+
+  const handleDeriveContextClick = (value: boolean) => {
+    setDeriveContextState(value);
+    getContext().powerUserSettings.context_size_derived = value;
+    saveSettingsDebounced();
   };
 
   return (
@@ -78,7 +112,7 @@ const TextGenerationSettings = ({ entries }: TextGenerationSettingsProps) => {
       <Select
         options={options}
         onChange={handleTypeChange}
-        value={settings.type}
+        value={textSettings.type}
       />
 
       <Divider />
@@ -87,16 +121,17 @@ const TextGenerationSettings = ({ entries }: TextGenerationSettingsProps) => {
         placeholder={getSecretLabelById(
           selectedProfile?.['secret-id'] ?? 'Enter your API Key',
         )}
-        value={''}
+        value={apiKeyInput}
         onChange={handleApiKeyChange}
         type="password"
+        disabled={true}
       />
 
       <Input
         style={{ marginTop: '12px' }}
         label="API URL"
         placeholder="Enter your API URL"
-        value={selectedProfile?.['api-url'] ?? ''}
+        value={selectedProfile?.['api-url']}
         onChange={handleApiUrlChange}
         type="text"
       />
@@ -104,24 +139,33 @@ const TextGenerationSettings = ({ entries }: TextGenerationSettingsProps) => {
       <div className="mt-4">
         <Checkbox
           label="Derive Contextsize from Backend"
-          checked={getAutoConnect()}
-          onChange={setAutoConnect}
+          checked={deriveContext}
+          onChange={handleDeriveContextClick}
         />
       </div>
 
       <div className="flex items-center space-x-4 my-4">
-        <Button
-          label="Connect"
-          onClick={() => genSet.getTextGenServer(getCurrentApi())}
-        />
+        <Button label="Connect" onClick={handleConnectClick} />
         <Checkbox
           label="Auto Connect to last Server"
-          checked={getAutoConnect()}
-          onChange={setAutoConnect}
+          checked={autoConnect}
+          onChange={handleAutoConnectClick}
         />
       </div>
+      {connectionStatus !== undefined && (
+        <div
+          className={`text-sm font-medium ${connectionStatus ? 'text-green-400' : 'text-red-400'}`}
+        >
+          Server is {connectionStatus ? 'Online!' : 'Offline'}
+          {connectionStatus && (
+            <div className="text-gray-400 text-xs font-normal mt-1">
+              Model: {connectionStatus}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };
 
-export default TextGenerationSettings;
+export default memo(TextGenerationSettings);

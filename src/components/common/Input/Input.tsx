@@ -3,11 +3,12 @@ import React from 'react';
 interface InputProps {
   placeholder?: string;
   label?: string;
-  defaultValue?: string;
-  value?: string;
+  defaultValue?: string | number | undefined;
+  value?: string | number | undefined;
   onChange: (value: string) => void;
   type?: string;
   style?: React.CSSProperties;
+  disabled?: boolean;
 }
 
 const Input = ({
@@ -17,9 +18,10 @@ const Input = ({
   label = '',
   onChange,
   style,
+  disabled = false,
   type = 'text',
 }: InputProps) => {
-  const [content, setContent] = React.useState(value || defaultValue);
+  const [content, setContent] = React.useState(value ?? defaultValue ?? '');
 
   const handleInputChange = React.useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -33,6 +35,7 @@ const Input = ({
     <div className="flex flex-col w-full gap-1 " style={style}>
       {label && <label className="text-sm font-medium mb-1">{label}</label>}
       <input
+        disabled={disabled}
         className="input-field w-full px-3 py-2 bg-input-bg rounded-md outline outline-input-outline focus:ring-2 focus:ring-input-ring"
         placeholder={placeholder}
         type={type}

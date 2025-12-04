@@ -29,18 +29,21 @@ const FormattingSettings = lazy(
 
 const { closeCurrentChat, openCharacterChat } = await imports('@script');
 const { openGroupChat } = await imports('@scripts/groupChats');
+const { getContext } = SillyTavern;
 
-const ChannelBar = ({
-  title = 'Recent Chats',
-  icons,
-  chats,
-  setOpen,
-}: {
-  title: string;
+interface ChannelBarProps {
   icons: Icon[] | null;
   chats: Chat[];
   setOpen: (value: boolean) => void;
-}) => {
+  isLoadingChats?: boolean;
+}
+
+const ChannelBar = ({
+  icons,
+  chats,
+  setOpen,
+  isLoadingChats = false,
+}: ChannelBarProps) => {
   const { openPage } = React.useContext(PageContext);
 
   const handleToolclick = React.useCallback(
@@ -132,7 +135,7 @@ const ChannelBar = ({
           onClick={handleChannelClick}
           isSelected={isSelectedChat(chat)}
           avatar={makeAvatar({ chat })}
-          setOpen={setOpen}
+          isLoading={isLoadingChats}
         />
       </div>
     );
@@ -143,6 +146,11 @@ const ChannelBar = ({
   }, []);
 
   const chatsMemo = React.useMemo(() => chats, [chats]);
+
+  const shownTitle = React.useMemo(() => {
+    const { characterId, groupId } = getContext();
+    return isLoadingChats || characterId || groupId ? 'Chats' : 'Recent Chats';
+  }, [isLoadingChats, getContext().characterId, getContext().groupId]);
 
   return (
     <div id="channel-container" className="px-1">
@@ -160,7 +168,7 @@ const ChannelBar = ({
         </div>
       </div>
       <div id="channel-divider" className="divider"></div>
-      <div className="section-header">{title}</div>
+      <div className="section-header">{shownTitle}</div>
       <div id="channel-list">
         <div id="channels-list-container">
           {chatsMemo.length > 50 ? (
@@ -180,7 +188,7 @@ const ChannelBar = ({
                 onClick={handleChannelClick}
                 isSelected={isSelectedChat(chat)}
                 avatar={makeAvatar({ chat })}
-                setOpen={setOpen}
+                isLoading={isLoadingChats}
               />
             ))
           )}

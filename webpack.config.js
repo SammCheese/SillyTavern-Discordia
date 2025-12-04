@@ -31,7 +31,10 @@ module.exports = {
           {
             loader: 'ts-loader',
             options: {
-              transpileOnly: false,
+              transpileOnly: true,
+              compilerOptions: {
+                noEmit: false,
+              },
             },
           },
         ],
