@@ -1,6 +1,5 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { getRecentChats } from "../utils/utils";
-import React from 'react';
 
 const { getGroupPastChats } = await imports('@scripts/groupChats');
 const { getEntitiesList, eventSource, event_types, getPastCharacterChats } = await imports('@script');
@@ -92,7 +91,7 @@ export const useSidebarState = () => {
     setState(prev => ({ ...prev, icons }));
   }, []);
 
-  React.useEffect(() => {
+  useEffect(() => {
     processMenuIcons();
 
 

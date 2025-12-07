@@ -1,12 +1,12 @@
 import { memo, useState, useMemo, useCallback } from 'react';
-import type { ApiBucket } from './ConnectionSettings';
-import Select from '../../../components/common/Select/Select';
-import Input from '../../../components/common/Input/Input';
-import Checkbox from '../../../components/common/Checkbox/Checkbox';
-import Button from '../../../components/common/Button/Button';
-import Divider from '../../../components/common/Divider/Divider';
-import { useConnectionManager } from './hooks/connectionManager';
-import { getTextGenStatus } from './hooks/textgenConn';
+import type { ApiBucket } from '../../ConnectionSettings';
+import Select from '../../../../../components/common/Select/Select';
+import Input from '../../../../../components/common/Input/Input';
+import Checkbox from '../../../../../components/common/Checkbox/Checkbox';
+import Button from '../../../../../components/common/Button/Button';
+import Divider from '../../../../../components/common/Divider/Divider';
+import { useConnectionManager } from '../../services/connectionManager';
+import { getTextGenStatus } from '../../services/textgenConn';
 
 interface TextGenerationSettingsProps {
   entries: ApiBucket[];

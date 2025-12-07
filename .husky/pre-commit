@@ -1,1 +1,1 @@
-pnpx run lint
+pnpm run lint

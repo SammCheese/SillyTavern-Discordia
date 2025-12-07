@@ -1,13 +1,13 @@
-import React from 'react';
+import { lazy, useEffect, useState } from 'react';
 
-const SettingsFrame = React.lazy(() => import('../base/Base'));
-const Accordion = React.lazy(
+const SettingsFrame = lazy(() => import('../base/Base'));
+const Accordion = lazy(
   () => import('../../../components/common/Accordion/Accordion'),
 );
-const Divider = React.lazy(
+const Divider = lazy(
   () => import('../../../components/common/Divider/Divider'),
 );
-const Checkbox = React.lazy(
+const Checkbox = lazy(
   () => import('../../../components/common/Checkbox/Checkbox'),
 );
 
@@ -20,10 +20,10 @@ const {
 } = await imports('@scripts/worldInfo');
 
 const WorldInfoSettings = () => {
-  const [settings, setSettings] = React.useState(getWorldInfoSettings);
-  const [entries, setEntries] = React.useState(selected_world_info);
+  const [settings, setSettings] = useState(getWorldInfoSettings);
+  const [entries, setEntries] = useState(selected_world_info);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const updateEntries = async () => {
       const fetchedEntries = await getSortedEntries();
       setEntries(fetchedEntries);

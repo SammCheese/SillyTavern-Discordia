@@ -1,14 +1,14 @@
-import React from 'react';
+import { lazy, useCallback, useEffect, useMemo, useState } from 'react';
 import Select from '../../../components/common/Select/Select';
 import Divider from '../../../components/common/Divider/Divider';
 import {
   useConnectionManager,
   type MainAPIValues,
-} from './hooks/connectionManager';
+} from './services/connectionManager';
 
-const SettingsFrame = React.lazy(() => import('../base/Base'));
-const TextGenerationSettings = React.lazy(
-  () => import('./TextGenerationSettings'),
+const SettingsFrame = lazy(() => import('../base/Base'));
+const TextGenerationSettings = lazy(
+  () => import('./apis/TextCompletion/TextCompletion'),
 );
 
 const script = await imports('@script');
@@ -41,15 +41,15 @@ const ConnectionSettings = () => {
     setSelectedProfile,
   } = useConnectionManager();
 
-  const [currentApi, setCurrentApiState] = React.useState<MainAPIValues>(() =>
+  const [currentApi, setCurrentApiState] = useState<MainAPIValues>(() =>
     getCurrentApi(),
   );
 
-  React.useEffect(() => {
+  useEffect(() => {
     setCurrentApiState(getCurrentApi());
   }, [selectedProfileId]);
 
-  const apiBuckets: ApiBuckets = React.useMemo(() => {
+  const apiBuckets: ApiBuckets = useMemo(() => {
     const buckets: Partial<ApiBuckets> = {};
     Object.entries(CONNECT_API_MAP).forEach(([name, data]) => {
       const type = data.selected as MainAPIValues;
@@ -63,7 +63,7 @@ const ConnectionSettings = () => {
     return buckets as ApiBuckets;
   }, [CONNECT_API_MAP]);
 
-  const renderConnectionInfo = React.useMemo(() => {
+  const renderConnectionInfo = useMemo(() => {
     switch (currentApi) {
       case 'kobold':
         return <div>Kobold API Connection Settings</div>;
@@ -87,7 +87,7 @@ const ConnectionSettings = () => {
     }
   }, [currentApi, selectedProfileId, apiBuckets]);
 
-  const makeProfileOptions = React.useCallback(() => {
+  const makeProfileOptions = useCallback(() => {
     return profiles.map((profile) => ({
       value: profile.id ?? '',
       label: profile.name ?? '',
