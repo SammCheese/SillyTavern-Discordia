@@ -1,11 +1,11 @@
-import React from 'react';
+import { lazy } from 'react';
 import { createPortal } from 'react-dom';
 import { useSidebarState } from './hooks/useSidebarState';
 import { SearchProvider } from './context/SearchContext';
 
 import { rootContainer } from './index';
 
-const SideBar = React.lazy(() => import('./components/sidebar/SideBar'));
+const SideBar = lazy(() => import('./components/sidebar/SideBar'));
 
 export const App = () => {
   const { open, setOpen, entities, chats, icons, isLoadingChats } =

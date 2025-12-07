@@ -4,11 +4,12 @@ import {
   useState,
   Suspense,
   useEffect,
+  type ReactNode,
 } from 'react';
 import { createPortal } from 'react-dom';
 
 export const ModalContext = createContext<{
-  openModal: (modal: React.ReactNode) => void;
+  openModal: (modal: ReactNode) => void;
   closeModal: () => void;
 }>({
   openModal: () => {},
@@ -20,7 +21,7 @@ const ModalShell = ({
   isVisible,
   onClose,
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
   isVisible: boolean;
   onClose: () => void;
 }) => {
@@ -57,11 +58,11 @@ const ModalShell = ({
   );
 };
 
-export function ModalProvider({ children }: { children: React.ReactNode }) {
-  const [content, setContent] = useState<React.ReactNode>(null);
+export function ModalProvider({ children }: { children: ReactNode }) {
+  const [content, setContent] = useState<ReactNode>(null);
   const [isVisible, setIsVisible] = useState<boolean>(false);
 
-  const openModal = useCallback((modal: React.ReactNode) => {
+  const openModal = useCallback((modal: ReactNode) => {
     setTimeout(() => setIsVisible(true), 10);
     setContent(modal);
   }, []);

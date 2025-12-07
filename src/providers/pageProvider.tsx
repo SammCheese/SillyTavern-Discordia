@@ -1,28 +1,35 @@
-import React, { useCallback } from 'react';
+import {
+  useCallback,
+  lazy,
+  useState,
+  useEffect,
+  createContext,
+  type ReactNode,
+} from 'react';
 import { createPortal } from 'react-dom';
 
 import { rootContainer } from '../index';
 
-const OpenPage = React.lazy(() => import('../pages/index'));
+const OpenPage = lazy(() => import('../pages/index'));
 
-export const PageContext = React.createContext<{
-  openPage: (page: React.ReactNode) => void;
+export const PageContext = createContext<{
+  openPage: (page: ReactNode) => void;
   closePage: () => void;
 }>({
   openPage: () => {},
   closePage: () => {},
 });
 
-export function PageProvider({ children }: { children: React.ReactNode }) {
-  const [content, setContent] = React.useState<React.ReactNode>(null);
-  const [isVisible, setIsVisible] = React.useState<boolean>(false);
+export function PageProvider({ children }: { children: ReactNode }) {
+  const [content, setContent] = useState<ReactNode>(null);
+  const [isVisible, setIsVisible] = useState<boolean>(false);
 
-  const openPage = useCallback((page: React.ReactNode) => {
+  const openPage = useCallback((page: ReactNode) => {
     setIsVisible(false);
     setContent(page);
   }, []);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (content) {
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
@@ -39,7 +46,7 @@ export function PageProvider({ children }: { children: React.ReactNode }) {
     }, 200);
   }, []);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         closePage();
