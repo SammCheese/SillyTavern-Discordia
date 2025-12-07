@@ -1,4 +1,4 @@
-import React from 'react';
+import { useContext, type ReactNode } from 'react';
 import { PageContext } from '../../../providers/pageProvider';
 
 const closeButton = () => {
@@ -35,9 +35,9 @@ const SettingsFrame = ({
   children,
 }: {
   title: string;
-  children: React.ReactNode;
+  children: ReactNode;
 }) => {
-  const { closePage } = React.useContext(PageContext);
+  const { closePage } = useContext(PageContext);
 
   return (
     <div

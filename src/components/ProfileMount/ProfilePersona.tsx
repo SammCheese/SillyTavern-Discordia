@@ -1,4 +1,4 @@
-import React from 'react';
+import { useMemo } from 'react';
 
 const { getThumbnailUrl, user_avatar } = await imports('@script');
 
@@ -9,7 +9,7 @@ const ProfilePersona = ({
   name: string;
   avatar: string | null;
 }) => {
-  const imageSrc = React.useMemo(() => {
+  const imageSrc = useMemo(() => {
     return getThumbnailUrl(
       'persona',
       avatar || user_avatar || 'user-default.png',

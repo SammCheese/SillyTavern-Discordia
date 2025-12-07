@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 
 
 const { lodash } = SillyTavern.libs;
@@ -104,14 +104,6 @@ export const useConnectionManager = () => {
 
     }, 300)();
   };
-
-  // Save settings on unmount
-  useEffect(() => {
-
-    return () => {
-      saveSettingsDebounced();
-    };
-  }, []);
 
   return {
     profiles,

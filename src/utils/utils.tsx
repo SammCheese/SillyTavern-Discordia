@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import React from 'react';
+import { createElement, type ReactElement } from 'react';
 
 const {
   characters,
@@ -136,7 +136,7 @@ export function isValidImageUrl(url) {
   );
 }
 
-export function makeReactGroupAvatar(groupItem: any): React.ReactElement {
+export function makeReactGroupAvatar(groupItem: any): ReactElement {
   if (!groupItem) {
     return <img src={default_avatar} />;
   }
@@ -173,16 +173,16 @@ export function makeReactGroupAvatar(groupItem: any): React.ReactElement {
   const avatarCount = memberAvatars.length;
 
   if (avatarCount >= 1 && avatarCount <= 4) {
-    const imgElements: React.ReactElement[] = [];
+    const imgElements: ReactElement[] = [];
 
     for (let i = 0; i < avatarCount; i++) {
-      const imgElement = React.createElement('img', {
+      const imgElement = createElement('img', {
         className: `img_${i + 1}`,
         src: memberAvatars[i],
       });
       imgElements.push(imgElement);
     }
-    const groupAvatar = React.createElement(
+    const groupAvatar = createElement(
       'div',
       {
         id: 'group_avatars_template',
@@ -200,14 +200,14 @@ export function makeReactGroupAvatar(groupItem: any): React.ReactElement {
   }
 
   // default avatar
-  const groupAvatar = React.createElement(
+  const groupAvatar = createElement(
     'div',
     {
       id: 'group_avatars_template',
       className: `collage_1 group-avatar`,
       title: `[Group] ${groupItem.name}`,
     },
-    React.createElement('img', { className: 'img_1', src: system_avatar }),
+    createElement('img', { className: 'img_1', src: system_avatar }),
   );
   return groupAvatar;
 }

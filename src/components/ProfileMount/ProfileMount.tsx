@@ -1,14 +1,22 @@
-import React, { useCallback } from 'react';
+import {
+  useCallback,
+  lazy,
+  useState,
+  useContext,
+  useEffect,
+  useMemo,
+  memo,
+} from 'react';
 import { PageContext } from '../../providers/pageProvider';
 import ProfilePersona from './ProfilePersona';
 
-const UserSettings = React.lazy(
+const UserSettings = lazy(
   () => import('../../pages/settings/user/UserSettings'),
 );
-const SamplerSettings = React.lazy(
+const SamplerSettings = lazy(
   () => import('../../pages/settings/samplers/SamplerSettings'),
 );
-const ConnectionSettings = React.lazy(
+const ConnectionSettings = lazy(
   () => import('../../pages/settings/connection/ConnectionSettings'),
 );
 
@@ -21,10 +29,10 @@ const ProfileMount = ({
   avatar?: string | null;
   icons?: Icon[] | null;
 }) => {
-  const [connStatus, setConnStatus] = React.useState<string>('no_connection');
-  const { openPage } = React.useContext(PageContext);
+  const [connStatus, setConnStatus] = useState<string>('no_connection');
+  const { openPage } = useContext(PageContext);
 
-  React.useEffect(() => {
+  useEffect(() => {
     eventSource.on(event_types.ONLINE_STATUS_CHANGED, handleConnectionChange);
 
     return () => {
@@ -60,11 +68,11 @@ const ProfileMount = ({
     }
   }, []);
 
-  const isApiConnected = React.useMemo(() => {
+  const isApiConnected = useMemo(() => {
     return connStatus !== 'no_connection';
   }, [connStatus]);
 
-  const iconsToShow = React.useMemo(() => {
+  const iconsToShow = useMemo(() => {
     return icons?.filter((i) => i.showInProfile) || [];
   }, [icons]);
 
@@ -132,4 +140,4 @@ const ProfileIcon = ({
   }
 };
 
-export default React.memo(ProfileMount);
+export default memo(ProfileMount);

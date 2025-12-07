@@ -1,4 +1,10 @@
-import React from 'react';
+import {
+  useState,
+  useCallback,
+  useEffect,
+  type ChangeEvent,
+  memo,
+} from 'react';
 
 interface CheckboxProps {
   label: string;
@@ -7,10 +13,10 @@ interface CheckboxProps {
 }
 
 const Checkbox = ({ label, checked = false, onChange }: CheckboxProps) => {
-  const [checkedState, setCheckedState] = React.useState(checked);
+  const [checkedState, setCheckedState] = useState(checked);
 
-  const toggleCheckbox = React.useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
+  const toggleCheckbox = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => {
       e.stopPropagation();
       const newCheckedState = !checkedState;
       setCheckedState(newCheckedState);
@@ -21,7 +27,7 @@ const Checkbox = ({ label, checked = false, onChange }: CheckboxProps) => {
     [checkedState, onChange],
   );
 
-  React.useEffect(() => {
+  useEffect(() => {
     setCheckedState(checked);
   }, [checked]);
 
@@ -71,4 +77,4 @@ const Checkbox = ({ label, checked = false, onChange }: CheckboxProps) => {
   );
 };
 
-export default React.memo(Checkbox);
+export default memo(Checkbox);

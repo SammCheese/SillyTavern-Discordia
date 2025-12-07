@@ -1,4 +1,4 @@
-import React from 'react';
+import { useState, useCallback, memo } from 'react';
 
 interface ToggleProps {
   isOn: boolean;
@@ -11,18 +11,14 @@ const Toggle = ({
   onToggle,
   onColor = 'var(--color-blurple)',
 }: ToggleProps) => {
-  const [onState, setOnState] = React.useState(isOn);
+  const [onState, setOnState] = useState(isOn);
 
-  React.useEffect(() => {
-    setOnState(isOn);
-  }, [isOn]);
-
-  const handleToggle = () => {
+  const handleToggle = useCallback(() => {
     setOnState(!onState);
     if (onToggle) {
       onToggle();
     }
-  };
+  }, [onState, onToggle]);
 
   return (
     <div
@@ -54,4 +50,4 @@ const Toggle = ({
   );
 };
 
-export default Toggle;
+export default memo(Toggle);

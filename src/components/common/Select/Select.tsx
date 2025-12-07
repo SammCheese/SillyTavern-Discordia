@@ -1,4 +1,4 @@
-import React from 'react';
+import { type FC, type ChangeEvent, memo, useCallback } from 'react';
 
 interface SelectOption {
   value: string;
@@ -12,17 +12,20 @@ interface SelectProps {
   disabled?: boolean;
 }
 
-const Select: React.FC<SelectProps> = ({
+const Select: FC<SelectProps> = ({
   options = [],
   value,
   onChange,
   disabled,
 }) => {
-  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    if (onChange) {
-      onChange(e.target.value);
-    }
-  };
+  const handleChange = useCallback(
+    (e: ChangeEvent<HTMLSelectElement>) => {
+      if (onChange) {
+        onChange(e.target.value);
+      }
+    },
+    [onChange],
+  );
 
   return (
     <select
@@ -40,4 +43,4 @@ const Select: React.FC<SelectProps> = ({
   );
 };
 
-export default React.memo(Select);
+export default memo(Select);

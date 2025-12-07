@@ -1,4 +1,4 @@
-import React from 'react';
+import { memo } from 'react';
 
 const AddCharacterIcon = ({
   onClick,
@@ -38,6 +38,4 @@ const AddCharacterIcon = ({
   );
 };
 
-const MemoizedAddCharacterIcon = React.memo(AddCharacterIcon);
-
-export default MemoizedAddCharacterIcon;
+export default memo(AddCharacterIcon);

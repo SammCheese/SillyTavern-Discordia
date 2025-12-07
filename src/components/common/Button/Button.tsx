@@ -1,4 +1,4 @@
-import React from 'react';
+import { useCallback, memo } from 'react';
 
 const Button = ({
   label,
@@ -9,7 +9,7 @@ const Button = ({
   onClick: () => void;
   disabled?: boolean;
 }) => {
-  const handleClick = React.useCallback(() => {
+  const handleClick = useCallback(() => {
     if (!disabled && onClick) {
       onClick();
     }
@@ -26,4 +26,4 @@ const Button = ({
   );
 };
 
-export default React.memo(Button);
+export default memo(Button);

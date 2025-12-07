@@ -1,17 +1,17 @@
-import React from 'react';
+import { lazy, type CSSProperties, useCallback, useState, memo } from 'react';
 
-const Input = React.lazy(() => import('../Input/Input'));
+const Input = lazy(() => import('../Input/Input'));
 
 interface SearchBarProps {
   onInput: (query: string) => void;
-  style?: React.CSSProperties;
+  style?: CSSProperties;
   onIconClick?: () => void;
 }
 
 const SearchBar = ({ onInput, style, onIconClick }: SearchBarProps) => {
-  const [query, setQuery] = React.useState('');
+  const [query, setQuery] = useState('');
 
-  const handleInputChange = React.useCallback(
+  const handleInputChange = useCallback(
     (e: string) => {
       setQuery(e);
       onInput(e);
@@ -19,7 +19,7 @@ const SearchBar = ({ onInput, style, onIconClick }: SearchBarProps) => {
     [onInput],
   );
 
-  const handleIconClick = React.useCallback(() => {
+  const handleIconClick = useCallback(() => {
     if (onIconClick) {
       onIconClick();
     }
@@ -40,4 +40,4 @@ const SearchBar = ({ onInput, style, onIconClick }: SearchBarProps) => {
   );
 };
 
-export default React.memo(SearchBar);
+export default memo(SearchBar);

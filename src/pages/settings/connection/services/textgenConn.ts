@@ -11,7 +11,7 @@ export const getTextGenStatus = async (server?: string): Promise<string | false 
     button.trigger('click');
   }
 
-  // consinue with our own check
+  // continue with our own check
     const url = '/api/backends/text-completions/status';
 
       const endpoint = getTextGenServer();

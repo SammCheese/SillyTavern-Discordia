@@ -1,4 +1,4 @@
-import React from 'react';
+import { type ReactNode, useCallback, useState, memo } from 'react';
 
 export const Accordion = ({
   title,
@@ -9,16 +9,16 @@ export const Accordion = ({
   title: string;
   isOpen?: boolean;
   onToggle?: () => void;
-  children: React.ReactNode;
+  children: ReactNode;
 }) => {
-  const [open, setOpen] = React.useState(isOpen);
+  const [open, setOpen] = useState(isOpen);
 
-  const handleToggle = () => {
+  const handleToggle = useCallback(() => {
     setOpen(!open);
     if (onToggle) {
       onToggle();
     }
-  };
+  }, [open, onToggle]);
 
   return (
     <div className="accordion border-none rounded mb-4">
@@ -43,4 +43,4 @@ export const Accordion = ({
   );
 };
 
-export default Accordion;
+export default memo(Accordion);

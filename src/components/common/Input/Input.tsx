@@ -1,4 +1,10 @@
-import React from 'react';
+import {
+  type CSSProperties,
+  useState,
+  useCallback,
+  type ChangeEvent,
+  memo,
+} from 'react';
 
 interface InputProps {
   placeholder?: string;
@@ -7,7 +13,7 @@ interface InputProps {
   value?: string | number | undefined;
   onChange: (value: string) => void;
   type?: string;
-  style?: React.CSSProperties;
+  style?: CSSProperties;
   disabled?: boolean;
 }
 
@@ -21,10 +27,10 @@ const Input = ({
   disabled = false,
   type = 'text',
 }: InputProps) => {
-  const [content, setContent] = React.useState(value ?? defaultValue ?? '');
+  const [content, setContent] = useState(value ?? defaultValue ?? '');
 
-  const handleInputChange = React.useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => {
       setContent(e.target.value);
       onChange(e.target.value);
     },
@@ -46,4 +52,4 @@ const Input = ({
   );
 };
 
-export default React.memo(Input);
+export default memo(Input);

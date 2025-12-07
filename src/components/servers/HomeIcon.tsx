@@ -1,4 +1,4 @@
-import React from 'react';
+import { memo } from 'react';
 
 const HomeIcon = ({ onClick }: { onClick?: (() => void) | undefined }) => {
   const handleClick = () => {
@@ -32,4 +32,4 @@ const HomeIcon = ({ onClick }: { onClick?: (() => void) | undefined }) => {
   );
 };
 
-export default React.memo(HomeIcon);
+export default memo(HomeIcon);
