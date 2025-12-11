@@ -17,15 +17,21 @@ const ProfilePersona = ({
   }, [avatar]);
 
   return (
-    <>
-      <div id="user-avatar">
+    <div
+      id="profile-persona-container"
+      className="hover:bg-lighter w-full cursor-pointer flex items-center rounded-md transition-colors ease-in-out"
+    >
+      <div
+        id="user-avatar"
+        className="mr-2 h-10 w-10 shrink-0 flex items-center justify-center"
+      >
         <img
           loading="lazy"
           id="discordia-avatar"
           src={imageSrc}
           style={{
-            width: '40px',
-            height: '40px',
+            width: '36px',
+            height: '36px',
             borderRadius: '50%',
             objectFit: 'cover',
             cursor: 'pointer',
@@ -39,7 +45,7 @@ const ProfilePersona = ({
         <div id="user-name">{name}</div>
         <div id="user-status"></div>
       </div>
-    </>
+    </div>
   );
 };
 

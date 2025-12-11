@@ -1,5 +1,16 @@
-import { memo, useEffect, useMemo, useState } from 'react';
+import {
+  memo,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 import GroupAvatar from '../groupAvatar/GroupAvatar';
+import {
+  ContextMenuContext,
+  type ContextMenuItem,
+} from '../../providers/contextMenuProvider';
 
 const { getThumbnailUrl } = await imports('@script');
 
@@ -17,6 +28,7 @@ const ServerIcon = ({
   index,
 }: ServerIconProps) => {
   const [hovered, setHovered] = useState(false);
+  const { showContextMenu } = useContext(ContextMenuContext);
 
   // Precaution
   useEffect(() => {
@@ -35,12 +47,59 @@ const ServerIcon = ({
     }
   };
 
+  const menuOptions = useMemo(() => {
+    return [
+      {
+        label: entity.item?.name || 'Character',
+        disabled: true,
+      },
+      { label: '---', variant: 'separator' },
+      {
+        label: 'Edit (Coming Soon)',
+        disabled: true,
+      },
+      {
+        label: 'Duplicate',
+      },
+      {
+        label: 'Export',
+      },
+      {
+        label: '---',
+        variant: 'separator',
+      },
+      {
+        label: 'Delete',
+        variant: 'danger',
+      },
+    ] as ContextMenuItem[];
+  }, [entity]);
+
+  const onRightClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+      showContextMenu(e, menuOptions);
+    },
+    [entity, index, showContextMenu],
+  );
+
   const memoizedSrc = useMemo(() => {
     return getThumbnailUrl('avatar', entity.item?.avatar || entity.id);
   }, [entity]);
 
+  const handleHover = () => {
+    setHovered(true);
+  };
+
+  const handleHoverLeave = () => {
+    setHovered(false);
+  };
+
   return (
-    <div className="flex m-0 relative w-full h-fit">
+    <div
+      className="flex m-0 relative w-full h-fit"
+      onContextMenu={onRightClick}
+    >
       <div className="absolute start-0 top-0 w-2 justify-start items-center flex h-full">
         <span
           style={{ borderRadius: '0 4px 4px 0' }}
@@ -53,12 +112,8 @@ const ServerIcon = ({
       </div>
 
       <div
-        onMouseEnter={() => {
-          setHovered(true);
-        }}
-        onMouseLeave={() => {
-          setHovered(false);
-        }}
+        onMouseEnter={handleHover}
+        onMouseLeave={handleHoverLeave}
         onClick={handleClick}
         className="cursor-pointer w-full h-fit flex justify-center items-center"
       >

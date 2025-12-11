@@ -13,7 +13,7 @@ const OpenPage = ({ children, isVisible, onClose }: OpenPageProps) => {
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
-      className={`        ${
+      className={`${
         isVisible
           ? 'bg-black/80 backdrop-blur-sm opacity-100'
           : 'bg-black/0 backdrop-blur-none opacity-0 pointer-events-none'

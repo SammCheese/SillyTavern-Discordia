@@ -107,24 +107,30 @@ const ProfileIcon = ({
   enabled = true,
 }: ProfileIconProps) => {
   // connection thing is a special cookie
-  const isPlugIcon = icon.className.includes('fa-plug');
+  const isPlugIcon = useMemo(
+    () => icon.className.includes('fa-plug'),
+    [icon.className],
+  );
+  const connectedClasses = useMemo(
+    () =>
+      apiConnected
+        ? icon.className
+            .replace('redOverlayGlow', '')
+            .replace('fa-plug-circle-exclamation', 'fa-plug')
+        : `${icon.className}`,
+    [apiConnected, icon.className],
+  );
 
-  const handleClick = () => {
+  const handleClick = useCallback(() => {
     if (onClick && enabled) {
       onClick(icon);
     }
-  };
+  }, [onClick, enabled, icon]);
 
   if (isPlugIcon) {
     return (
       <div
-        className={
-          apiConnected
-            ? icon.className
-                .replace('fa-plug-circle-exclamation', 'fa-plug')
-                .replace('redOverlayGlow', '')
-            : `${icon.className}`
-        }
+        className={connectedClasses}
         title={icon.title}
         onClick={handleClick}
       />

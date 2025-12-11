@@ -1,5 +1,6 @@
-import React from 'react';
+import { useContext, memo } from 'react';
 import Skeleton from 'react-loading-skeleton';
+import { ContextMenuContext } from '../../providers/contextMenuProvider';
 
 interface ChannelEntryProps {
   avatar: string;
@@ -16,10 +17,37 @@ const ChannelEntry = ({
   onClick,
   isLoading = false,
 }: ChannelEntryProps) => {
+  const { showContextMenu } = useContext(ContextMenuContext);
+
   const handleClick = () => {
     if (onClick) {
       onClick(chat);
     }
+  };
+
+  const handleRightClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    showContextMenu(e, [
+      {
+        label: 'Open',
+        onClick: () => {
+          handleClick();
+        },
+      },
+      {
+        label: 'Export',
+        onClick: () => {
+          console.log('Export channel:', chat.file_id);
+        },
+      },
+      {
+        label: 'Delete',
+        variant: 'danger',
+        onClick: () => {
+          console.log('Delete channel:', chat.file_id);
+        },
+      },
+    ]);
   };
 
   return (
@@ -28,6 +56,7 @@ const ChannelEntry = ({
       id={`recent-chat-${chat.file_id}`}
       title={chat.file_id}
       onClick={handleClick}
+      onContextMenu={handleRightClick}
     >
       <div className="items-stretch flex w-full box-border">
         {isLoading ? (
@@ -69,4 +98,4 @@ const ChannelEntry = ({
   );
 };
 
-export default React.memo(ChannelEntry);
+export default memo(ChannelEntry);
