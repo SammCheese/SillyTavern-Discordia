@@ -29,6 +29,11 @@
     hsl(234.935 calc(1 * 85.556%) 64.706% /1) 100%,
     #000 0%
   );
+  --color-blurple-lighter: color-mix(
+    in oklab,
+    hsl(234.935 calc(1 * 85.556%) 64.706% /1) 100%,
+    #000 10%
+  );
 
   --accordion-header-bg: hsl(240 calc(1 * 4%) 60.784% /0.0784313725490196);
 }
@@ -65,7 +70,7 @@
 }
 
 :root {
-  --profile-container-height: 60px;
+  --profile-container-height: 68px;
   --sidebar-width-mobile: 80px;
   --character-container-width: 80px;
 }
@@ -187,7 +192,7 @@ select {
 }
 
 #user-profile-container {
-  padding: 4px;
+  padding: 6px;
   border-radius: 8px;
   background-color: rgba(255, 255, 255, 0.05);
   display: flex;

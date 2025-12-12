@@ -78,7 +78,7 @@ const ChannelEntry = ({
                   className="rounded-4xl h-9 w-9 object-cover flex me-3 justify-center"
                   src={avatar}
                 />
-                <div className="truncate">
+                <div className="truncate select-none">
                   {chat?.file_id ?? chat.file_name}
                 </div>
               </div>

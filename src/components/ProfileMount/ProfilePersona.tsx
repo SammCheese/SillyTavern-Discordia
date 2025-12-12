@@ -23,7 +23,7 @@ const ProfilePersona = ({
     >
       <div
         id="user-avatar"
-        className="mr-2 h-10 w-10 shrink-0 flex items-center justify-center"
+        className="mx-1 h-10 w-10 shrink-0 flex items-center justify-center"
       >
         <img
           loading="lazy"
@@ -42,7 +42,9 @@ const ProfilePersona = ({
 
       <div id="user-info">
         {' '}
-        <div id="user-name">{name}</div>
+        <div id="user-name" className="select-none">
+          {name}
+        </div>
         <div id="user-status"></div>
       </div>
     </div>

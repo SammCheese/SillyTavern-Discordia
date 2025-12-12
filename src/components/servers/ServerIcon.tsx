@@ -11,6 +11,8 @@ import {
   ContextMenuContext,
   type ContextMenuItem,
 } from '../../providers/contextMenuProvider';
+import { ModalContext } from '../../providers/modalProvider';
+import CharacterEditModal from '../../modals/CharacterEdit/CharacterModal';
 
 const { getThumbnailUrl } = await imports('@script');
 
@@ -29,6 +31,7 @@ const ServerIcon = ({
 }: ServerIconProps) => {
   const [hovered, setHovered] = useState(false);
   const { showContextMenu } = useContext(ContextMenuContext);
+  const { openModal } = useContext(ModalContext);
 
   // Precaution
   useEffect(() => {
@@ -55,8 +58,14 @@ const ServerIcon = ({
       },
       { label: '---', variant: 'separator' },
       {
-        label: 'Edit (Coming Soon)',
-        disabled: true,
+        label: 'Edit',
+        onClick: () => {
+          openModal(
+            <CharacterEditModal
+              avatarName={entity.item?.avatar.toString() || ''}
+            />,
+          );
+        },
       },
       {
         label: 'Duplicate',
