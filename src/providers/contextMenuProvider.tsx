@@ -2,6 +2,7 @@ import {
   createContext,
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -9,14 +10,8 @@ import {
   type ReactNode,
 } from 'react';
 import { createPortal } from 'react-dom';
-
-export interface ContextMenuItem {
-  label: string;
-  onClick?: () => void;
-  icon?: ReactNode;
-  variant?: 'default' | 'separator' | 'danger';
-  disabled?: boolean;
-}
+import { type ContextMenuItem } from '../components/common/ContextMenuEntry/ContextMenuEntry';
+import ContextMenuList from '../components/common/ContextMenuEntry/ContextMenuEntryList';
 
 export const ContextMenuContext = createContext<{
   showContextMenu: (e: MouseEvent, items: ContextMenuItem[]) => void;
@@ -34,6 +29,8 @@ export function ContextMenuProvider({ children }: { children: ReactNode }) {
   const [menuItems, setMenuItems] = useState<ContextMenuItem[] | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
 
+  const isMobile = window.innerWidth <= 768;
+
   const closeContextMenu = useCallback(() => {
     setIsVisible(false);
   }, []);
@@ -42,26 +39,35 @@ export function ContextMenuProvider({ children }: { children: ReactNode }) {
     (e: MouseEvent, items: ContextMenuItem[]) => {
       e.preventDefault();
       e.stopPropagation();
+
       const clickX = e.clientX;
       const clickY = e.clientY;
-      const screenW = window.innerWidth;
-      const screenH = window.innerHeight;
-      const rootW = menuRef.current ? menuRef.current.offsetWidth : 0;
-      const rootH = menuRef.current ? menuRef.current.offsetHeight : 0;
 
-      const rightOverflow = clickX + rootW > screenW;
-      const bottomOverflow = clickY + rootH > screenH;
-
-      setPosition({
-        x: rightOverflow ? clickX - rootW : clickX,
-        y: bottomOverflow ? clickY - rootH : clickY,
-      });
-
+      setPosition({ x: clickX, y: clickY });
       setMenuItems(items);
       setIsVisible(true);
     },
     [],
   );
+
+  useLayoutEffect(() => {
+    if (isVisible && menuRef.current && !isMobile) {
+      const { offsetWidth: rootW, offsetHeight: rootH } = menuRef.current;
+      const screenW = window.innerWidth;
+      const screenH = window.innerHeight;
+      const { x, y } = position || { x: 0, y: 0 };
+
+      const rightOverflow = x + rootW > screenW;
+      const bottomOverflow = y + rootH > screenH;
+
+      if (rightOverflow || bottomOverflow) {
+        setPosition({
+          x: rightOverflow ? x - rootW : x,
+          y: bottomOverflow ? y - rootH : y,
+        });
+      }
+    }
+  }, [isVisible, isMobile, position]);
 
   useEffect(() => {
     const handleClick = () => isVisible && closeContextMenu();
@@ -81,11 +87,6 @@ export function ContextMenuProvider({ children }: { children: ReactNode }) {
     };
   }, [isVisible, closeContextMenu]);
 
-  const menuPosition = useMemo(() => {
-    if (!isVisible || !position) return null;
-    return position;
-  }, [isVisible, position]);
-
   const contextValue = useMemo(
     () => ({
       showContextMenu: handleContextMenu,
@@ -94,47 +95,45 @@ export function ContextMenuProvider({ children }: { children: ReactNode }) {
     [handleContextMenu, closeContextMenu],
   );
 
+  const styles = {
+    mobile: {
+      container:
+        'absolute h-fit z-70 bg-base-discordia border-t border-darker rounded-t-xl shadow-2xl p-4 pb-8 animate-slide-up',
+    },
+    desktop: {
+      container:
+        'fixed z-70 min-w-[180px] max-w-[300px] bg-base-discordia border border-darker rounded-lg shadow-lg p-1 animate-in fade-in zoom-in-95 duration-100',
+    },
+  };
+
   return (
     <ContextMenuContext.Provider value={contextValue}>
       {isVisible &&
         createPortal(
           <div
-            ref={menuRef}
-            style={{
-              top: menuPosition?.y,
-              left: menuPosition?.x,
-            }}
-            className="fixed z-70 min-w-[180px] max-w-[300px] bg-base-discordia border border-darker rounded-lg shadow-lg p-1 animate-in fade-in zoom-in-95 duration-100"
-            onContextMenu={(e) => e.preventDefault()}
+            className={`z-60 fixed top-0 left-0 w-dvw h-dvh ${isMobile ? 'bg-black/60 backdrop-blur-[2px] opacity-100' : ''}`}
           >
-            {menuItems?.map((item, index) => {
-              if (item.variant === 'separator') {
-                return (
-                  <div key={index} className="border-t border-lighter my-1" />
-                );
-              }
-              return (
-                <div
-                  key={index}
-                  onClick={() => {
-                    if (!item.disabled && item.onClick) {
-                      item.onClick();
-                      closeContextMenu();
+            <div
+              ref={menuRef}
+              style={
+                isMobile
+                  ? { bottom: 0, left: 0, width: '100%' }
+                  : {
+                      top: position?.y,
+                      left: position?.x,
                     }
-                  }}
-                  className={`px-4 py-1.5 rounded-lg  ${
-                    item.disabled
-                      ? 'opacity-50 cursor-not-allowed'
-                      : 'hover:bg-lighter cursor-pointer'
-                  } ${
-                    item.variant === 'danger' ? 'text-red-500' : 'text-white'
-                  } flex items-center space-x-2`}
-                >
-                  <span>{item.label}</span>
-                  {item.icon && <span>{item.icon}</span>}
-                </div>
-              );
-            })}
+              }
+              className={
+                isMobile ? styles.mobile.container : styles.desktop.container
+              }
+              onClick={(e) => e.stopPropagation()}
+              onContextMenu={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              }}
+            >
+              <ContextMenuList items={menuItems || []} isMobile={isMobile} />
+            </div>
           </div>,
           document.body,
         )}
@@ -142,4 +141,5 @@ export function ContextMenuProvider({ children }: { children: ReactNode }) {
     </ContextMenuContext.Provider>
   );
 }
+
 export default ContextMenuProvider;

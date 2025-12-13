@@ -9,6 +9,11 @@
     hsl(230 calc(1 * 6.383%) 18.431% /1) 100%,
     #000 0%
   );
+  --color-base-discordia-lighter: color-mix(
+    in oklab,
+    hsl(230 calc(1 * 6.383%) 18.431% /1) 100%,
+    #fff 10%
+  );
   --color-input-bg: color-mix(
     in oklab,
     hsl(0 calc(1 * 0%) 0% /0.0784313725490196) 100%,
