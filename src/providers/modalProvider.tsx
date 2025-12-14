@@ -31,7 +31,7 @@ const ModalShell = ({
         if (e.target === e.currentTarget) onClose();
       }}
       className={`
-        fixed inset-0 z-60 flex items-center justify-center p-4
+        fixed w-dvw h-dvh inset-0 z-60 flex items-center justify-center p-4
         transition-all duration-200 ease-out
         ${
           isVisible
@@ -41,9 +41,7 @@ const ModalShell = ({
       `}
     >
       <div
-        className={`
-          bg-gray-800 rounded-lg shadow-2xl border border-gray-700
-          max-w-lg w-full max-h-[90vh] overflow-y-auto custom-scrollbar
+        className={` w-full max-w-lg h-full max-h-[85vh] relative
           transition-all duration-200 ease-out transform
           ${
             isVisible

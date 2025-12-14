@@ -1,5 +1,6 @@
-import React from 'react';
+import { useContext, memo } from 'react';
 import Skeleton from 'react-loading-skeleton';
+import { ContextMenuContext } from '../../providers/contextMenuProvider';
 
 interface ChannelEntryProps {
   avatar: string;
@@ -9,6 +10,8 @@ interface ChannelEntryProps {
   isLoading?: boolean;
 }
 
+const { deleteCharacterChatByName } = await imports('@script');
+
 const ChannelEntry = ({
   avatar,
   chat,
@@ -16,10 +19,55 @@ const ChannelEntry = ({
   onClick,
   isLoading = false,
 }: ChannelEntryProps) => {
+  const { showContextMenu } = useContext(ContextMenuContext);
+
   const handleClick = () => {
     if (onClick) {
       onClick(chat);
     }
+  };
+
+  const handleDelete = async () => {
+    try {
+      let charId = chat.char_id ?? null;
+      if (!charId) {
+        charId = SillyTavern.getContext().characters.findIndex(
+          (c) => c.avatar === chat.avatar,
+        );
+      }
+      if (charId === null || charId === -1) return;
+
+      await deleteCharacterChatByName(charId.toString(), chat.file_id);
+    } catch (error) {
+      console.error('Error deleting chat:', error);
+    }
+  };
+
+  const handleRightClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    showContextMenu(e, [
+      {
+        label: 'Open',
+        onClick: () => {
+          handleClick();
+        },
+      },
+      /*{
+        label: 'Export',
+        onClick: () => {
+          console.log('Export channel:', chat.file_id);
+        },
+      },*/
+      {
+        label: '---',
+        variant: 'separator',
+      },
+      {
+        label: 'Delete',
+        variant: 'danger',
+        onClick: () => handleDelete(),
+      },
+    ]);
   };
 
   return (
@@ -28,6 +76,7 @@ const ChannelEntry = ({
       id={`recent-chat-${chat.file_id}`}
       title={chat.file_id}
       onClick={handleClick}
+      onContextMenu={handleRightClick}
     >
       <div className="items-stretch flex w-full box-border">
         {isLoading ? (
@@ -49,7 +98,7 @@ const ChannelEntry = ({
                   className="rounded-4xl h-9 w-9 object-cover flex me-3 justify-center"
                   src={avatar}
                 />
-                <div className="truncate">
+                <div className="truncate select-none">
                   {chat?.file_id ?? chat.file_name}
                 </div>
               </div>
@@ -69,4 +118,4 @@ const ChannelEntry = ({
   );
 };
 
-export default React.memo(ChannelEntry);
+export default memo(ChannelEntry);

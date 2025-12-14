@@ -1,29 +1,58 @@
-import React from 'react';
+import { useCallback, memo, type ReactNode, useMemo } from 'react';
+
+export enum ButtonLook {
+  DANGER = 'danger',
+  PRIMARY = 'primary',
+  SECONDARY = 'secondary',
+  TRANSPARENT = 'transparent',
+}
+interface ButtonProps {
+  label?: string;
+  onClick?: () => void;
+  disabled?: boolean;
+  children?: ReactNode;
+  look?: ButtonLook;
+}
 
 const Button = ({
   label,
   onClick,
+  children,
   disabled = false,
-}: {
-  label: string;
-  onClick: () => void;
-  disabled?: boolean;
-}) => {
-  const handleClick = React.useCallback(() => {
+  look = ButtonLook.PRIMARY,
+}: ButtonProps) => {
+  const handleClick = useCallback(() => {
     if (!disabled && onClick) {
       onClick();
     }
   }, [disabled, onClick]);
 
+  const getButtonClass = useCallback(() => {
+    switch (look) {
+      case ButtonLook.DANGER:
+        return 'bg-red-600 hover:bg-red-700 border-red-700';
+      case ButtonLook.SECONDARY:
+        return 'bg-gray-600 hover:bg-gray-700 border-gray-700';
+      case ButtonLook.PRIMARY:
+        return 'hover:bg-blurple-lighter bg-blurple border-blurple';
+      case ButtonLook.TRANSPARENT:
+        return 'bg-transparent hover:border-blurple border-white';
+      default:
+        return 'hover:bg-blurple-lighter bg-blurple border-blurple';
+    }
+  }, [look]);
+
+  const buttonClass = useMemo(() => getButtonClass(), [getButtonClass]);
+
   return (
     <button
-      className="px-4 py-2 text-white border hover:border-blue-500 cursor-pointer rounded disabled:opacity-50"
+      className={`px-4 py-2 text-white font-bold border cursor-pointer rounded disabled:opacity-50 ${buttonClass}`}
       onClick={handleClick}
       disabled={disabled}
     >
-      {label}
+      {label || children}
     </button>
   );
 };
 
-export default React.memo(Button);
+export default memo(Button);

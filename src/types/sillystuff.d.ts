@@ -33,4 +33,22 @@ type ConnectAPIMap = {
 }
 
 
-
+type Character = {
+  name: string;
+  description: string;
+  personality: string;
+  scenario: string;
+  first_mes: string;
+  mes_example: string;
+  creatorcomment: string;
+  tags: string[];
+  talkativeness: number;
+  fav: boolean | string;
+  create_date: string;
+  data: unknown; // v2 data extension
+  // Non-standard extensions added by the ST server (not part of the original data)
+  chat?: string;
+  avatar?: string;
+  json_data?: string;
+  shallow?: boolean;
+}

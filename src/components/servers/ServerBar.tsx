@@ -1,18 +1,18 @@
-import React, { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, lazy, memo, useState } from 'react';
 import { List, type RowComponentProps } from 'react-window';
 import { selectCharacter, selectGroup } from '../../utils/utils';
 import { useSearch } from '../../context/SearchContext';
 
-const ServerIcon = React.lazy(() => import('./ServerIcon'));
-const AddCharacterIcon = React.lazy(() => import('./AddCharacterIcon'));
-const HomeIcon = React.lazy(() => import('./HomeIcon'));
+const ServerIcon = lazy(() => import('./ServerIcon'));
+const AddCharacterIcon = lazy(() => import('./AddCharacterIcon'));
+const HomeIcon = lazy(() => import('./HomeIcon'));
 
 //const { openWelcomeScreen } = await imports('@scripts/welcomeScreen');
 const { getGroupPastChats } = await imports('@scripts/groupChats');
 const { getPastCharacterChats, characters, closeCurrentChat } =
   await imports('@script');
 
-const ServerRow = React.memo(
+const ServerRow = memo(
   function ServerRow({
     entity,
     index,
@@ -86,7 +86,7 @@ const Row = ({ index, style, data }: RowComponentProps<RowData>) => {
 };
 
 const ServerBar = ({ entities }: { entities: Entity[] }) => {
-  const [selectedIndex, setSelectedIndex] = React.useState<number | null>(null);
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const { searchQuery } = useSearch();
 
   const onHomeClickHandler = useCallback(async () => {
@@ -202,4 +202,4 @@ const ServerBar = ({ entities }: { entities: Entity[] }) => {
   );
 };
 
-export default React.memo(ServerBar);
+export default memo(ServerBar);

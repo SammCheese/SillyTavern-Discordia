@@ -1,11 +1,11 @@
-import React from 'react';
+import { lazy, useEffect } from 'react';
 
-const SettingsFrame = React.lazy(() => import('../base/Base'));
+const SettingsFrame = lazy(() => import('../base/Base'));
 
 const { saveSettingsDebounced } = await imports('@script');
 
 const PersonaSettings = () => {
-  React.useEffect(() => {
+  useEffect(() => {
     return () => {
       saveSettingsDebounced();
     };

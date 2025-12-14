@@ -1,9 +1,8 @@
-import React from 'react';
+import { lazy, useMemo } from 'react';
 
-const ProfileMount = React.lazy(() => import('../ProfileMount/ProfileMount'));
-const ChannelBar = React.lazy(() => import('../channels/ChannelBar'));
-const ServerBar = React.lazy(() => import('../servers/ServerBar'));
-
+const ProfileMount = lazy(() => import('../ProfileMount/ProfileMount'));
+const ChannelBar = lazy(() => import('../channels/ChannelBar'));
+const ServerBar = lazy(() => import('../servers/ServerBar'));
 interface SideBarProps {
   open: boolean;
   setOpen: (open: boolean) => void;
@@ -21,9 +20,9 @@ const SideBar = ({
   icons,
   isLoadingChats,
 }: SideBarProps) => {
-  const memoizedEntities = React.useMemo(() => entities, [entities]);
-  const memoizedChats = React.useMemo(() => chats, [chats]);
-  const memoizedIcons = React.useMemo(() => icons, [icons]);
+  const memoizedEntities = useMemo(() => entities, [entities]);
+  const memoizedChats = useMemo(() => chats, [chats]);
+  const memoizedIcons = useMemo(() => icons, [icons]);
 
   return (
     <div

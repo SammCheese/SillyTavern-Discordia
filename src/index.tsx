@@ -9,6 +9,7 @@ const App = lazy(() => import('./App'));
 
 // @ts-expect-error Styles Import
 import './styles.css';
+import ContextMenuProvider from './providers/contextMenuProvider';
 
 // Insert sidebar before top bar
 const topBar = document.getElementById('top-bar');
@@ -28,7 +29,9 @@ root.render(
   <StrictMode>
     <PageProvider>
       <ModalProvider>
-        <App />
+        <ContextMenuProvider>
+          <App />
+        </ContextMenuProvider>
       </ModalProvider>
     </PageProvider>
   </StrictMode>,

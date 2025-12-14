@@ -1,14 +1,22 @@
-import React, { useCallback } from 'react';
+import {
+  useCallback,
+  lazy,
+  useState,
+  useContext,
+  useEffect,
+  useMemo,
+  memo,
+} from 'react';
 import { PageContext } from '../../providers/pageProvider';
 import ProfilePersona from './ProfilePersona';
 
-const UserSettings = React.lazy(
+const UserSettings = lazy(
   () => import('../../pages/settings/user/UserSettings'),
 );
-const SamplerSettings = React.lazy(
+const SamplerSettings = lazy(
   () => import('../../pages/settings/samplers/SamplerSettings'),
 );
-const ConnectionSettings = React.lazy(
+const ConnectionSettings = lazy(
   () => import('../../pages/settings/connection/ConnectionSettings'),
 );
 
@@ -21,10 +29,10 @@ const ProfileMount = ({
   avatar?: string | null;
   icons?: Icon[] | null;
 }) => {
-  const [connStatus, setConnStatus] = React.useState<string>('no_connection');
-  const { openPage } = React.useContext(PageContext);
+  const [connStatus, setConnStatus] = useState<string>('no_connection');
+  const { openPage } = useContext(PageContext);
 
-  React.useEffect(() => {
+  useEffect(() => {
     eventSource.on(event_types.ONLINE_STATUS_CHANGED, handleConnectionChange);
 
     return () => {
@@ -60,11 +68,11 @@ const ProfileMount = ({
     }
   }, []);
 
-  const isApiConnected = React.useMemo(() => {
+  const isApiConnected = useMemo(() => {
     return connStatus !== 'no_connection';
   }, [connStatus]);
 
-  const iconsToShow = React.useMemo(() => {
+  const iconsToShow = useMemo(() => {
     return icons?.filter((i) => i.showInProfile) || [];
   }, [icons]);
 
@@ -99,24 +107,30 @@ const ProfileIcon = ({
   enabled = true,
 }: ProfileIconProps) => {
   // connection thing is a special cookie
-  const isPlugIcon = icon.className.includes('fa-plug');
+  const isPlugIcon = useMemo(
+    () => icon.className.includes('fa-plug'),
+    [icon.className],
+  );
+  const connectedClasses = useMemo(
+    () =>
+      apiConnected
+        ? icon.className
+            .replace('redOverlayGlow', '')
+            .replace('fa-plug-circle-exclamation', 'fa-plug')
+        : `${icon.className}`,
+    [apiConnected, icon.className],
+  );
 
-  const handleClick = () => {
+  const handleClick = useCallback(() => {
     if (onClick && enabled) {
       onClick(icon);
     }
-  };
+  }, [onClick, enabled, icon]);
 
   if (isPlugIcon) {
     return (
       <div
-        className={
-          apiConnected
-            ? icon.className
-                .replace('fa-plug-circle-exclamation', 'fa-plug')
-                .replace('redOverlayGlow', '')
-            : `${icon.className}`
-        }
+        className={connectedClasses}
         title={icon.title}
         onClick={handleClick}
       />
@@ -132,4 +146,4 @@ const ProfileIcon = ({
   }
 };
 
-export default React.memo(ProfileMount);
+export default memo(ProfileMount);

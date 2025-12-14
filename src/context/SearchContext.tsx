@@ -1,7 +1,8 @@
-import React, {
+import {
   createContext,
   useState,
   useCallback,
+  useContext,
   type ReactNode,
 } from 'react';
 
@@ -31,7 +32,7 @@ export const SearchProvider = ({ children }: { children: ReactNode }) => {
 };
 
 export const useSearch = () => {
-  const context = React.useContext(SearchContext);
+  const context = useContext(SearchContext);
   if (!context) {
     throw new Error('useSearch cannot be used outside of SearchProvider');
   }

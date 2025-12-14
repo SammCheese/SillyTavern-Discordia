@@ -134,19 +134,21 @@ const ExtensionSettings = () => {
     };
   }, []);
 
-  const onToggle = useCallback((extension: ExtensionInfo) => {
+  const onToggle = useCallback(async (extension: ExtensionInfo) => {
     console.log('Toggling extension:', extension.name);
-    setDisabledExtensions((prev) => {
-      const isCurrentlyDisabled = prev.includes(extension.name);
 
-      if (isCurrentlyDisabled) {
-        enableExtension(extension.name, false);
-        return prev.filter((name) => name !== extension.name);
-      } else {
-        disableExtension(extension.name, false);
-        return [...prev, extension.name];
-      }
-    });
+    const currentDisabled = currentDisabledRef.current;
+    if (extension.disabled) {
+      await enableExtension(extension.name, false);
+      currentDisabledRef.current = currentDisabled.filter(
+        (name) => name !== extension.name,
+      );
+    } else {
+      await disableExtension(extension.name, false);
+      currentDisabledRef.current = [...currentDisabled, extension.name];
+    }
+
+    setDisabledExtensions(currentDisabledRef.current);
 
     setExtensions((prev) => {
       const newExtensions = { ...prev };

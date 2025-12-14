@@ -1,23 +1,22 @@
-import React from "react";
+import { lazy, useEffect } from 'react';
 
-const SettingsFrame = React.lazy(() => import('../base/Base'));
+const SettingsFrame = lazy(() => import('../base/Base'));
 
 const { power_user } = await imports('@scripts/powerUser');
 const { saveSettingsDebounced } = await imports('@script');
 
 const UserSettings = () => {
-  React.useEffect(() => {
-    console.log("Power User Settings Loaded:", power_user);
+  useEffect(() => {
+    console.log('Power User Settings Loaded:', power_user);
     return () => {
-      console.log("Power User Settings Unloaded, saving settings.");
+      console.log('Power User Settings Unloaded, saving settings.');
       saveSettingsDebounced();
     };
   }, [power_user]);
 
   return (
     <SettingsFrame title="User Settings">
-      <div className="settings-section">
-      </div>
+      <div className="settings-section"></div>
     </SettingsFrame>
   );
 };
