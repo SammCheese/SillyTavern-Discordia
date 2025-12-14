@@ -107,6 +107,9 @@ export const useSidebarState = () => {
     eventSource.on(event_types.CHAT_DELETED, updateChatData);
     eventSource.on(event_types.CHAT_CREATED, updateChatData);
     eventSource.on(event_types.SETTINGS_UPDATED, handleSettingsUpdate);
+    eventSource.on(event_types.CHARACTER_EDITED, resetWithNewData);
+    eventSource.on(event_types.CHARACTER_RENAMED, resetWithNewData);
+    eventSource.on(event_types.CHARACTER_DELETED, resetWithNewData);
 
     // Swipe Listeners
     const THRESHOLD = 100;
@@ -143,6 +146,9 @@ export const useSidebarState = () => {
       eventSource.removeListener(event_types.CHAT_DELETED, updateChatData);
       eventSource.removeListener(event_types.CHAT_CREATED, updateChatData);
       eventSource.removeListener(event_types.SETTINGS_UPDATED, handleSettingsUpdate);
+      eventSource.removeListener(event_types.CHARACTER_EDITED, resetWithNewData);
+      eventSource.removeListener(event_types.CHARACTER_RENAMED, resetWithNewData);
+      eventSource.removeListener(event_types.CHARACTER_DELETED, resetWithNewData);
 
       if (body) {
         body.off('pointerdown', onPointerDown);

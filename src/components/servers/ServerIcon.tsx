@@ -7,14 +7,12 @@ import {
   useState,
 } from 'react';
 import GroupAvatar from '../groupAvatar/GroupAvatar';
-import {
-  ContextMenuContext,
-  type ContextMenuItem,
-} from '../../providers/contextMenuProvider';
+import { ContextMenuContext } from '../../providers/contextMenuProvider';
 import { ModalContext } from '../../providers/modalProvider';
 import CharacterEditModal from '../../modals/CharacterEdit/CharacterModal';
+import type { ContextMenuItem } from '../common/ContextMenuEntry/ContextMenuEntry';
 
-const { getThumbnailUrl } = await imports('@script');
+const { getThumbnailUrl, deleteCharacter } = await imports('@script');
 
 interface ServerIconProps {
   entity: Entity;
@@ -50,6 +48,18 @@ const ServerIcon = ({
     }
   };
 
+  const handleDelete = useCallback(async () => {
+    try {
+      if (entity.item?.avatar) {
+        await deleteCharacter(entity.item.avatar.toString(), {
+          deleteChats: true,
+        });
+      }
+    } catch (error) {
+      console.error('Error deleting character:', error);
+    }
+  }, [entity]);
+
   const menuOptions = useMemo(() => {
     return [
       {
@@ -67,12 +77,12 @@ const ServerIcon = ({
           );
         },
       },
-      {
+      /*{
         label: 'Duplicate',
       },
       {
         label: 'Export',
-      },
+      },*/
       {
         label: '---',
         variant: 'separator',
@@ -80,9 +90,10 @@ const ServerIcon = ({
       {
         label: 'Delete',
         variant: 'danger',
+        onClick: () => handleDelete(),
       },
     ] as ContextMenuItem[];
-  }, [entity]);
+  }, [entity, handleDelete, openModal]);
 
   const onRightClick = useCallback(
     (e: React.MouseEvent) => {

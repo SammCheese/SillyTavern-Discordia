@@ -1,3 +1,5 @@
+import { memo } from 'react';
+
 interface ModalContentProps {
   children?: React.ReactNode;
 }
@@ -10,4 +12,4 @@ const ModalContent = ({ children }: ModalContentProps) => {
   );
 };
 
-export default ModalContent;
+export default memo(ModalContent);

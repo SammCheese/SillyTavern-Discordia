@@ -1,4 +1,4 @@
-import { useContext } from 'react';
+import { memo, useContext } from 'react';
 import { ModalContext } from '../../../providers/modalProvider';
 
 interface ModalHeaderProps {
@@ -41,4 +41,4 @@ const ModalHeader = ({
   );
 };
 
-export default ModalHeader;
+export default memo(ModalHeader);

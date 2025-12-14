@@ -40,7 +40,7 @@
     #000 10%
   );
 
-  --accordion-header-bg: hsl(240 calc(1 * 4%) 60.784% /0.0784313725490196);
+  --color-accordion-header: hsl(240 calc(1 * 4%) 60.784% /0.0784313725490196);
 }
 
 @media (min-width: 601px) and (max-width: 1000px) {

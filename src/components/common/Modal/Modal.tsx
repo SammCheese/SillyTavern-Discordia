@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { type ReactNode } from 'react';
 import ModalContent from './ModalContent';
 import ModalFooter from './ModalFooter';
 import ModalHeader from './ModalHeader';

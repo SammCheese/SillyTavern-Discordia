@@ -22,7 +22,9 @@ export const ContextMenuContext = createContext<{
 });
 
 export function ContextMenuProvider({ children }: { children: ReactNode }) {
+  const [isRendered, setIsRendered] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
+
   const [position, setPosition] = useState<{ x: number; y: number } | null>(
     null,
   );
@@ -33,6 +35,9 @@ export function ContextMenuProvider({ children }: { children: ReactNode }) {
 
   const closeContextMenu = useCallback(() => {
     setIsVisible(false);
+    setTimeout(() => {
+      setIsRendered(false);
+    }, 300);
   }, []);
 
   const handleContextMenu = useCallback(
@@ -45,13 +50,20 @@ export function ContextMenuProvider({ children }: { children: ReactNode }) {
 
       setPosition({ x: clickX, y: clickY });
       setMenuItems(items);
-      setIsVisible(true);
+
+      setIsRendered(true);
+
+      requestAnimationFrame(() =>
+        requestAnimationFrame(() => {
+          setIsVisible(true);
+        }),
+      );
     },
     [],
   );
 
   useLayoutEffect(() => {
-    if (isVisible && menuRef.current && !isMobile) {
+    if (isRendered && menuRef.current && !isMobile) {
       const { offsetWidth: rootW, offsetHeight: rootH } = menuRef.current;
       const screenW = window.innerWidth;
       const screenH = window.innerHeight;
@@ -67,9 +79,11 @@ export function ContextMenuProvider({ children }: { children: ReactNode }) {
         });
       }
     }
-  }, [isVisible, isMobile, position]);
+  }, [isRendered, isMobile, position]);
 
   useEffect(() => {
+    if (!isVisible) return;
+
     const handleClick = () => isVisible && closeContextMenu();
     const handleResize = () => isVisible && closeContextMenu();
     const handleScroll = () => isVisible && closeContextMenu();
@@ -97,8 +111,9 @@ export function ContextMenuProvider({ children }: { children: ReactNode }) {
 
   const styles = {
     mobile: {
-      container:
-        'absolute h-fit z-70 bg-base-discordia border-t border-darker rounded-t-xl shadow-2xl p-4 pb-8 animate-slide-up',
+      container: `absolute h-fit z-70 bg-base-discordia border-t border-darker rounded-t-xl shadow-2xl p-4 pb-8
+        transform transition-transform duration-300 ease-in-out
+        ${isVisible ? 'translate-y-0' : 'translate-y-full'}`,
     },
     desktop: {
       container:
@@ -108,10 +123,11 @@ export function ContextMenuProvider({ children }: { children: ReactNode }) {
 
   return (
     <ContextMenuContext.Provider value={contextValue}>
-      {isVisible &&
+      {isRendered &&
         createPortal(
           <div
-            className={`z-60 fixed top-0 left-0 w-dvw h-dvh ${isMobile ? 'bg-black/60 backdrop-blur-[2px] opacity-100' : ''}`}
+            className={`z-60 fixed top-0 left-0 w-dvw h-dvh
+              ${isMobile ? (isVisible ? 'bg-black/60 backdrop-blur-[2px] opacity-100' : 'bg-black/0 opacity-0') : ''}`}
           >
             <div
               ref={menuRef}

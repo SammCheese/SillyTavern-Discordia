@@ -10,6 +10,8 @@ interface ChannelEntryProps {
   isLoading?: boolean;
 }
 
+const { deleteCharacterChatByName } = await imports('@script');
+
 const ChannelEntry = ({
   avatar,
   chat,
@@ -25,6 +27,22 @@ const ChannelEntry = ({
     }
   };
 
+  const handleDelete = async () => {
+    try {
+      let charId = chat.char_id ?? null;
+      if (!charId) {
+        charId = SillyTavern.getContext().characters.findIndex(
+          (c) => c.avatar === chat.avatar,
+        );
+      }
+      if (charId === null || charId === -1) return;
+
+      await deleteCharacterChatByName(charId.toString(), chat.file_id);
+    } catch (error) {
+      console.error('Error deleting chat:', error);
+    }
+  };
+
   const handleRightClick = (e: React.MouseEvent) => {
     e.preventDefault();
     showContextMenu(e, [
@@ -34,18 +52,20 @@ const ChannelEntry = ({
           handleClick();
         },
       },
-      {
+      /*{
         label: 'Export',
         onClick: () => {
           console.log('Export channel:', chat.file_id);
         },
+      },*/
+      {
+        label: '---',
+        variant: 'separator',
       },
       {
         label: 'Delete',
         variant: 'danger',
-        onClick: () => {
-          console.log('Delete channel:', chat.file_id);
-        },
+        onClick: () => handleDelete(),
       },
     ]);
   };

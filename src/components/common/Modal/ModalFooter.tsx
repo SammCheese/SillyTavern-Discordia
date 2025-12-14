@@ -1,3 +1,5 @@
+import { memo } from 'react';
+
 interface ModalFooterProps {
   children?: React.ReactNode;
 }
@@ -10,4 +12,4 @@ const ModalFooter = ({ children }: ModalFooterProps) => {
   );
 };
 
-export default ModalFooter;
+export default memo(ModalFooter);

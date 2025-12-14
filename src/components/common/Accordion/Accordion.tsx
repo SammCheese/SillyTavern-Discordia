@@ -21,10 +21,9 @@ export const Accordion = ({
   }, [open, onToggle]);
 
   return (
-    <div className="accordion border-none rounded mb-4">
+    <div className="accordion rounded mb-4 border border-base-discordia-lighter overflow-hidden">
       <button
-        style={{ backgroundColor: 'var(--accordion-header-bg)' }}
-        className="accordion-header cursor-pointer w-full flex justify-between items-center p-2 hover:bg-gray-900 transition-colors duration-200"
+        className="accordion-header cursor-pointer w-full flex justify-between items-center p-2 bg-accordion-header hover:bg-lighter transition-colors duration-200"
         onClick={handleToggle}
       >
         <span className="text-lg font-medium">{title}</span>
@@ -37,7 +36,7 @@ export const Accordion = ({
         </span>
       </button>
       {open && (
-        <div className="accordion-content p-4 bg-gray-900">{children}</div>
+        <div className="accordion-content p-4 bg-input-bg">{children}</div>
       )}
     </div>
   );

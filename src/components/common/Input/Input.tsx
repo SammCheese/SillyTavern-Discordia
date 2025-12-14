@@ -1,6 +1,5 @@
 import {
   type CSSProperties,
-  useState,
   useCallback,
   type ChangeEvent,
   memo,
@@ -19,6 +18,7 @@ interface InputProps {
   disabled?: boolean;
   id?: string;
   growHeight?: boolean;
+  maxHeight?: number;
 }
 
 const Input = ({
@@ -32,21 +32,14 @@ const Input = ({
   id = '',
   type = 'text',
   growHeight = false,
+  maxHeight = 160,
 }: InputProps) => {
-  const [content, setContent] = useState(value ?? defaultValue ?? '');
+  const content = value ?? defaultValue ?? '';
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
-
-  useEffect(() => {
-    if (value !== undefined) {
-      setContent(value);
-    }
-  }, [value]);
 
   const handleInputChange = useCallback(
     (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-      const newValue = e.target.value;
-      setContent(newValue);
-      onChange(newValue);
+      onChange(e.target.value);
     },
     [onChange],
   );
@@ -54,9 +47,9 @@ const Input = ({
   useEffect(() => {
     if (growHeight && textAreaRef.current) {
       textAreaRef.current.style.height = 'auto';
-      textAreaRef.current.style.height = `${textAreaRef.current.scrollHeight}px`;
+      textAreaRef.current.style.height = `${Math.min(textAreaRef.current.scrollHeight, maxHeight)}px`;
     }
-  }, [content, growHeight]);
+  }, [content, growHeight, maxHeight]);
 
   return (
     <div className={`flex flex-col w-full gap-1 `} style={style}>
@@ -70,7 +63,12 @@ const Input = ({
           ref={textAreaRef}
           id={id}
           disabled={disabled}
-          className="input-field max-h-40 w-full px-3 py-2 bg-input-bg rounded-md outline outline-input-outline focus:ring-2 focus:ring-input-ring resize-none text-wrap wrap-break-word"
+          style={
+            growHeight
+              ? { maxHeight: `${maxHeight}px`, overflowY: 'auto' }
+              : undefined
+          }
+          className="input-field w-full px-3 py-2 bg-input-bg rounded-md outline outline-input-outline focus:ring-2 focus:ring-input-ring resize-none text-wrap wrap-break-word"
           placeholder={placeholder}
           value={content}
           onChange={handleInputChange}
