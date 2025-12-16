@@ -24,7 +24,7 @@ A WIP Discord Theme for SillyTavern.
 
 **Mobile View**
 
-![Mobile View](https://cdn.discordapp.com/attachments/839738209500135438/1443979362742440076/image.png?ex=692b0a13&is=6929b893&hm=8a27ca10c0d73a15e8a5a6981273da23995a898a77d9ef4f8fe6d6862b1b3a23&)
+![Mobile View](https://cdn.discordapp.com/attachments/839738209500135438/1443979362742440076/image.png?ex=69421c53&is=6940cad3&hm=89de9aea7fa5a25a8c90c955879a588aba43ce81381d248076dde754e2ca0283&)
 
 ## How to use
 
