@@ -4,6 +4,7 @@ import { makeAvatar, selectCharacter, selectGroup } from '../../utils/utils';
 import type { RowComponentProps } from 'react-window';
 import { List } from 'react-window';
 import { useSearch } from '../../context/SearchContext';
+import ErrorBoundary from '../common/ErrorBoundary/ErrorBoundary';
 
 const Divider = React.lazy(() => import('../common/Divider/Divider'));
 const ChannelEntry = lazy(() => import('./ChannelEntry'));
@@ -158,48 +159,50 @@ const ChannelBar = ({
   }, [isLoadingChats, getContext().characterId, getContext().groupId]);
 
   return (
-    <div id="channel-container" className="px-1">
-      <SearchBar onInput={handleSearchInput} />
-      <Divider />
-      <div id="channel-header">
-        <div id="channel-icons-container">
-          {iconsFiltered?.map((icon, index) => (
-            <ChannelHeaderEntry
-              icon={icon}
-              key={index}
-              onClick={handleToolclick}
-            />
-          ))}
-        </div>
-      </div>
-      <div id="channel-divider" className="divider"></div>
-      <div className="section-header">{shownTitle}</div>
-      <div id="channel-list">
-        <div id="channels-list-container">
-          {chatsMemo.length > 50 ? (
-            <List
-              rowComponent={Row}
-              rowCount={chatsMemo.length}
-              rowHeight={48}
-              rowProps={{}}
-              overscanCount={5}
-              style={{ width: '100%' }}
-            />
-          ) : (
-            chatsMemo.map((chat, index) => (
-              <ChannelEntry
-                chat={chat}
+    <ErrorBoundary>
+      <div id="channel-container" className="px-1 select-none">
+        <SearchBar onInput={handleSearchInput} />
+        <Divider />
+        <div id="channel-header">
+          <div id="channel-icons-container">
+            {iconsFiltered?.map((icon, index) => (
+              <ChannelHeaderEntry
+                icon={icon}
                 key={index}
-                onClick={handleChannelClick}
-                isSelected={isSelectedChat(chat)}
-                avatar={makeAvatar({ chat })}
-                isLoading={isLoadingChats}
+                onClick={handleToolclick}
               />
-            ))
-          )}
+            ))}
+          </div>
+        </div>
+        <div id="channel-divider" className="divider"></div>
+        <div className="section-header">{shownTitle}</div>
+        <div id="channel-list">
+          <div id="channels-list-container">
+            {chatsMemo.length > 50 ? (
+              <List
+                rowComponent={Row}
+                rowCount={chatsMemo.length}
+                rowHeight={48}
+                rowProps={{}}
+                overscanCount={5}
+                style={{ width: '100%' }}
+              />
+            ) : (
+              chatsMemo.map((chat, index) => (
+                <ChannelEntry
+                  chat={chat}
+                  key={index}
+                  onClick={handleChannelClick}
+                  isSelected={isSelectedChat(chat)}
+                  avatar={makeAvatar({ chat })}
+                  isLoading={isLoadingChats}
+                />
+              ))
+            )}
+          </div>
         </div>
       </div>
-    </div>
+    </ErrorBoundary>
   );
 };
 
@@ -218,7 +221,7 @@ const ChannelHeaderEntry = React.memo(function ChannelHeaderEntry({
 
   return (
     <div
-      className="py-2 px-2.5 cursor-pointer font-bold rounded-md mr-1 w-full flex items-center gap-2 group"
+      className="py-2 px-2.5 select-none cursor-pointer font-bold rounded-md mr-1 w-full flex items-center gap-2 group"
       title={icon.title}
       onClick={handleClick}
     >

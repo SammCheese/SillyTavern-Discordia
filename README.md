@@ -28,8 +28,6 @@ A WIP Discord Theme for SillyTavern.
 
 ## How to use
 
-This extension can only be installed for all users due to its tight dependencies on internal functions.
-
 I **HEAVILY** recommend installing SillyTaverns ["Chat TopBar"](https://github.com/SillyTavern/Extension-TopInfoBar) Extension to mitigate the large amount of unimplemented features in its current state.
 
 ### Instructions:
@@ -37,7 +35,7 @@ I **HEAVILY** recommend installing SillyTaverns ["Chat TopBar"](https://github.c
 1. In Your Extensions Settings, click `"Install Extension"`
 2. Enter `https://github.com/SammCheese/SillyTavern-Discordia` into the text field
 
-3. Press `Install for all users` (IMPORTANT)
+3. Press either `Install for all users` or `Install for me`
 
 On smaller displays, you can swipe right to open the Sidebar.
 

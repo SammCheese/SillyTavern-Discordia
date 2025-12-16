@@ -7,6 +7,7 @@ import {
   type ReactNode,
 } from 'react';
 import { createPortal } from 'react-dom';
+import ErrorBoundary from '../components/common/ErrorBoundary/ErrorBoundary';
 
 export const ModalContext = createContext<{
   openModal: (modal: ReactNode) => void;
@@ -85,20 +86,22 @@ export function ModalProvider({ children }: { children: ReactNode }) {
   const container = document.getElementById('discordia-root') || document.body;
 
   return (
-    <ModalContext.Provider value={{ openModal, closeModal }}>
-      {content &&
-        createPortal(
-          <ModalShell isVisible={isVisible} onClose={closeModal}>
-            <Suspense
-              fallback={<div className="p-4 text-center">Loading...</div>}
-            >
-              {content}
-            </Suspense>
-          </ModalShell>,
-          container,
-        )}
-      {children}
-    </ModalContext.Provider>
+    <ErrorBoundary>
+      <ModalContext.Provider value={{ openModal, closeModal }}>
+        {content &&
+          createPortal(
+            <ModalShell isVisible={isVisible} onClose={closeModal}>
+              <Suspense
+                fallback={<div className="p-4 text-center">Loading...</div>}
+              >
+                {content}
+              </Suspense>
+            </ModalShell>,
+            container,
+          )}
+        {children}
+      </ModalContext.Provider>
+    </ErrorBoundary>
   );
 }
 
