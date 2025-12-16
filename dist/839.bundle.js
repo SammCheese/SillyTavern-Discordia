@@ -1,2 +1,0 @@
-export const __webpack_esm_id__=839;export const __webpack_esm_ids__=[839];export const __webpack_esm_modules__={839:(e,s,t)=>{t.a(e,async(e,_)=>{try{t.r(s),t.d(s,{default:()=>o});var c=t(2714),a=t(9378),n=t(7257).V;const e=(0,a.lazy)(()=>t.e(468).then(t.bind(t,7468))),{saveSettingsDebounced:i}=await n("@script"),o=()=>((0,a.useEffect)(()=>()=>{i()},[]),(0,c.jsx)(e,{title:"Persona Settings",children:(0,c.jsx)("div",{className:"settings-section"})}));_()}catch(e){_(e)}},1)}};
-//# sourceMappingURL=839.bundle.js.map
