@@ -12,6 +12,7 @@ import {
 import { createPortal } from 'react-dom';
 import { type ContextMenuItem } from '../components/common/ContextMenuEntry/ContextMenuEntry';
 import ContextMenuList from '../components/common/ContextMenuEntry/ContextMenuEntryList';
+import ErrorBoundary from '../components/common/ErrorBoundary/ErrorBoundary';
 
 export const ContextMenuContext = createContext<{
   showContextMenu: (e: MouseEvent, items: ContextMenuItem[]) => void;
@@ -122,39 +123,41 @@ export function ContextMenuProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <ContextMenuContext.Provider value={contextValue}>
-      {isRendered &&
-        createPortal(
-          <div
-            className={`z-60 fixed top-0 left-0 w-dvw h-dvh
-              ${isMobile ? (isVisible ? 'bg-black/60 backdrop-blur-[2px] opacity-100' : 'bg-black/0 opacity-0') : ''}`}
-          >
+    <ErrorBoundary>
+      <ContextMenuContext.Provider value={contextValue}>
+        {isRendered &&
+          createPortal(
             <div
-              ref={menuRef}
-              style={
-                isMobile
-                  ? { bottom: 0, left: 0, width: '100%' }
-                  : {
-                      top: position?.y,
-                      left: position?.x,
-                    }
-              }
-              className={
-                isMobile ? styles.mobile.container : styles.desktop.container
-              }
-              onClick={(e) => e.stopPropagation()}
-              onContextMenu={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-              }}
+              className={`z-60 fixed top-0 left-0 w-dvw h-dvh
+              ${isMobile ? (isVisible ? 'bg-black/60 backdrop-blur-[2px] opacity-100' : 'bg-black/0 opacity-0') : ''}`}
             >
-              <ContextMenuList items={menuItems || []} isMobile={isMobile} />
-            </div>
-          </div>,
-          document.body,
-        )}
-      {children}
-    </ContextMenuContext.Provider>
+              <div
+                ref={menuRef}
+                style={
+                  isMobile
+                    ? { bottom: 0, left: 0, width: '100%' }
+                    : {
+                        top: position?.y,
+                        left: position?.x,
+                      }
+                }
+                className={
+                  isMobile ? styles.mobile.container : styles.desktop.container
+                }
+                onClick={(e) => e.stopPropagation()}
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+              >
+                <ContextMenuList items={menuItems || []} isMobile={isMobile} />
+              </div>
+            </div>,
+            document.body,
+          )}
+        {children}
+      </ContextMenuContext.Provider>
+    </ErrorBoundary>
   );
 }
 

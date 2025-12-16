@@ -20,15 +20,13 @@ const ConnectionSettings = lazy(
   () => import('../../pages/settings/connection/ConnectionSettings'),
 );
 
-const { name1, eventSource, event_types } = await imports('@script');
+const { eventSource, event_types } = await imports('@script');
 
-const ProfileMount = ({
-  avatar = null,
-  icons = null,
-}: {
-  avatar?: string | null;
+interface ProfileMountProps {
   icons?: Icon[] | null;
-}) => {
+}
+
+const ProfileMount = ({ icons = null }: ProfileMountProps) => {
   const [connStatus, setConnStatus] = useState<string>('no_connection');
   const { openPage } = useContext(PageContext);
 
@@ -78,7 +76,7 @@ const ProfileMount = ({
 
   return (
     <div id="user-profile-container">
-      <ProfilePersona name={name1} avatar={avatar} />
+      <ProfilePersona />
       <div id="user-settings-buttons">
         {iconsToShow.map((icon, index) => (
           <ProfileIcon

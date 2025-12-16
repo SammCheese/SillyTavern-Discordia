@@ -9,6 +9,7 @@ import {
 import { createPortal } from 'react-dom';
 
 import { rootContainer } from '../index';
+import ErrorBoundary from '../components/common/ErrorBoundary/ErrorBoundary';
 
 const OpenPage = lazy(() => import('../pages/index'));
 
@@ -57,17 +58,19 @@ export function PageProvider({ children }: { children: ReactNode }) {
   }, [closePage]);
 
   return (
-    <PageContext.Provider value={{ openPage, closePage }}>
-      {content &&
-        createPortal(
-          <div>
-            <OpenPage isVisible={isVisible} onClose={closePage}>
-              {content}
-            </OpenPage>
-          </div>,
-          rootContainer,
-        )}
-      {children}
-    </PageContext.Provider>
+    <ErrorBoundary>
+      <PageContext.Provider value={{ openPage, closePage }}>
+        {content &&
+          createPortal(
+            <div>
+              <OpenPage isVisible={isVisible} onClose={closePage}>
+                {content}
+              </OpenPage>
+            </div>,
+            rootContainer,
+          )}
+        {children}
+      </PageContext.Provider>
+    </ErrorBoundary>
   );
 }

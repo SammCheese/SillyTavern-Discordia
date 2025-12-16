@@ -52,3 +52,8 @@ type Character = {
   json_data?: string;
   shallow?: boolean;
 }
+
+type Persona = {
+  name: string;
+  avatar: string;
+};

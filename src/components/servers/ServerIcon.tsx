@@ -117,14 +117,14 @@ const ServerIcon = ({
 
   return (
     <div
-      className="flex m-0 relative w-full h-fit"
+      className="flex m-0 relative w-full h-fit select-none"
       onContextMenu={onRightClick}
     >
       <div className="absolute start-0 top-0 w-2 justify-start items-center flex h-full">
         <span
           style={{ borderRadius: '0 4px 4px 0' }}
           className={
-            'w-2 h-0 absolute block transition ease-in-out duration-500 -ms-1 bg-white ' +
+            'w-2 h-0  absolute block transition ease-in-out duration-200 -ms-1 bg-white ' +
             (hovered ? ' h-6' : '') +
             (isSelected ? ' h-8' : '')
           }

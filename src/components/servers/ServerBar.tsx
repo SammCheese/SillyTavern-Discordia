@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, lazy, memo, useState } from 'react';
 import { List, type RowComponentProps } from 'react-window';
 import { selectCharacter, selectGroup } from '../../utils/utils';
 import { useSearch } from '../../context/SearchContext';
+import ErrorBoundary from '../common/ErrorBoundary/ErrorBoundary';
 
 const ServerIcon = lazy(() => import('./ServerIcon'));
 const AddCharacterIcon = lazy(() => import('./AddCharacterIcon'));
@@ -97,6 +98,7 @@ const ServerBar = ({ entities }: { entities: Entity[] }) => {
   const onHomeClickHandler = useCallback(async () => {
     setSelectedIndex(null);
     await closeCurrentChat();
+    // Signal Sidebar to go back to recent chats
     await eventSource.emit('DISCORDIA_HOME_BUTTON_CLICKED');
   }, []);
 
@@ -181,46 +183,48 @@ const ServerBar = ({ entities }: { entities: Entity[] }) => {
   }, [entities, searchQuery]);
 
   return (
-    <div id="character-container">
-      <div id="characters-header">
-        <HomeIcon onClick={onHomeClickHandler} />
-        <div id="characters-divider" className="divider"></div>
+    <ErrorBoundary>
+      <div id="character-container">
+        <div id="characters-header">
+          <HomeIcon onClick={onHomeClickHandler} />
+          <div id="characters-divider" className="divider"></div>
+        </div>
+
+        <div id="characters-list" className="pt-0.5">
+          {/* A little trickery in performance */}
+          {filteredEntities.length < 50 ? (
+            <>
+              {filteredEntities.map((entity) => {
+                const actualIndex = entities.indexOf(entity);
+                return (
+                  <ServerRow
+                    key={entity.id.toString()}
+                    entity={entity}
+                    index={actualIndex}
+                    isSelected={selectedIndex === actualIndex}
+                    onClick={handleItemClick}
+                    style={{}}
+                  />
+                );
+              })}
+
+              <div id="characters-divider" className="divider"></div>
+
+              <AddCharacterIcon onClick={() => {}} />
+            </>
+          ) : (
+            <List
+              rowComponent={Row}
+              rowCount={filteredEntities.length + 1}
+              rowHeight={60}
+              rowProps={{ data: itemData }}
+              style={{ width: '100%' }}
+              overscanCount={5}
+            />
+          )}
+        </div>
       </div>
-
-      <div id="characters-list" className="pt-0.5">
-        {/* A little trickery in performance */}
-        {filteredEntities.length < 50 ? (
-          <>
-            {filteredEntities.map((entity) => {
-              const actualIndex = entities.indexOf(entity);
-              return (
-                <ServerRow
-                  key={entity.id.toString()}
-                  entity={entity}
-                  index={actualIndex}
-                  isSelected={selectedIndex === actualIndex}
-                  onClick={handleItemClick}
-                  style={{}}
-                />
-              );
-            })}
-
-            <div id="characters-divider" className="divider"></div>
-
-            <AddCharacterIcon onClick={() => {}} />
-          </>
-        ) : (
-          <List
-            rowComponent={Row}
-            rowCount={filteredEntities.length + 1}
-            rowHeight={60}
-            rowProps={{ data: itemData }}
-            style={{ width: '100%' }}
-            overscanCount={5}
-          />
-        )}
-      </div>
-    </div>
+    </ErrorBoundary>
   );
 };
 
