@@ -9,8 +9,13 @@ const HomeIcon = lazy(() => import('./HomeIcon'));
 
 //const { openWelcomeScreen } = await imports('@scripts/welcomeScreen');
 const { getGroupPastChats } = await imports('@scripts/groupChats');
-const { getPastCharacterChats, characters, closeCurrentChat } =
-  await imports('@script');
+const {
+  getPastCharacterChats,
+  characters,
+  closeCurrentChat,
+  eventSource,
+  event_types,
+} = await imports('@script');
 
 const ServerRow = memo(
   function ServerRow({
@@ -92,6 +97,7 @@ const ServerBar = ({ entities }: { entities: Entity[] }) => {
   const onHomeClickHandler = useCallback(async () => {
     setSelectedIndex(null);
     await closeCurrentChat();
+    await eventSource.emit('DISCORDIA_HOME_BUTTON_CLICKED');
   }, []);
 
   const handleItemClick = useCallback(async (entity: Entity, index: number) => {
@@ -124,6 +130,10 @@ const ServerBar = ({ entities }: { entities: Entity[] }) => {
   }, []);
 
   useEffect(() => {
+    refreshSelectedIndex();
+  }, [entities]);
+
+  const refreshSelectedIndex = useCallback(() => {
     const { characterId, groupId } = SillyTavern.getContext();
 
     if (groupId !== null && typeof groupId !== 'undefined') {
@@ -144,6 +154,18 @@ const ServerBar = ({ entities }: { entities: Entity[] }) => {
       setSelectedIndex(null);
     }
   }, [entities]);
+
+  useEffect(() => {
+    // In case we miss an event e.g. context menu selection
+    eventSource.on(event_types.CHAT_CHANGED, refreshSelectedIndex);
+
+    return () => {
+      eventSource.removeListener(
+        event_types.CHAT_CHANGED,
+        refreshSelectedIndex,
+      );
+    };
+  }, [refreshSelectedIndex]);
 
   const itemData = useMemo(
     () => ({ entities, selectedIndex, handleItemClick }),

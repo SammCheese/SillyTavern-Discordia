@@ -51,15 +51,10 @@ export const useSidebarState = () => {
       } else if (typeof characterId !== 'undefined' && parseInt(characterId) >= 0) {
         chats = await getPastCharacterChats();
         setState(prev => ({ ...prev, chats, isLoadingChats: false }));
-        // Home / Recent Chats
-      } else {
-        const entities = getEntitiesList({ doFilter: true, doSort: true });
-        chats = await getRecentChats(entities);
-        setState(prev => ({ ...prev, chats, isLoadingChats: false }));
       }
     } catch (error) {
       console.error('Error updating chat data:', error);
-      setState(prev => ({ ...prev, isLoadingChats: false }));
+      resetWithNewData();
     }
   }, []);
 
@@ -111,6 +106,9 @@ export const useSidebarState = () => {
     eventSource.on(event_types.CHARACTER_RENAMED, resetWithNewData);
     eventSource.on(event_types.CHARACTER_DELETED, resetWithNewData);
 
+    // Custom event to handle home button clicks
+    eventSource.on('DISCORDIA_HOME_BUTTON_CLICKED', resetWithNewData);
+
     // Swipe Listeners
     const THRESHOLD = 100;
     const body = $('body');
@@ -149,6 +147,7 @@ export const useSidebarState = () => {
       eventSource.removeListener(event_types.CHARACTER_EDITED, resetWithNewData);
       eventSource.removeListener(event_types.CHARACTER_RENAMED, resetWithNewData);
       eventSource.removeListener(event_types.CHARACTER_DELETED, resetWithNewData);
+      eventSource.removeListener('DISCORDIA_HOME_BUTTON_CLICKED', resetWithNewData);
 
       if (body) {
         body.off('pointerdown', onPointerDown);
