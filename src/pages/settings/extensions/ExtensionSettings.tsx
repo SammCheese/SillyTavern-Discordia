@@ -1,12 +1,7 @@
-import {
-  useCallback,
-  lazy,
-  useMemo,
-  memo,
-  useState,
-  useRef,
-  useEffect,
-} from 'react';
+import { useCallback, lazy, memo, useState, useRef, useEffect } from 'react';
+import Skeleton from 'react-loading-skeleton';
+
+import { getManifests } from '../../../services/extensionService';
 
 const Divider = lazy(
   () => import('../../../components/common/Divider/Divider'),
@@ -52,7 +47,7 @@ interface ExtensionList {
 
 interface ExtensionAccordionProps {
   extension: ExtensionInfo;
-  onToggle: () => void;
+  onToggle: (ext: ExtensionInfo) => void;
 }
 
 const ExtensionAccordion: React.FC<ExtensionAccordionProps> = memo(
@@ -60,18 +55,47 @@ const ExtensionAccordion: React.FC<ExtensionAccordionProps> = memo(
     extension,
     onToggle,
   }: ExtensionAccordionProps) {
-    const displayName = useMemo(() => {
-      return extension.name
-        .replace('third-party/', '')
-        .replace(/\//g, '_')
-        .replace(/\b\w/g, (c) => c.toUpperCase());
-    }, [extension.name]);
+    const [displayName, setDisplayName] = useState(extension.name);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+      let isMounted = true;
+
+      getManifests([extension.name]).then((manifests) => {
+        if (isMounted) {
+          setDisplayName(
+            manifests[extension.name]?.display_name || extension.name,
+          );
+          setLoading(false);
+        }
+      });
+      return () => {
+        isMounted = false;
+      };
+    }, []);
+
+    const handleToggle = useCallback(() => {
+      onToggle(extension);
+    }, [onToggle, extension]);
+
+    if (loading) {
+      return (
+        <Accordion title={<Skeleton width={150} />}>
+          <div className="p-4 flex items-center justify-between">
+            <label>
+              <Skeleton width={60} />
+            </label>
+            <Skeleton width={40} height={20} />
+          </div>
+        </Accordion>
+      );
+    }
 
     return (
       <Accordion title={displayName}>
         <div className="p-4 flex items-center justify-between">
           <label htmlFor={`${extension.name}-enabled`}> Enabled </label>
-          <Toggle isOn={!extension.disabled} onToggle={onToggle} />
+          <Toggle isOn={!extension.disabled} onToggle={handleToggle} />
         </div>
       </Accordion>
     );
@@ -135,9 +159,8 @@ const ExtensionSettings = () => {
   }, []);
 
   const onToggle = useCallback(async (extension: ExtensionInfo) => {
-    console.log('Toggling extension:', extension.name);
-
     const currentDisabled = currentDisabledRef.current;
+
     if (extension.disabled) {
       await enableExtension(extension.name, false);
       currentDisabledRef.current = currentDisabled.filter(
@@ -166,7 +189,7 @@ const ExtensionSettings = () => {
     <SettingsFrame title="Extension Settings">
       <div
         className="settings-section overflow-auto"
-        style={{ maxHeight: '70dvh' }}
+        style={{ maxHeight: '80dvh' }}
       >
         <h3 className="text-2xl font-semibold mb-4">System Extensions</h3>
         <ul>
@@ -174,7 +197,7 @@ const ExtensionSettings = () => {
             <ExtensionAccordion
               key={ext.name}
               extension={ext}
-              onToggle={() => onToggle(ext)}
+              onToggle={onToggle}
             />
           ))}
         </ul>
@@ -185,7 +208,7 @@ const ExtensionSettings = () => {
             <ExtensionAccordion
               key={ext.name}
               extension={ext}
-              onToggle={() => onToggle(ext)}
+              onToggle={onToggle}
             />
           ))}
         </ul>
@@ -196,7 +219,7 @@ const ExtensionSettings = () => {
             <ExtensionAccordion
               key={ext.name}
               extension={ext}
-              onToggle={() => onToggle(ext)}
+              onToggle={onToggle}
             />
           ))}
         </ul>

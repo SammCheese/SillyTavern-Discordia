@@ -1,16 +1,18 @@
 import { type ReactNode, useCallback, useState, memo } from 'react';
 
+interface AccordionProps {
+  title: string | ReactNode;
+  isOpen?: boolean;
+  onToggle?: () => void;
+  children: ReactNode;
+}
+
 export const Accordion = ({
   title,
   isOpen = false,
   onToggle,
   children,
-}: {
-  title: string;
-  isOpen?: boolean;
-  onToggle?: () => void;
-  children: ReactNode;
-}) => {
+}: AccordionProps) => {
   const [open, setOpen] = useState(isOpen);
 
   const handleToggle = useCallback(() => {
