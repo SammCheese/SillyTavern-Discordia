@@ -1,9 +1,51 @@
+// @ts-expect-error Video Import
+import video from '../assets/cord.webm';
+
+const splashTexts = [
+  'Gathering your Characters...',
+  'Summoning the spirits...',
+  'Warning the AI...',
+  'Aligning the pixels...',
+  'Loading your chat experience...',
+  'Preparing the fun...',
+  'Delaying reality...',
+];
+
 export const performPatches = async () => {
   try {
+    overrideSpinner();
     angleSendButton();
     combineChatMenu();
   } catch (error) {
     console.error('Failed to Perform Patches:', error);
+  }
+};
+
+const overrideSpinner = () => {
+  try {
+    const loadSpinner = $('#load-spinner');
+    if (loadSpinner) {
+      loadSpinner.remove();
+      const randomIndex = Math.floor(Math.random() * splashTexts.length);
+      const randomText = splashTexts[randomIndex];
+      const parent = $('#loader');
+      const newSpinner = $(`
+      <div id="load-spinner">
+        <video autoplay loop muted playsinline  style="width: 300px; height: 300px; object-fit: cover; border-radius: 12px;">
+          <source src="${video}" type="video/webm" />
+        </video>
+        <span id="loading-text" style="color: white; font-size: 1.2rem; margin-top: -40px;">
+          ${randomText}
+        </span>
+      </div>
+      `).attr(
+        'style',
+        'display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100dvw; height: 100dvh; position: absolute; top: 0; left: 0; z-index: 1000; background-color: #1e1e1e;',
+      );
+      parent.append(newSpinner);
+    }
+  } catch (error) {
+    console.error('Failed to Apply Spinner Patch:', error);
   }
 };
 
@@ -77,5 +119,3 @@ const toggleCombinedChatMenu = (event: MouseEvent) => {
     console.error('Failed to Handle Extra Listener:', error);
   }
 };
-
-
