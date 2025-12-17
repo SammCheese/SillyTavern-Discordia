@@ -33,11 +33,31 @@ const ProfilePersona = () => {
     setShowSelector((prev) => !prev);
   }, []);
 
+  const handleFullscreen = useCallback(() => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch((err) => {
+        console.error(
+          `Error attempting to enable full-screen mode: ${err.message} (${err.name})`,
+        );
+      });
+    } else {
+      document.exitFullscreen().catch((err) => {
+        console.error(
+          `Error attempting to exit full-screen mode: ${err.message} (${err.name})`,
+        );
+      });
+    }
+  }, [document.fullscreenElement]);
+
   const handleRightClick = useCallback(
     (e: MouseEvent) => {
       e.preventDefault();
 
       showContextMenu(e, [
+        {
+          label: `${document.fullscreenElement ? 'Exit' : 'Enter'} Fullscreen`,
+          onClick: handleFullscreen,
+        },
         {
           label: 'Log Out',
           variant: 'danger',
@@ -45,7 +65,7 @@ const ProfilePersona = () => {
         },
       ]);
     },
-    [showContextMenu, handleLogout],
+    [showContextMenu, handleLogout, handleFullscreen],
   );
 
   useEffect(() => {

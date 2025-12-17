@@ -1,0 +1,2 @@
+export const __webpack_esm_id__=809;export const __webpack_esm_ids__=[809];export const __webpack_esm_modules__={7809(_,e,s){s.r(e),s.d(e,{default:()=>o});var a=s(5656);const o=({width:_="w-full",className:e=""})=>(0,a.jsx)(a.Fragment,{children:(0,a.jsx)("div",{style:{backgroundColor:"rgba(255, 255, 255, 0.1)"},className:`${_} h-px my-2 ml-auto mr-auto ${e}`})})}};
+//# sourceMappingURL=809.bundle.js.map

@@ -60,7 +60,7 @@ export function ContextMenuProvider({ children }: { children: ReactNode }) {
         }),
       );
     },
-    [],
+    [menuItems],
   );
 
   useLayoutEffect(() => {

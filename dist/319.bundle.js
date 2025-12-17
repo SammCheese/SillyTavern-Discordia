@@ -1,0 +1,2 @@
+export const __webpack_esm_id__=319;export const __webpack_esm_ids__=[319];export const __webpack_esm_modules__={4319(e,t,s){s.a(e,async(e,_)=>{try{s.r(t),s.d(t,{default:()=>o});var c=s(5656),a=s(7140),n=s(5822).V;const e=(0,a.lazy)(()=>s.e(53).then(s.bind(s,6053))),{saveSettingsDebounced:i}=await n("@script"),o=()=>((0,a.useEffect)(()=>()=>{i()},[]),(0,c.jsx)(e,{title:"Sampler Settings",children:(0,c.jsx)("div",{className:"settings-section"})}));_()}catch(e){_(e)}},1)}};
+//# sourceMappingURL=319.bundle.js.map

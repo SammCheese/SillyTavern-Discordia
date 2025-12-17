@@ -23,3 +23,6 @@ declare global {
   interface Window { discordia: discordiaWindow['discordia']; }
 }
 
+declare module '*.webm' {
+  const src: string;
+}

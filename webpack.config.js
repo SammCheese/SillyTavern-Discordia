@@ -48,6 +48,10 @@ module.exports = {
           'postcss-loader',
         ],
       },
+      {
+        test: /\.webm$/i,
+        type: 'asset/resource',
+      },
     ],
   },
   plugins: [

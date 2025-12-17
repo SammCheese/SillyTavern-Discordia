@@ -1,6 +1,6 @@
 {
   "display_name": "Discordia",
-  "loading_order": 0,
+  "loading_order": -999,
   "requires": [],
   "optional": [],
   "js": "dist/bundle.js",
