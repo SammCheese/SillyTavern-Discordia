@@ -80,42 +80,6 @@
   --character-container-width: 80px;
 }
 
-.group-avatar {
-  width: 48px;
-  height: 48px;
-  display: flex;
-}
-
-.img_1,
-.img_2,
-.img_3,
-.img_4 {
-  object-fit: cover;
-}
-
-.collage_2 {
-  .img_1 {
-    border-radius: 25% 0 0 25%;
-  }
-  .img_2 {
-    border-radius: 0 25% 25% 0;
-  }
-}
-
-.collage_3 {
-  flex-wrap: wrap;
-  .img_1 {
-    border-radius: 25% 0 0 0;
-  }
-  .img_2 {
-    border-radius: 0 25% 0 0;
-  }
-  .img_3 {
-    border-radius: 0 0 25% 25%;
-    object-fit: cover;
-  }
-}
-
 select {
   padding: 8px !important;
 }

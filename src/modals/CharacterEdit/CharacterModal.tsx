@@ -16,6 +16,7 @@ import {
   charToPayload,
   updateCharacter,
 } from '../../services/characterService';
+import { DISCORDIA_EVENTS } from '../../events/eventTypes';
 
 interface CharacterEditModalProps {
   onClose?: () => void;
@@ -27,8 +28,10 @@ const { getThumbnailUrl, eventSource, event_types, deleteCharacter } =
   await imports('@script');
 const { getContext } = SillyTavern;
 
-interface BoundInputProps
-  extends Omit<ComponentProps<typeof Input>, 'onChange' | 'value'> {
+interface BoundInputProps extends Omit<
+  ComponentProps<typeof Input>,
+  'onChange' | 'value'
+> {
   field: keyof Character;
   value?: string | number | undefined;
   onChange: (data: Partial<Character>) => void;
@@ -127,6 +130,7 @@ const CharacterEditModal: React.FC<CharacterEditModalProps> = ({
   const handleDelete = useCallback(() => {
     if (avatarName === null) return;
     deleteCharacter(avatarName, { deleteChats: true }).then(() => {
+      eventSource.emit(DISCORDIA_EVENTS.ENTITIES_LENGTH_CHANGED);
       closeModal();
     });
   }, [avatarName, closeModal]);

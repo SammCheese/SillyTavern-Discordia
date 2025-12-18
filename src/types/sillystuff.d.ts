@@ -57,3 +57,25 @@ type Persona = {
   name: string;
   avatar: string;
 };
+
+
+type GroupItem = {
+  activation_strategy: number;
+  allow_self_responses: boolean;
+  auto_mode_delay: number;
+  avatar_url: string;
+  chat_id: string;
+  chat_size: number;
+  chats: string[];
+  create_date: string;
+  date_added: string;
+  data_last_chat: string;
+  disabled_members: string[];
+  fav: boolean;
+  generation_mode: number;
+  generation_mode_join_prefix: string;
+  generation_mode_join_suffix: string;
+  id: string;
+  members: string[];
+  name: string;
+};

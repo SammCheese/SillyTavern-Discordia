@@ -3,6 +3,7 @@ import { List, type RowComponentProps } from 'react-window';
 import { selectCharacter, selectGroup } from '../../utils/utils';
 import { useSearch } from '../../context/SearchContext';
 import ErrorBoundary from '../common/ErrorBoundary/ErrorBoundary';
+import { DISCORDIA_EVENTS } from '../../events/eventTypes';
 
 const ServerIcon = lazy(() => import('./ServerIcon'));
 const AddCharacterIcon = lazy(() => import('./AddCharacterIcon'));
@@ -43,7 +44,7 @@ const ServerRow = memo(
           entity={entity}
           index={index}
           isSelected={isSelected}
-          onSelect={onClick}
+          onClick={onClick}
         />
       </div>
     );
@@ -99,7 +100,7 @@ const ServerBar = ({ entities }: { entities: Entity[] }) => {
     setSelectedIndex(null);
     await closeCurrentChat();
     // Signal Sidebar to go back to recent chats
-    await eventSource.emit('DISCORDIA_HOME_BUTTON_CLICKED');
+    await eventSource.emit(DISCORDIA_EVENTS.HOME_BUTTON_CLICKED);
   }, []);
 
   const handleItemClick = useCallback(async (entity: Entity, index: number) => {

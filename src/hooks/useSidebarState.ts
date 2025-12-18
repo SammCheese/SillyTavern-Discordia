@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { getRecentChats } from "../utils/utils";
+import { DISCORDIA_EVENTS } from '../events/eventTypes';
 
 const { getGroupPastChats } = await imports('@scripts/groupChats');
 const { getEntitiesList, eventSource, event_types, getPastCharacterChats } = await imports('@script');
@@ -104,10 +105,10 @@ export const useSidebarState = () => {
     eventSource.on(event_types.SETTINGS_UPDATED, handleSettingsUpdate);
     eventSource.on(event_types.CHARACTER_EDITED, resetWithNewData);
     eventSource.on(event_types.CHARACTER_RENAMED, resetWithNewData);
-    eventSource.on(event_types.CHARACTER_DELETED, resetWithNewData);
 
-    // Custom event to handle home button clicks
-    eventSource.on('DISCORDIA_HOME_BUTTON_CLICKED', resetWithNewData);
+    // Our own Events
+    eventSource.on(DISCORDIA_EVENTS.ENTITIES_LENGTH_CHANGED, resetWithNewData);
+    eventSource.on(DISCORDIA_EVENTS.HOME_BUTTON_CLICKED, resetWithNewData);
 
     // Swipe Listeners
     const THRESHOLD = 100;
@@ -146,8 +147,8 @@ export const useSidebarState = () => {
       eventSource.removeListener(event_types.SETTINGS_UPDATED, handleSettingsUpdate);
       eventSource.removeListener(event_types.CHARACTER_EDITED, resetWithNewData);
       eventSource.removeListener(event_types.CHARACTER_RENAMED, resetWithNewData);
-      eventSource.removeListener(event_types.CHARACTER_DELETED, resetWithNewData);
-      eventSource.removeListener('DISCORDIA_HOME_BUTTON_CLICKED', resetWithNewData);
+      eventSource.removeListener(DISCORDIA_EVENTS.ENTITIES_LENGTH_CHANGED, resetWithNewData);
+      eventSource.removeListener(DISCORDIA_EVENTS.HOME_BUTTON_CLICKED, resetWithNewData);
 
       if (body) {
         body.off('pointerdown', onPointerDown);

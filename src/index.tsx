@@ -19,6 +19,7 @@ const topBar = document.getElementById('top-bar');
 export const rootContainer = document.createElement('div');
 rootContainer.id = 'discordia-root';
 topBar?.parentNode?.insertBefore(rootContainer, topBar);
+
 // Unneeded. Remove for the sake of cleaner DOM
 topBar?.remove();
 

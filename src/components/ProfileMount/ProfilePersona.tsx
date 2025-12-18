@@ -162,7 +162,7 @@ const ProfilePersona = () => {
       </div>
 
       {showSelector && personas.length > 0 && (
-        <div className="absolute bottom-[calc(100%+8px)] left-0 z-50">
+        <div className="absolute bottom-[calc(100%+8px)] -left-1 z-50">
           <PersonaSelector personas={personas} onSelect={handlePersonaSelect} />
         </div>
       )}

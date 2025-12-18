@@ -1,14 +1,14 @@
 import { type FC, type ChangeEvent, memo, useCallback } from 'react';
 
 interface SelectOption {
-  value: string;
+  value: string | number;
   label: string;
 }
 
 interface SelectProps {
   options: SelectOption[];
-  value: string;
-  onChange?: (value: string) => void;
+  value: string | number;
+  onChange?: (value: string | number) => void;
   disabled?: boolean;
 }
 
