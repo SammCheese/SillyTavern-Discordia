@@ -1,9 +1,15 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { getRecentChats } from "../utils/utils";
 import { DISCORDIA_EVENTS } from '../events/eventTypes';
 
 const { getGroupPastChats } = await imports('@scripts/groupChats');
 const { getEntitiesList, eventSource, event_types, getPastCharacterChats } = await imports('@script');
+
+type ChatViewMode = 'recent' | 'context';
+
+interface RefreshOptions {
+  forceRecentFallback?: boolean;
+}
 
 interface SidebarState {
   open: boolean;
@@ -24,6 +30,8 @@ const CHANNEL_MENU_CONFIG = [
 
 
 export const useSidebarState = () => {
+  const chatViewModeRef = useRef<ChatViewMode>('recent');
+
   const [state, setState] = useState<SidebarState>({
     open: false,
     entities: [],
@@ -37,32 +45,68 @@ export const useSidebarState = () => {
   }, []);
 
 
-  const updateChatData = useCallback(async () => {
-    setState(prev => ({ ...prev, isLoadingChats: true }));
+  const refreshChats = useCallback(async (options?: RefreshOptions) => {
+    const forceRecentFallback = options?.forceRecentFallback ?? false;
+
+    setState(prev => prev.isLoadingChats ? prev : { ...prev, isLoadingChats: true });
 
     const { characterId, groupId } = SillyTavern.getContext();
-    let chats: Chat[] = [];
+    const hasGroup = groupId !== null && groupId !== undefined;
+    const hasCharacter =
+      characterId !== null &&
+      characterId !== undefined &&
+      Number(characterId) >= 0;
 
     try {
-      // Group Chats
-      if (groupId !== null) {
-        chats = await getGroupPastChats(groupId.toString());
-        setState(prev => ({ ...prev, chats, isLoadingChats: false}));
-        // Character Chats
-      } else if (typeof characterId !== 'undefined' && parseInt(characterId) >= 0) {
-        chats = await getPastCharacterChats();
-        setState(prev => ({ ...prev, chats, isLoadingChats: false }));
+      if (hasGroup) {
+        const chats = await getGroupPastChats(groupId.toString());
+        chatViewModeRef.current = 'context';
+        setState(prev => {
+          if (prev.chats === chats) {
+            return { ...prev, isLoadingChats: false };
+          }
+          return { ...prev, chats, isLoadingChats: false };
+        });
+        return;
+      }
+
+      if (hasCharacter) {
+        const chats = await getPastCharacterChats();
+        chatViewModeRef.current = 'context';
+        setState(prev => {
+          if (prev.chats === chats) {
+            return { ...prev, isLoadingChats: false };
+          }
+          return { ...prev, chats, isLoadingChats: false };
+        });
+        return;
+      }
+
+      if (forceRecentFallback || chatViewModeRef.current === 'recent') {
+        const entities = getEntitiesList({ doFilter: true, doSort: true });
+        const chats = await getRecentChats(entities);
+        chatViewModeRef.current = 'recent';
+        setState(prev => {
+          if (prev.chats === chats && prev.entities === entities && prev.open) {
+            return { ...prev, isLoadingChats: false };
+          }
+          return { ...prev, chats, entities, open: true, isLoadingChats: false };
+        });
+      } else {
+        setState(prev => ({ ...prev, isLoadingChats: false }));
       }
     } catch (error) {
       console.error('Error updating chat data:', error);
-      resetWithNewData();
+      setState(prev => ({ ...prev, isLoadingChats: false }));
     }
   }, []);
 
-  const resetWithNewData = useCallback(async () => {
-    const entities = getEntitiesList({ doFilter: true, doSort: true });
-    const chats = await getRecentChats(entities);
-    setState(prev => ({ ...prev, chats, entities, open: true, isLoadingChats: false }));
+  const handleHomeButton = useCallback(() => {
+    refreshChats({ forceRecentFallback: true });
+  }, [refreshChats]);
+
+  const handleChatSwitchPending = useCallback(() => {
+    chatViewModeRef.current = 'context';
   }, []);
 
   const processMenuIcons = useCallback(() => {
@@ -98,17 +142,18 @@ export const useSidebarState = () => {
     };
 
     // Event Handling
-    eventSource.on(event_types.APP_READY, resetWithNewData);
-    eventSource.on(event_types.CHAT_CHANGED, updateChatData);
-    eventSource.on(event_types.CHAT_DELETED, updateChatData);
-    eventSource.on(event_types.CHAT_CREATED, updateChatData);
+    eventSource.on(event_types.APP_READY, refreshChats);
+    eventSource.on(event_types.CHAT_CHANGED, refreshChats);
+    eventSource.on(event_types.CHAT_DELETED, refreshChats);
+    eventSource.on(event_types.CHAT_CREATED, refreshChats);
     eventSource.on(event_types.SETTINGS_UPDATED, handleSettingsUpdate);
-    eventSource.on(event_types.CHARACTER_EDITED, resetWithNewData);
-    eventSource.on(event_types.CHARACTER_RENAMED, resetWithNewData);
+    eventSource.on(event_types.CHARACTER_EDITED, refreshChats);
+    eventSource.on(event_types.CHARACTER_RENAMED, refreshChats);
 
     // Our own Events
-    eventSource.on(DISCORDIA_EVENTS.ENTITIES_LENGTH_CHANGED, resetWithNewData);
-    eventSource.on(DISCORDIA_EVENTS.HOME_BUTTON_CLICKED, resetWithNewData);
+    eventSource.on(DISCORDIA_EVENTS.ENTITIES_LENGTH_CHANGED, refreshChats);
+    eventSource.on(DISCORDIA_EVENTS.HOME_BUTTON_CLICKED, handleHomeButton);
+    eventSource.on(DISCORDIA_EVENTS.CHAT_SWITCH_PENDING, handleChatSwitchPending);
 
     // Swipe Listeners
     const THRESHOLD = 100;
@@ -140,15 +185,16 @@ export const useSidebarState = () => {
     }
 
     return () => {
-      eventSource.removeListener(event_types.APP_READY, resetWithNewData);
-      eventSource.removeListener(event_types.CHAT_CHANGED, updateChatData);
-      eventSource.removeListener(event_types.CHAT_DELETED, updateChatData);
-      eventSource.removeListener(event_types.CHAT_CREATED, updateChatData);
+      eventSource.removeListener(event_types.APP_READY, refreshChats);
+      eventSource.removeListener(event_types.CHAT_CHANGED, refreshChats);
+      eventSource.removeListener(event_types.CHAT_DELETED, refreshChats);
+      eventSource.removeListener(event_types.CHAT_CREATED, refreshChats);
       eventSource.removeListener(event_types.SETTINGS_UPDATED, handleSettingsUpdate);
-      eventSource.removeListener(event_types.CHARACTER_EDITED, resetWithNewData);
-      eventSource.removeListener(event_types.CHARACTER_RENAMED, resetWithNewData);
-      eventSource.removeListener(DISCORDIA_EVENTS.ENTITIES_LENGTH_CHANGED, resetWithNewData);
-      eventSource.removeListener(DISCORDIA_EVENTS.HOME_BUTTON_CLICKED, resetWithNewData);
+      eventSource.removeListener(event_types.CHARACTER_EDITED, refreshChats);
+      eventSource.removeListener(event_types.CHARACTER_RENAMED, refreshChats);
+      eventSource.removeListener(DISCORDIA_EVENTS.ENTITIES_LENGTH_CHANGED, refreshChats);
+      eventSource.removeListener(DISCORDIA_EVENTS.HOME_BUTTON_CLICKED, handleHomeButton);
+      eventSource.removeListener(DISCORDIA_EVENTS.CHAT_SWITCH_PENDING, handleChatSwitchPending);
 
       if (body) {
         body.off('pointerdown', onPointerDown);
@@ -158,10 +204,12 @@ export const useSidebarState = () => {
         body.off('touchend pointerup', onPointerUp);
       }
     };
-  }, []);
+  }, [processMenuIcons, refreshChats, setOpen, handleHomeButton, handleChatSwitchPending]);
 
   return {
     ...state,
     setOpen,
+    hasActiveContext: chatViewModeRef.current === 'context',
+    refreshChats,
   };
 }

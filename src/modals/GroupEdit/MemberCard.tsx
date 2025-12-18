@@ -105,15 +105,15 @@ const MemberCard = ({
 interface MemberListProps {
   members?: Character[];
   onOrderChange: (member: Character, direction: 'up' | 'down') => void;
-  onRemoveMember?: (member: Character) => void;
-  onOpenMemberProfile?: (member: Character) => void;
+  onRemoveMember: (member: Character) => void;
+  onOpenMemberProfile: (member: Character) => void;
 }
 
 const MemberList = ({
   members,
   onOrderChange,
-  /*onRemoveMember,
-  onOpenMemberProfile,*/
+  onRemoveMember,
+  onOpenMemberProfile,
 }: MemberListProps) => {
   return (
     <>
@@ -124,6 +124,8 @@ const MemberList = ({
               key={member.avatar || index}
               member={member}
               onOrderChange={onOrderChange}
+              onRemove={onRemoveMember}
+              onOpenProfile={onOpenMemberProfile}
             />
           ))}
       </div>

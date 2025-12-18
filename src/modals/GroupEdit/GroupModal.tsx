@@ -1,4 +1,4 @@
-import { useContext, useEffect, useMemo, useState } from 'react';
+import { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import Button, { ButtonLook } from '../../components/common/Button/Button';
 import Modal from '../../components/common/Modal/Modal';
 import { ModalContext } from '../../providers/modalProvider';
@@ -9,15 +9,9 @@ import Select from '../../components/common/Select/Select';
 import Checkbox from '../../components/common/Checkbox/Checkbox';
 import Accordion from '../../components/common/Accordion/Accordion';
 import MemberList from './MemberCard';
+import { saveGroup } from '../../utils/groupUtils';
 
-const {
-  deleteGroup,
-  /*renameGroupChat,
-  getGroupMembers,
-  getGroupCharacterCards,
-  saveGroupChat,
-  editGroup,*/
-} = await imports('@scripts/groupChats');
+const { deleteGroup } = await imports('@scripts/groupChats');
 
 interface GroupEditModalProps {
   entity: Entity;
@@ -34,24 +28,30 @@ const GroupEditModal = ({ entity }: GroupEditModalProps) => {
     setGroup(entity.item || null);
   }, [entity]);
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     closeModal();
-  };
+  }, [closeModal]);
 
-  const handleDelete = async () => {
+  const handleDelete = useCallback(async () => {
     if (!entity?.id) return;
     await deleteGroup(entity.id.toString());
     closeModal();
-  };
+  }, [entity, closeModal]);
 
-  const handleSave = () => {
-    // Implement save logic here
+  const handleSave = useCallback(async () => {
+    if (!entity?.id || !group) return;
+    const index = getContext().groups.findIndex((g) => g.id === entity.id);
+
+    if (index !== -1) {
+      getContext().groups[index] = group;
+    }
+
+    await saveGroup(group, true);
+
     closeModal();
-  };
+  }, [entity, group, closeModal]);
 
-  const handleNameChange = () => {
-    // Implement name change logic here
-  };
+  const handleNameChange = () => {};
 
   const orderOptions = [
     { label: 'Manual', value: 2 },
@@ -82,6 +82,19 @@ const GroupEditModal = ({ entity }: GroupEditModalProps) => {
     newMembers[index] = newMembers[newIndex] ?? '';
     newMembers[newIndex] = temp ?? '';
 
+    setGroup((prevGroup) =>
+      prevGroup ? { ...prevGroup, members: newMembers } : prevGroup,
+    );
+  };
+
+  const handleOpenProfileClick = (character: Character) => {
+    // TODO: Open character profile modal
+    console.log('Open profile for character:', character);
+  };
+
+  const handleRemoveMember = (character: Character) => {
+    const members = group?.members || [];
+    const newMembers = members.filter((m) => m !== character.avatar);
     setGroup((prevGroup) =>
       prevGroup ? { ...prevGroup, members: newMembers } : prevGroup,
     );
@@ -174,6 +187,8 @@ const GroupEditModal = ({ entity }: GroupEditModalProps) => {
                 <MemberList
                   members={members}
                   onOrderChange={handleOrderChange}
+                  onRemoveMember={handleRemoveMember}
+                  onOpenMemberProfile={handleOpenProfileClick}
                 />
               </div>
             </Accordion>

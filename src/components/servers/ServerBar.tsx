@@ -19,6 +19,14 @@ const {
   event_types,
 } = await imports('@script');
 
+interface ServerRowProps {
+  entity: Entity;
+  index: number;
+  isSelected: boolean;
+  style: React.CSSProperties;
+  onClick: (entity: Entity, index: number) => void;
+}
+
 const ServerRow = memo(
   function ServerRow({
     entity,
@@ -26,13 +34,7 @@ const ServerRow = memo(
     isSelected,
     style,
     onClick,
-  }: {
-    entity: Entity;
-    index: number;
-    isSelected: boolean;
-    style: React.CSSProperties;
-    onClick: (entity: Entity, index: number) => void;
-  }) {
+  }: ServerRowProps) {
     return (
       <div
         style={style}
@@ -70,13 +72,19 @@ const Row = ({ index, style, data }: RowComponentProps<RowData>) => {
   const { entities, selectedIndex, handleItemClick } = data;
   const entity = entities[index];
 
+  const handleClick = useCallback(() => {
+    if (entity) {
+      handleItemClick(entity, index);
+    }
+  }, [entity, handleItemClick, index]);
+
   if (!entity) {
     return (
       <div
         style={style}
         className="discord-entity-item character-button w-full h-fit flex justify-center py-1"
       >
-        <AddCharacterIcon onClick={() => {}} />
+        <AddCharacterIcon onClick={handleClick} />
       </div>
     );
   }
@@ -114,6 +122,8 @@ const ServerBar = ({ entities }: { entities: Entity[] }) => {
 
         if (!group) return;
 
+        // Prevent sidebar from falling back to recents while IDs are cleared.
+        eventSource.emit(DISCORDIA_EVENTS.CHAT_SWITCH_PENDING);
         await closeCurrentChat();
         const chats = await getGroupPastChats(groupId);
         await selectGroup({ group: entity, chat_id: chats[0]?.file_id });
@@ -123,6 +133,7 @@ const ServerBar = ({ entities }: { entities: Entity[] }) => {
         );
         if (char_id === -1) return;
 
+        eventSource.emit(DISCORDIA_EVENTS.CHAT_SWITCH_PENDING);
         await closeCurrentChat();
         const chats = await getPastCharacterChats(char_id);
         await selectCharacter(char_id, chats[0]?.file_id);

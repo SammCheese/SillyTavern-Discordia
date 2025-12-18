@@ -11,6 +11,7 @@ interface SideBarProps {
   chats: Chat[];
   icons: Icon[] | null;
   isLoadingChats: boolean;
+  hasActiveContext: boolean;
 }
 
 const SideBar = ({
@@ -20,6 +21,7 @@ const SideBar = ({
   chats,
   icons,
   isLoadingChats,
+  hasActiveContext,
 }: SideBarProps) => {
   const memoizedEntities = useMemo(() => entities, [entities]);
   const memoizedChats = useMemo(() => chats, [chats]);
@@ -40,6 +42,7 @@ const SideBar = ({
             chats={memoizedChats}
             setOpen={setOpen}
             isLoadingChats={isLoadingChats}
+            hasActiveContext={hasActiveContext}
           />
         </div>
         <div id="user-container">

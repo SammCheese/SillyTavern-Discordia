@@ -8,8 +8,15 @@ import { rootContainer } from './index';
 const SideBar = lazy(() => import('./components/sidebar/SideBar'));
 
 export const App = () => {
-  const { open, setOpen, entities, chats, icons, isLoadingChats } =
-    useSidebarState();
+  const {
+    open,
+    setOpen,
+    entities,
+    chats,
+    icons,
+    isLoadingChats,
+    hasActiveContext,
+  } = useSidebarState();
 
   return createPortal(
     <SearchProvider>
@@ -20,6 +27,7 @@ export const App = () => {
         chats={chats}
         icons={icons}
         isLoadingChats={isLoadingChats}
+        hasActiveContext={hasActiveContext}
       />
     </SearchProvider>,
     rootContainer,
