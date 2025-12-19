@@ -1,20 +1,22 @@
-import { memo } from 'react';
+import { memo, useCallback } from 'react';
 
 const AddCharacterIcon = ({
   onClick,
 }: {
   onClick: (() => void) | undefined;
 }) => {
+  const handleClick = useCallback(() => {
+    if (onClick) {
+      onClick();
+    }
+  }, [onClick]);
+
   return (
     <div
       className="discord-entity-item avatar new-character-button"
       id="new-character-button"
       title="Add Character"
-      onClick={() => {
-        if (onClick) {
-          onClick();
-        }
-      }}
+      onClick={handleClick}
     >
       <svg
         aria-hidden="true"

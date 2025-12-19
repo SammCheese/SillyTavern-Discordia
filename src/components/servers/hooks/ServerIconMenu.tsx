@@ -4,14 +4,15 @@ import { ModalContext } from '../../../providers/modalProvider';
 import type { ContextMenuItem } from '../../common/ContextMenuEntry/ContextMenuEntry';
 import { DISCORDIA_EVENTS } from '../../../events/eventTypes';
 
-const CharacterEditModal = lazy(
-  () => import('../../../modals/CharacterEdit/CharacterModal'),
+const CharacterModal = lazy(
+  () => import('../../../modals/Character/CharacterModal'),
 );
 const GroupEditModal = lazy(
   () => import('../../../modals/GroupEdit/GroupModal'),
 );
 
-const { deleteCharacter, eventSource } = await imports('@script');
+const { deleteCharacter, eventSource, closeCurrentChat } =
+  await imports('@script');
 const { deleteGroup } = await imports('@scripts/groupChats');
 
 export const useServerIconMenu = (entity: Entity) => {
@@ -22,7 +23,23 @@ export const useServerIconMenu = (entity: Entity) => {
     try {
       if (entity.type === 'character') {
         if (!entity.item?.avatar) return;
-        await deleteCharacter(entity.item.avatar.toString(), {
+
+        const { characterId, characters } = SillyTavern.getContext();
+        const avatarUrl = entity.item.avatar.toString();
+        const character = characters.find(
+          (c) => c.avatar?.toString() === avatarUrl,
+        );
+        const isCurrentCharacter =
+          characterId !== null &&
+          characterId !== undefined &&
+          character &&
+          characters[characterId] === character;
+
+        if (isCurrentCharacter) {
+          await closeCurrentChat();
+        }
+
+        await deleteCharacter(avatarUrl, {
           deleteChats: true,
         });
       } else if (entity.type === 'group') {
@@ -39,9 +56,7 @@ export const useServerIconMenu = (entity: Entity) => {
   const handleEdit = useCallback(() => {
     if (entity.type === 'character') {
       openModal(
-        <CharacterEditModal
-          avatarName={entity.item?.avatar.toString() || ''}
-        />,
+        <CharacterModal avatarName={entity.item?.avatar.toString() || ''} />,
       );
     } else if (entity.type === 'group') {
       openModal(<GroupEditModal entity={entity} />);

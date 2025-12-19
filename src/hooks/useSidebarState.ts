@@ -7,10 +7,6 @@ const { getEntitiesList, eventSource, event_types, getPastCharacterChats } = awa
 
 type ChatViewMode = 'recent' | 'context';
 
-interface RefreshOptions {
-  forceRecentFallback?: boolean;
-}
-
 interface SidebarState {
   open: boolean;
   entities: Entity[];
@@ -31,6 +27,9 @@ const CHANNEL_MENU_CONFIG = [
 
 export const useSidebarState = () => {
   const chatViewModeRef = useRef<ChatViewMode>('recent');
+  const inFlightRefresh = useRef<Promise<void> | null>(null);
+  const queuedRefresh = useRef(false);
+  const queuedForceRecent = useRef(false);
 
   const [state, setState] = useState<SidebarState>({
     open: false,
@@ -45,8 +44,12 @@ export const useSidebarState = () => {
   }, []);
 
 
-  const refreshChats = useCallback(async (options?: RefreshOptions) => {
-    const forceRecentFallback = options?.forceRecentFallback ?? false;
+  const refreshChats = useCallback(async (forceRecent = false) => {
+    if (inFlightRefresh.current) {
+      queuedRefresh.current = true;
+      queuedForceRecent.current = queuedForceRecent.current || forceRecent;
+      return inFlightRefresh.current;
+    }
 
     setState(prev => prev.isLoadingChats ? prev : { ...prev, isLoadingChats: true });
 
@@ -56,16 +59,18 @@ export const useSidebarState = () => {
       characterId !== null &&
       characterId !== undefined &&
       Number(characterId) >= 0;
+    const entities = getEntitiesList({ doFilter: true, doSort: true });
 
-    try {
+
+    const doRefresh = async () => {
       if (hasGroup) {
         const chats = await getGroupPastChats(groupId.toString());
         chatViewModeRef.current = 'context';
         setState(prev => {
-          if (prev.chats === chats) {
+          if (prev.chats === chats && prev.entities === entities) {
             return { ...prev, isLoadingChats: false };
           }
-          return { ...prev, chats, isLoadingChats: false };
+          return { ...prev, chats, entities, isLoadingChats: false };
         });
         return;
       }
@@ -74,16 +79,17 @@ export const useSidebarState = () => {
         const chats = await getPastCharacterChats();
         chatViewModeRef.current = 'context';
         setState(prev => {
-          if (prev.chats === chats) {
+          if (prev.chats === chats && prev.entities === entities) {
             return { ...prev, isLoadingChats: false };
           }
-          return { ...prev, chats, isLoadingChats: false };
+          return { ...prev, chats, entities, isLoadingChats: false };
         });
         return;
       }
 
-      if (forceRecentFallback || chatViewModeRef.current === 'recent') {
-        const entities = getEntitiesList({ doFilter: true, doSort: true });
+      const shouldForceRecent = forceRecent || chatViewModeRef.current !== 'context';
+
+      if (shouldForceRecent) {
         const chats = await getRecentChats(entities);
         chatViewModeRef.current = 'recent';
         setState(prev => {
@@ -93,16 +99,34 @@ export const useSidebarState = () => {
           return { ...prev, chats, entities, open: true, isLoadingChats: false };
         });
       } else {
-        setState(prev => ({ ...prev, isLoadingChats: false }));
+        setState(prev => ({ ...prev, entities, isLoadingChats: false }));
       }
-    } catch (error) {
-      console.error('Error updating chat data:', error);
-      setState(prev => ({ ...prev, isLoadingChats: false }));
-    }
+    };
+
+    inFlightRefresh.current = doRefresh()
+      .catch(error => {
+        console.error('Error updating chat data:', error);
+        setState(prev => ({ ...prev, entities, isLoadingChats: false }));
+      })
+      .finally(async () => {
+        inFlightRefresh.current = null;
+        if (queuedRefresh.current) {
+          const force = queuedForceRecent.current;
+          queuedRefresh.current = false;
+          queuedForceRecent.current = false;
+          await refreshChats(force);
+        }
+      });
+
+    return inFlightRefresh.current;
   }, []);
 
   const handleHomeButton = useCallback(() => {
-    refreshChats({ forceRecentFallback: true });
+    refreshChats(true);
+  }, [refreshChats]);
+
+  const handleEntitiesChanged = useCallback(() => {
+    refreshChats(true);
   }, [refreshChats]);
 
   const handleChatSwitchPending = useCallback(() => {
@@ -151,7 +175,7 @@ export const useSidebarState = () => {
     eventSource.on(event_types.CHARACTER_RENAMED, refreshChats);
 
     // Our own Events
-    eventSource.on(DISCORDIA_EVENTS.ENTITIES_LENGTH_CHANGED, refreshChats);
+    eventSource.on(DISCORDIA_EVENTS.ENTITIES_LENGTH_CHANGED, handleEntitiesChanged);
     eventSource.on(DISCORDIA_EVENTS.HOME_BUTTON_CLICKED, handleHomeButton);
     eventSource.on(DISCORDIA_EVENTS.CHAT_SWITCH_PENDING, handleChatSwitchPending);
 
@@ -192,7 +216,7 @@ export const useSidebarState = () => {
       eventSource.removeListener(event_types.SETTINGS_UPDATED, handleSettingsUpdate);
       eventSource.removeListener(event_types.CHARACTER_EDITED, refreshChats);
       eventSource.removeListener(event_types.CHARACTER_RENAMED, refreshChats);
-      eventSource.removeListener(DISCORDIA_EVENTS.ENTITIES_LENGTH_CHANGED, refreshChats);
+      eventSource.removeListener(DISCORDIA_EVENTS.ENTITIES_LENGTH_CHANGED, handleEntitiesChanged);
       eventSource.removeListener(DISCORDIA_EVENTS.HOME_BUTTON_CLICKED, handleHomeButton);
       eventSource.removeListener(DISCORDIA_EVENTS.CHAT_SWITCH_PENDING, handleChatSwitchPending);
 

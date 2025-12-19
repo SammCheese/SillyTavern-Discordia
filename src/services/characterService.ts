@@ -1,9 +1,12 @@
-const { getRequestHeaders, getCharacters } = await imports('@script');
+import { DISCORDIA_EVENTS } from "../events/eventTypes";
+
+const { getRequestHeaders, getCharacters, eventSource, deleteCharacter, closeCurrentChat } = await imports('@script');
 const { ensureImageFormatSupported } = await imports('@scripts/utils');
 
 export interface CharacterPayload {
   ch_name: string;
   avatar: File | string;
+  avatar_url?: string;
 
   description?: string;
   personality?: string;
@@ -38,7 +41,7 @@ export async function editCharacter(data: CharacterPayload): Promise<void> {
   if (data.avatar instanceof File) {
       const processed = await ensureImageFormatSupported(data.avatar);
       formData.append('avatar', processed);
-  } else if (typeof data.avatar === 'string') {
+  } else {
       formData.append('avatar_url', data.avatar);
   }
 
@@ -162,10 +165,84 @@ export async function renameCharacter(avatarUrl: string, newName: string): Promi
     throw new Error(`Failed to rename character: ${response.statusText}`);
   }
 
+  // Returns the avatar url
+  const res = await response.text();
 
-  const res = await response.json();
+  return res;
+}
 
-  return res.avatar;
+export async function createCharacter(payload: CharacterPayload): Promise<string> {
+  const url = '/api/characters/create';
+  const formData = new FormData();
+
+  if (payload.avatar instanceof File) {
+      const processed = await ensureImageFormatSupported(payload.avatar);
+      const filename = (payload.avatar as File).name || 'avatar.png';
+      formData.append('avatar', processed, filename);
+  } else if (typeof payload.avatar === 'string') {
+      formData.append('avatar_url', payload.avatar);
+  }
+
+  const append = (key: keyof CharacterPayload) => {
+    const value = payload[key];
+    if (value === undefined || value === null || key === 'avatar') return;
+
+    if (Array.isArray(value)) {
+      if (key === 'tags') {
+        formData.append(key, value.join(','));
+      } else {
+        value.forEach(v => formData.append(key, String(v)));
+      }
+    } else {
+      formData.append(key, String(value));
+    }
+  };
+
+  (Object.keys(payload) as Array<keyof CharacterPayload>).forEach(append);
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: getRequestHeaders({ omitContentType: true }),
+    body: formData,
+    cache: 'no-cache',
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(errorText || response.statusText);
+  }
+
+  // Returns the avatar url
+  const res = await response.text();
+
+  return res;
+}
+
+export async function _deleteCharacter(
+  avatarUrl: string,
+  options: { deleteChats?: boolean } = {}
+): Promise<void> {
+  if (!avatarUrl) {
+    throw new Error('Avatar URL is required to delete character.');
+  }
+
+  const { characters, characterId } = SillyTavern.getContext();
+  const character = characters.find((c) => c.avatar?.toString() === avatarUrl);
+  const isCurrentCharacter = characterId !== null && characterId !== undefined && character && characters[characterId] === character;
+
+  // Close chat BEFORE deletion if this is the current character
+  if (isCurrentCharacter) {
+    await closeCurrentChat();
+
+    await deleteCharacter(avatarUrl, options);
+
+    await refreshCharacterList();
+  }
+}
+
+export async function refreshCharacterList(): Promise<void> {
+  await getCharacters();
+  eventSource.emit(DISCORDIA_EVENTS.ENTITIES_LENGTH_CHANGED);
 }
 
 
@@ -181,7 +258,9 @@ export async function updateCharacter(
     throw new Error('Original character not found for update.');
   }
 
-  await editCharacter({ ...payload, avatar: originalAvatarId });
+  const editPayload: CharacterPayload = { ...payload, avatar_url: originalAvatarId };
+
+  await editCharacter(editPayload);
 
   if (payload.ch_name && payload.ch_name !== originalName) {
     try {
@@ -192,7 +271,6 @@ export async function updateCharacter(
     }
   }
 
-    // Update internal character list
   await getCharacters();
 
   return originalAvatarId;

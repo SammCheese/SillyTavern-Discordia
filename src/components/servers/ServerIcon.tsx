@@ -25,7 +25,7 @@ const ServerIcon = ({
 
   const memoizedSrc = useMemo(() => {
     return getThumbnailUrl('avatar', entity.item?.avatar || entity.id);
-  }, [entity.item?.avatar, entity.id]);
+  }, [entity]);
 
   return (
     <div

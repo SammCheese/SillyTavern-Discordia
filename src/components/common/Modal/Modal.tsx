@@ -1,4 +1,4 @@
-import { type ReactNode } from 'react';
+import { memo, type ReactNode } from 'react';
 import ModalContent from './ModalContent';
 import ModalFooter from './ModalFooter';
 import ModalHeader from './ModalHeader';
@@ -8,7 +8,7 @@ interface ModalProps {
   className?: string;
 }
 
-const Modal = ({ children, className = '' }: ModalProps) => {
+const Modal = memo(({ children, className = '' }: ModalProps) => {
   return (
     <div
       className={`flex flex-col w-full h-full
@@ -18,7 +18,13 @@ const Modal = ({ children, className = '' }: ModalProps) => {
       {children}
     </div>
   );
+}) as typeof ModalContent & {
+  Header: typeof ModalHeader;
+  Content: typeof ModalContent;
+  Footer: typeof ModalFooter;
 };
+
+Modal.displayName = 'Modal';
 
 Modal.Header = ModalHeader;
 Modal.Content = ModalContent;

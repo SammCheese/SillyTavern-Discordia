@@ -1,4 +1,4 @@
-import { memo, useContext } from 'react';
+import { memo, useCallback, useContext } from 'react';
 import { ModalContext } from '../../../providers/modalProvider';
 
 interface ModalHeaderProps {
@@ -16,12 +16,12 @@ const ModalHeader = ({
 }: ModalHeaderProps) => {
   const { closeModal } = useContext(ModalContext);
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     if (onClose) {
       onClose();
     }
     closeModal();
-  };
+  }, [onClose, closeModal]);
 
   return (
     <div className="px-4 py-4 shrink-0 border-b border-gray-700 flex items-center justify-between w-full">
