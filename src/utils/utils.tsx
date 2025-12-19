@@ -1,13 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { createElement, type ReactElement } from 'react';
-
 const {
   characters,
   getRequestHeaders,
   getThumbnailUrl,
   system_avatar,
-  default_avatar,
   openCharacterChat,
   setActiveCharacter,
   setActiveGroup,
@@ -56,7 +53,7 @@ export async function getRecentChats(entities?: Entity[], amount = 20) {
         (e) =>
           (t.character &&
             e.type === 'character' &&
-            e.item.avatar.toString() === t.character!.avatar.toString()) ||
+            e.item.avatar.toString() === t.character!.avatar?.toString()) ||
           (t.group &&
             e.type === 'group' &&
             e.id.toString() === t.group!.id.toString()),
@@ -71,7 +68,7 @@ export async function getRecentChats(entities?: Entity[], amount = 20) {
     chat.date_long = chatTimestamp.format('LL LT');
     chat.chat_name = chat.file_name.replace('.jsonl', '');
     chat.char_thumbnail = character
-      ? getThumbnailUrl('avatar', character.avatar)
+      ? getThumbnailUrl('avatar', character?.avatar ?? '')
       : system_avatar;
     chat.is_group = !!group;
     chat.hidden = index >= 15;
@@ -134,82 +131,6 @@ export function isValidImageUrl(url) {
     isDataURL(url) ||
     (url && (url.startsWith('user') || url.startsWith('/user')))
   );
-}
-
-export function makeReactGroupAvatar(groupItem: any): ReactElement {
-  if (!groupItem) {
-    return <img src={default_avatar} />;
-  }
-
-  if (isValidImageUrl(groupItem.avatar_url)) {
-    return (
-      <div className="avatar" title={`[Group] ${groupItem.name}`}>
-        <img loading="lazy" src={groupItem.avatar_url} />
-      </div>
-    );
-  }
-
-  const memberAvatars: string[] = [];
-  if (
-    groupItem &&
-    Array.isArray(groupItem.members) &&
-    groupItem.members.length
-  ) {
-    for (const member of groupItem.members) {
-      const charIndex = characters.findIndex((x) => x.avatar === member);
-      if (charIndex !== -1 && characters[charIndex]?.avatar !== 'none') {
-        const avatar = getThumbnailUrl(
-          'avatar',
-          characters[charIndex]?.avatar || default_avatar,
-        );
-        memberAvatars.push(avatar);
-      }
-      if (memberAvatars.length === 4) {
-        break;
-      }
-    }
-  }
-
-  const avatarCount = memberAvatars.length;
-
-  if (avatarCount >= 1 && avatarCount <= 4) {
-    const imgElements: ReactElement[] = [];
-
-    for (let i = 0; i < avatarCount; i++) {
-      const imgElement = createElement('img', {
-        className: `img_${i + 1}`,
-        src: memberAvatars[i],
-      });
-      imgElements.push(imgElement);
-    }
-    const groupAvatar = createElement(
-      'div',
-      {
-        id: 'group_avatars_template',
-        className: `collage_${avatarCount} group-avatar`,
-        title: `[Group] ${groupItem.name}`,
-      },
-      ...imgElements,
-    );
-    return groupAvatar;
-  }
-
-  // catch edge case where group had one member and that member is deleted
-  if (avatarCount === 0) {
-    return <div className="missing-avatar fa-solid fa-user-slash"></div>;
-  }
-
-  // default avatar
-  const groupAvatar = createElement(
-    'div',
-    {
-      id: 'group_avatars_template',
-      className: `collage_1 group-avatar`,
-      title: `[Group] ${groupItem.name}`,
-    },
-    createElement('img', { className: 'img_1', src: system_avatar }),
-  );
-  return groupAvatar;
 }
 
 export const selectCharacter = async (char_id: number, chat_id?: string) => {
@@ -283,5 +204,5 @@ export const makeAvatar = ({
 
   if (!character) return system_avatar;
 
-  return getThumbnailUrl('avatar', character.avatar);
+  return getThumbnailUrl('avatar', character.avatar || '');
 };

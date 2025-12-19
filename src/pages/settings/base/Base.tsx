@@ -1,7 +1,7 @@
-import { useContext, type ReactNode } from 'react';
+import { memo, useCallback, useContext, type ReactNode } from 'react';
 import { PageContext } from '../../../providers/pageProvider';
 
-const closeButton = () => {
+const CloseButton = memo(function CloseButton() {
   return (
     <>
       <div
@@ -28,26 +28,35 @@ const closeButton = () => {
       </div>
     </>
   );
-};
+});
 
-const SettingsFrame = ({
-  title,
-  children,
-}: {
+interface SettingsFrameProps {
   title: string;
   children: ReactNode;
-}) => {
+  onClose?: () => void;
+}
+
+const SettingsFrame = ({ title, children, onClose }: SettingsFrameProps) => {
   const { closePage } = useContext(PageContext);
+
+  const handleClose = useCallback(() => {
+    if (onClose) onClose();
+    closePage();
+  }, [onClose, closePage]);
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+  };
 
   return (
     <div
-      onClick={(e) => e.stopPropagation()}
+      onClick={handleClick}
       className="w-full h-full p-[5%] bg-base-discordia text-white"
     >
       <div className="settings-header flex justify-between items-center p-4 mb-4 border-b border-gray-700">
         <h2 className="text-3xl font-semibold">{title}</h2>
-        <button className="group" onClick={closePage}>
-          {closeButton()}
+        <button className="group" onClick={handleClose}>
+          <CloseButton />
         </button>
       </div>
       <div className="settings-content">{children}</div>

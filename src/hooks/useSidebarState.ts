@@ -1,8 +1,11 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { getRecentChats } from "../utils/utils";
+import { DISCORDIA_EVENTS } from '../events/eventTypes';
 
 const { getGroupPastChats } = await imports('@scripts/groupChats');
 const { getEntitiesList, eventSource, event_types, getPastCharacterChats } = await imports('@script');
+
+type ChatViewMode = 'recent' | 'context';
 
 interface SidebarState {
   open: boolean;
@@ -23,6 +26,11 @@ const CHANNEL_MENU_CONFIG = [
 
 
 export const useSidebarState = () => {
+  const chatViewModeRef = useRef<ChatViewMode>('recent');
+  const inFlightRefresh = useRef<Promise<void> | null>(null);
+  const queuedRefresh = useRef(false);
+  const queuedForceRecent = useRef(false);
+
   const [state, setState] = useState<SidebarState>({
     open: false,
     entities: [],
@@ -36,32 +44,93 @@ export const useSidebarState = () => {
   }, []);
 
 
-  const updateChatData = useCallback(async () => {
-    setState(prev => ({ ...prev, isLoadingChats: true }));
+  const refreshChats = useCallback(async (forceRecent = false) => {
+    if (inFlightRefresh.current) {
+      queuedRefresh.current = true;
+      queuedForceRecent.current = queuedForceRecent.current || forceRecent;
+      return inFlightRefresh.current;
+    }
+
+    setState(prev => prev.isLoadingChats ? prev : { ...prev, isLoadingChats: true });
 
     const { characterId, groupId } = SillyTavern.getContext();
-    let chats: Chat[] = [];
+    const hasGroup = groupId !== null && groupId !== undefined;
+    const hasCharacter =
+      characterId !== null &&
+      characterId !== undefined &&
+      Number(characterId) >= 0;
+    const entities = getEntitiesList({ doFilter: true, doSort: true });
 
-    try {
-      // Group Chats
-      if (groupId !== null) {
-        chats = await getGroupPastChats(groupId.toString());
-        setState(prev => ({ ...prev, chats, isLoadingChats: false}));
-        // Character Chats
-      } else if (typeof characterId !== 'undefined' && parseInt(characterId) >= 0) {
-        chats = await getPastCharacterChats();
-        setState(prev => ({ ...prev, chats, isLoadingChats: false }));
+
+    const doRefresh = async () => {
+      if (hasGroup) {
+        const chats = await getGroupPastChats(groupId.toString());
+        chatViewModeRef.current = 'context';
+        setState(prev => {
+          if (prev.chats === chats && prev.entities === entities) {
+            return { ...prev, isLoadingChats: false };
+          }
+          return { ...prev, chats, entities, isLoadingChats: false };
+        });
+        return;
       }
-    } catch (error) {
-      console.error('Error updating chat data:', error);
-      resetWithNewData();
-    }
+
+      if (hasCharacter) {
+        const chats = await getPastCharacterChats();
+        chatViewModeRef.current = 'context';
+        setState(prev => {
+          if (prev.chats === chats && prev.entities === entities) {
+            return { ...prev, isLoadingChats: false };
+          }
+          return { ...prev, chats, entities, isLoadingChats: false };
+        });
+        return;
+      }
+
+      const shouldForceRecent = forceRecent || chatViewModeRef.current !== 'context';
+
+      if (shouldForceRecent) {
+        const chats = await getRecentChats(entities);
+        chatViewModeRef.current = 'recent';
+        setState(prev => {
+          if (prev.chats === chats && prev.entities === entities && prev.open) {
+            return { ...prev, isLoadingChats: false };
+          }
+          return { ...prev, chats, entities, open: true, isLoadingChats: false };
+        });
+      } else {
+        setState(prev => ({ ...prev, entities, isLoadingChats: false }));
+      }
+    };
+
+    inFlightRefresh.current = doRefresh()
+      .catch(error => {
+        console.error('Error updating chat data:', error);
+        setState(prev => ({ ...prev, entities, isLoadingChats: false }));
+      })
+      .finally(async () => {
+        inFlightRefresh.current = null;
+        if (queuedRefresh.current) {
+          const force = queuedForceRecent.current;
+          queuedRefresh.current = false;
+          queuedForceRecent.current = false;
+          await refreshChats(force);
+        }
+      });
+
+    return inFlightRefresh.current;
   }, []);
 
-  const resetWithNewData = useCallback(async () => {
-    const entities = getEntitiesList({ doFilter: true, doSort: true });
-    const chats = await getRecentChats(entities);
-    setState(prev => ({ ...prev, chats, entities, open: true, isLoadingChats: false }));
+  const handleHomeButton = useCallback(() => {
+    refreshChats(true);
+  }, [refreshChats]);
+
+  const handleEntitiesChanged = useCallback(() => {
+    refreshChats(true);
+  }, [refreshChats]);
+
+  const handleChatSwitchPending = useCallback(() => {
+    chatViewModeRef.current = 'context';
   }, []);
 
   const processMenuIcons = useCallback(() => {
@@ -97,17 +166,18 @@ export const useSidebarState = () => {
     };
 
     // Event Handling
-    eventSource.on(event_types.APP_READY, resetWithNewData);
-    eventSource.on(event_types.CHAT_CHANGED, updateChatData);
-    eventSource.on(event_types.CHAT_DELETED, updateChatData);
-    eventSource.on(event_types.CHAT_CREATED, updateChatData);
+    eventSource.on(event_types.APP_READY, refreshChats);
+    eventSource.on(event_types.CHAT_CHANGED, refreshChats);
+    eventSource.on(event_types.CHAT_DELETED, refreshChats);
+    eventSource.on(event_types.CHAT_CREATED, refreshChats);
     eventSource.on(event_types.SETTINGS_UPDATED, handleSettingsUpdate);
-    eventSource.on(event_types.CHARACTER_EDITED, resetWithNewData);
-    eventSource.on(event_types.CHARACTER_RENAMED, resetWithNewData);
-    eventSource.on(event_types.CHARACTER_DELETED, resetWithNewData);
+    eventSource.on(event_types.CHARACTER_EDITED, refreshChats);
+    eventSource.on(event_types.CHARACTER_RENAMED, refreshChats);
 
-    // Custom event to handle home button clicks
-    eventSource.on('DISCORDIA_HOME_BUTTON_CLICKED', resetWithNewData);
+    // Our own Events
+    eventSource.on(DISCORDIA_EVENTS.ENTITIES_LENGTH_CHANGED, handleEntitiesChanged);
+    eventSource.on(DISCORDIA_EVENTS.HOME_BUTTON_CLICKED, handleHomeButton);
+    eventSource.on(DISCORDIA_EVENTS.CHAT_SWITCH_PENDING, handleChatSwitchPending);
 
     // Swipe Listeners
     const THRESHOLD = 100;
@@ -139,15 +209,16 @@ export const useSidebarState = () => {
     }
 
     return () => {
-      eventSource.removeListener(event_types.APP_READY, resetWithNewData);
-      eventSource.removeListener(event_types.CHAT_CHANGED, updateChatData);
-      eventSource.removeListener(event_types.CHAT_DELETED, updateChatData);
-      eventSource.removeListener(event_types.CHAT_CREATED, updateChatData);
+      eventSource.removeListener(event_types.APP_READY, refreshChats);
+      eventSource.removeListener(event_types.CHAT_CHANGED, refreshChats);
+      eventSource.removeListener(event_types.CHAT_DELETED, refreshChats);
+      eventSource.removeListener(event_types.CHAT_CREATED, refreshChats);
       eventSource.removeListener(event_types.SETTINGS_UPDATED, handleSettingsUpdate);
-      eventSource.removeListener(event_types.CHARACTER_EDITED, resetWithNewData);
-      eventSource.removeListener(event_types.CHARACTER_RENAMED, resetWithNewData);
-      eventSource.removeListener(event_types.CHARACTER_DELETED, resetWithNewData);
-      eventSource.removeListener('DISCORDIA_HOME_BUTTON_CLICKED', resetWithNewData);
+      eventSource.removeListener(event_types.CHARACTER_EDITED, refreshChats);
+      eventSource.removeListener(event_types.CHARACTER_RENAMED, refreshChats);
+      eventSource.removeListener(DISCORDIA_EVENTS.ENTITIES_LENGTH_CHANGED, handleEntitiesChanged);
+      eventSource.removeListener(DISCORDIA_EVENTS.HOME_BUTTON_CLICKED, handleHomeButton);
+      eventSource.removeListener(DISCORDIA_EVENTS.CHAT_SWITCH_PENDING, handleChatSwitchPending);
 
       if (body) {
         body.off('pointerdown', onPointerDown);
@@ -157,10 +228,12 @@ export const useSidebarState = () => {
         body.off('touchend pointerup', onPointerUp);
       }
     };
-  }, []);
+  }, [processMenuIcons, refreshChats, setOpen, handleHomeButton, handleChatSwitchPending]);
 
   return {
     ...state,
     setOpen,
+    hasActiveContext: chatViewModeRef.current === 'context',
+    refreshChats,
   };
 }

@@ -1,10 +1,11 @@
 import React, { lazy, useCallback, useContext, useMemo } from 'react';
 import { PageContext } from '../../providers/pageProvider';
-import { makeAvatar, selectCharacter, selectGroup } from '../../utils/utils';
+import { makeAvatar } from '../../utils/utils';
 import type { RowComponentProps } from 'react-window';
 import { List } from 'react-window';
 import { useSearch } from '../../context/SearchContext';
 import ErrorBoundary from '../common/ErrorBoundary/ErrorBoundary';
+import { useOpenChat } from '../../hooks/useOpenChat';
 
 const Divider = React.lazy(() => import('../common/Divider/Divider'));
 const ChannelEntry = lazy(() => import('./ChannelEntry'));
@@ -29,15 +30,12 @@ const FormattingSettings = lazy(
   () => import('../../pages/settings/formatting/FormattingSettings'),
 );
 
-const { closeCurrentChat, openCharacterChat } = await imports('@script');
-const { openGroupChat } = await imports('@scripts/groupChats');
-const { getContext } = SillyTavern;
-
 interface ChannelBarProps {
   icons: Icon[] | null;
   chats: Chat[];
   setOpen: (value: boolean) => void;
   isLoadingChats?: boolean;
+  hasActiveContext: boolean;
 }
 
 const ChannelBar = ({
@@ -45,9 +43,11 @@ const ChannelBar = ({
   chats,
   setOpen,
   isLoadingChats = false,
+  hasActiveContext,
 }: ChannelBarProps) => {
   const { openPage } = useContext(PageContext);
   const { setSearchQuery } = useSearch();
+  const { openChat, isSelectedChat } = useOpenChat();
 
   const handleToolclick = useCallback(
     (icon: Icon) => {
@@ -78,49 +78,12 @@ const ChannelBar = ({
     [openPage],
   );
 
-  const isSelectedChat = useCallback(
-    (chat: Chat): boolean => {
-      return getContext().chatId === chat.file_id;
-    },
-    [getContext().chatId],
-  );
-
   const handleChannelClick = useCallback(
     async (chat: Chat) => {
-      if (!chat) return;
-      // if its the currently selected chat, do nothing
-      if (isSelectedChat(chat)) return;
-
-      // Recent Chat handler
-      if (
-        (chat?.char_id !== undefined && chat?.char_id >= 0) ||
-        chat?.is_group
-      ) {
-        await closeCurrentChat();
-        if (chat.is_group) {
-          await selectGroup({
-            id: chat.group,
-            chat_id: chat.file_id,
-          });
-        } else if (chat?.char_id !== undefined) {
-          await selectCharacter(chat.char_id, chat.file_id);
-        }
-        return;
-      }
-
-      // Channel Switch within selected character/group
-      const { characterId, groupId } = SillyTavern.getContext();
-      if (groupId !== null) {
-        await openGroupChat(groupId, chat.file_id);
-      } else if (characterId) {
-        await openCharacterChat(chat.file_id);
-      }
-
-      if (window.innerWidth <= 1000) {
-        setOpen(false);
-      }
+      await openChat(chat);
+      if (window.innerWidth <= 1000) setOpen(false);
     },
-    [setOpen, isSelectedChat],
+    [openChat, setOpen],
   );
 
   const iconsFiltered = React.useMemo(
@@ -153,10 +116,8 @@ const ChannelBar = ({
 
   const chatsMemo = useMemo(() => chats, [chats]);
 
-  const shownTitle = useMemo(() => {
-    const { characterId, groupId } = getContext();
-    return isLoadingChats || characterId || groupId ? 'Chats' : 'Recent Chats';
-  }, [isLoadingChats, getContext().characterId, getContext().groupId]);
+  const shownTitle =
+    isLoadingChats || hasActiveContext ? 'Chats' : 'Recent Chats';
 
   return (
     <ErrorBoundary>

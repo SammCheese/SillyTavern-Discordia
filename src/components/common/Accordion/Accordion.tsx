@@ -1,24 +1,32 @@
-import { type ReactNode, useCallback, useState, memo } from 'react';
+import { type ReactNode, useCallback, useState, memo, useEffect } from 'react';
+
+interface AccordionProps {
+  title: string | ReactNode;
+  isOpen?: boolean;
+  onToggle?: () => void;
+  children: ReactNode;
+  destroyOnClose?: boolean;
+}
 
 export const Accordion = ({
   title,
   isOpen = false,
   onToggle,
   children,
-}: {
-  title: string;
-  isOpen?: boolean;
-  onToggle?: () => void;
-  children: ReactNode;
-}) => {
+  destroyOnClose = false,
+}: AccordionProps) => {
   const [open, setOpen] = useState(isOpen);
 
+  useEffect(() => {
+    setOpen(isOpen);
+  }, [isOpen]);
+
   const handleToggle = useCallback(() => {
-    setOpen(!open);
+    setOpen((prevOpen) => !prevOpen);
     if (onToggle) {
       onToggle();
     }
-  }, [open, onToggle]);
+  }, [onToggle]);
 
   return (
     <div className="accordion rounded mb-4 border border-base-discordia-lighter overflow-hidden">
@@ -27,17 +35,20 @@ export const Accordion = ({
         onClick={handleToggle}
       >
         <span className="text-lg font-medium">{title}</span>
-        <span>
-          {open ? (
-            <div className="fa fa-chevron-up"></div>
-          ) : (
-            <div className="fa fa-chevron-down"></div>
-          )}
+        <span
+          className={`transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
+        >
+          <div className="fa fa-chevron-down" />
         </span>
       </button>
-      {open && (
-        <div className="accordion-content p-4 bg-input-bg">{children}</div>
-      )}
+
+      <div
+        className={`accordion-content bg-input-bg transition-all duration-200 ${
+          open ? 'block p-4' : 'hidden'
+        }`}
+      >
+        {(open || !destroyOnClose) && children}
+      </div>
     </div>
   );
 };

@@ -1,14 +1,24 @@
-import { useCallback, useEffect, useMemo, lazy, memo, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  lazy,
+  memo,
+  useState,
+  useContext,
+} from 'react';
 import { List, type RowComponentProps } from 'react-window';
 import { selectCharacter, selectGroup } from '../../utils/utils';
 import { useSearch } from '../../context/SearchContext';
 import ErrorBoundary from '../common/ErrorBoundary/ErrorBoundary';
+import { DISCORDIA_EVENTS } from '../../events/eventTypes';
+import { ModalContext } from '../../providers/modalProvider';
+import CharacterModal from '../../modals/Character/CharacterModal';
 
 const ServerIcon = lazy(() => import('./ServerIcon'));
 const AddCharacterIcon = lazy(() => import('./AddCharacterIcon'));
 const HomeIcon = lazy(() => import('./HomeIcon'));
 
-//const { openWelcomeScreen } = await imports('@scripts/welcomeScreen');
 const { getGroupPastChats } = await imports('@scripts/groupChats');
 const {
   getPastCharacterChats,
@@ -18,6 +28,14 @@ const {
   event_types,
 } = await imports('@script');
 
+interface ServerRowProps {
+  entity: Entity;
+  index: number;
+  isSelected: boolean;
+  style: React.CSSProperties;
+  onClick: (entity: Entity, index: number) => void;
+}
+
 const ServerRow = memo(
   function ServerRow({
     entity,
@@ -25,13 +43,7 @@ const ServerRow = memo(
     isSelected,
     style,
     onClick,
-  }: {
-    entity: Entity;
-    index: number;
-    isSelected: boolean;
-    style: React.CSSProperties;
-    onClick: (entity: Entity, index: number) => void;
-  }) {
+  }: ServerRowProps) {
     return (
       <div
         style={style}
@@ -43,7 +55,7 @@ const ServerRow = memo(
           entity={entity}
           index={index}
           isSelected={isSelected}
-          onSelect={onClick}
+          onClick={onClick}
         />
       </div>
     );
@@ -67,7 +79,18 @@ interface RowData {
 
 const Row = ({ index, style, data }: RowComponentProps<RowData>) => {
   const { entities, selectedIndex, handleItemClick } = data;
+  const { openModal } = useContext(ModalContext);
   const entity = entities[index];
+
+  const handleClick = useCallback(() => {
+    if (entity) {
+      handleItemClick(entity, index);
+    }
+  }, [entity, handleItemClick, index]);
+
+  const handleAddCharacterClick = useCallback(() => {
+    openModal(<CharacterModal type="create" />);
+  }, [openModal]);
 
   if (!entity) {
     return (
@@ -75,7 +98,7 @@ const Row = ({ index, style, data }: RowComponentProps<RowData>) => {
         style={style}
         className="discord-entity-item character-button w-full h-fit flex justify-center py-1"
       >
-        <AddCharacterIcon onClick={() => {}} />
+        <AddCharacterIcon onClick={handleAddCharacterClick} />
       </div>
     );
   }
@@ -86,7 +109,7 @@ const Row = ({ index, style, data }: RowComponentProps<RowData>) => {
       entity={entity}
       style={style}
       isSelected={selectedIndex === index}
-      onClick={handleItemClick}
+      onClick={handleClick}
     />
   );
 };
@@ -94,16 +117,16 @@ const Row = ({ index, style, data }: RowComponentProps<RowData>) => {
 const ServerBar = ({ entities }: { entities: Entity[] }) => {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const { searchQuery } = useSearch();
+  const { openModal } = useContext(ModalContext);
 
   const onHomeClickHandler = useCallback(async () => {
     setSelectedIndex(null);
     await closeCurrentChat();
     // Signal Sidebar to go back to recent chats
-    await eventSource.emit('DISCORDIA_HOME_BUTTON_CLICKED');
+    await eventSource.emit(DISCORDIA_EVENTS.HOME_BUTTON_CLICKED);
   }, []);
 
   const handleItemClick = useCallback(async (entity: Entity, index: number) => {
-    setSelectedIndex(index);
     try {
       if (entity.type === 'group') {
         const groupId = entity.id.toString();
@@ -113,18 +136,25 @@ const ServerBar = ({ entities }: { entities: Entity[] }) => {
 
         if (!group) return;
 
+        // Prevent sidebar from falling back to recents while IDs are cleared.
+        eventSource.emit(DISCORDIA_EVENTS.CHAT_SWITCH_PENDING);
         await closeCurrentChat();
         const chats = await getGroupPastChats(groupId);
         await selectGroup({ group: entity, chat_id: chats[0]?.file_id });
+
+        setSelectedIndex(index);
       } else {
         const char_id = characters.findIndex(
           (c) => c.avatar === entity?.item?.avatar,
         );
         if (char_id === -1) return;
 
+        eventSource.emit(DISCORDIA_EVENTS.CHAT_SWITCH_PENDING);
         await closeCurrentChat();
         const chats = await getPastCharacterChats(char_id);
         await selectCharacter(char_id, chats[0]?.file_id);
+
+        setSelectedIndex(index);
       }
     } catch (error) {
       console.error('Error selecting entity:', error);
@@ -144,6 +174,7 @@ const ServerBar = ({ entities }: { entities: Entity[] }) => {
       );
       setSelectedIndex(idx !== -1 ? idx : null);
     } else if (
+      characterId !== null &&
       typeof characterId !== 'undefined' &&
       parseInt(characterId) >= 0
     ) {
@@ -171,16 +202,21 @@ const ServerBar = ({ entities }: { entities: Entity[] }) => {
 
   const itemData = useMemo(
     () => ({ entities, selectedIndex, handleItemClick }),
-    [entities, handleItemClick],
+    [entities, selectedIndex, handleItemClick],
   );
 
   const filteredEntities = useMemo(() => {
-    if (!searchQuery) return entities;
-    return entities.filter((entity) => {
+    const withIndex = entities.map((entity, index) => ({ entity, index }));
+    if (!searchQuery) return withIndex;
+    return withIndex.filter(({ entity }) => {
       const name = entity.item?.name || '';
       return name.toLowerCase().includes(searchQuery.toLowerCase());
     });
   }, [entities, searchQuery]);
+
+  const handleAddCharacterClick = useCallback(() => {
+    openModal(<CharacterModal type="create" />);
+  }, []);
 
   return (
     <ErrorBoundary>
@@ -194,8 +230,7 @@ const ServerBar = ({ entities }: { entities: Entity[] }) => {
           {/* A little trickery in performance */}
           {filteredEntities.length < 50 ? (
             <>
-              {filteredEntities.map((entity) => {
-                const actualIndex = entities.indexOf(entity);
+              {filteredEntities.map(({ entity, index: actualIndex }) => {
                 return (
                   <ServerRow
                     key={entity.id.toString()}
@@ -210,7 +245,7 @@ const ServerBar = ({ entities }: { entities: Entity[] }) => {
 
               <div id="characters-divider" className="divider"></div>
 
-              <AddCharacterIcon onClick={() => {}} />
+              <AddCharacterIcon onClick={handleAddCharacterClick} />
             </>
           ) : (
             <List

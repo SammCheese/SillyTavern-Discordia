@@ -113,7 +113,10 @@ const ConnectionSettings = () => {
 
   return (
     <SettingsFrame title="Connection Settings">
-      <div className="p-4 space-y-4 overflow-auto flex flex-col">
+      <div
+        style={{ maxHeight: '80vh' }}
+        className="p-4 space-y-4 overflow-auto flex flex-col"
+      >
         <h2>Profile</h2>
 
         <Select

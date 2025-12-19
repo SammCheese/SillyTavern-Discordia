@@ -1,150 +1,57 @@
-import {
-  memo,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react';
+import { memo, useCallback, useMemo } from 'react';
 import GroupAvatar from '../groupAvatar/GroupAvatar';
-import { ContextMenuContext } from '../../providers/contextMenuProvider';
-import { ModalContext } from '../../providers/modalProvider';
-import CharacterEditModal from '../../modals/CharacterEdit/CharacterModal';
-import type { ContextMenuItem } from '../common/ContextMenuEntry/ContextMenuEntry';
+import { useServerIconMenu } from './hooks/ServerIconMenu';
 
-const { getThumbnailUrl, deleteCharacter } = await imports('@script');
+const { getThumbnailUrl } = await imports('@script');
 
 interface ServerIconProps {
   entity: Entity;
   isSelected: boolean;
-  onSelect?: (entity: Entity, index: number) => void;
+  onClick?: (entity: Entity, index: number) => void;
   index: number;
 }
 
 const ServerIcon = ({
   entity,
   isSelected,
-  onSelect,
+  onClick,
   index,
 }: ServerIconProps) => {
-  const [hovered, setHovered] = useState(false);
-  const { showContextMenu } = useContext(ContextMenuContext);
-  const { openModal } = useContext(ModalContext);
+  const { handleContextMenu: contextMenuHandler } = useServerIconMenu(entity);
 
-  // Precaution
-  useEffect(() => {
-    let hoverTimeout: NodeJS.Timeout;
-    if (hovered) {
-      hoverTimeout = setTimeout(() => {
-        setHovered(false);
-      }, 3000);
-    }
-    return () => clearTimeout(hoverTimeout);
-  }, [hovered]);
-
-  const handleClick = () => {
-    if (onSelect) {
-      onSelect(entity, index);
-    }
-  };
-
-  const handleDelete = useCallback(async () => {
-    try {
-      if (entity.item?.avatar) {
-        await deleteCharacter(entity.item.avatar.toString(), {
-          deleteChats: true,
-        });
-      }
-    } catch (error) {
-      console.error('Error deleting character:', error);
-    }
-  }, [entity]);
-
-  const menuOptions = useMemo(() => {
-    return [
-      {
-        label: entity.item?.name || 'Character',
-        disabled: true,
-      },
-      { label: '---', variant: 'separator' },
-      {
-        label: 'Edit',
-        onClick: () => {
-          openModal(
-            <CharacterEditModal
-              avatarName={entity.item?.avatar.toString() || ''}
-            />,
-          );
-        },
-      },
-      /*{
-        label: 'Duplicate',
-      },
-      {
-        label: 'Export',
-      },*/
-      {
-        label: '---',
-        variant: 'separator',
-      },
-      {
-        label: 'Delete',
-        variant: 'danger',
-        onClick: () => handleDelete(),
-      },
-    ] as ContextMenuItem[];
-  }, [entity, handleDelete, openModal]);
-
-  const onRightClick = useCallback(
-    (e: React.MouseEvent) => {
-      e.preventDefault();
-      showContextMenu(e, menuOptions);
-    },
-    [entity, index, showContextMenu],
-  );
+  const handleClick = useCallback(() => {
+    onClick?.(entity, index);
+  }, [onClick, entity, index]);
 
   const memoizedSrc = useMemo(() => {
     return getThumbnailUrl('avatar', entity.item?.avatar || entity.id);
   }, [entity]);
 
-  const handleHover = () => {
-    setHovered(true);
-  };
-
-  const handleHoverLeave = () => {
-    setHovered(false);
-  };
-
   return (
     <div
-      className="flex m-0 relative w-full h-fit select-none"
-      onContextMenu={onRightClick}
+      className="flex m-0 relative w-full h-fit select-none group"
+      onContextMenu={contextMenuHandler}
+      onClick={handleClick}
     >
       <div className="absolute start-0 top-0 w-2 justify-start items-center flex h-full">
         <span
-          style={{ borderRadius: '0 4px 4px 0' }}
-          className={
-            'w-2 h-0  absolute block transition ease-in-out duration-200 -ms-1 bg-white ' +
-            (hovered ? ' h-6' : '') +
-            (isSelected ? ' h-8' : '')
-          }
-        ></span>
+          className={`w-2 absolute block transition-all ease-in-out duration-200 -ms-1 bg-white rounded-r ${
+            isSelected ? 'h-8' : 'h-0 group-hover:h-6'
+          }`}
+        />
       </div>
 
-      <div
-        onMouseEnter={handleHover}
-        onMouseLeave={handleHoverLeave}
-        onClick={handleClick}
-        className="cursor-pointer w-full h-fit flex justify-center items-center"
-      >
+      <div className="cursor-pointer w-full h-fit flex justify-center items-center">
         {entity.type === 'group' ? (
-          <GroupAvatar groupItem={entity.item} />
+          <GroupAvatar groupItem={entity.item} rounded={true} />
         ) : (
           <img
             loading="lazy"
             alt={entity.item?.name || 'Character'}
-            className={`rounded-xl h-12 w-12 object-cover hover:outline-1 outline-white ${
-              isSelected ? 'outline' : ''
+            className={`rounded-xl h-12 w-12 object-cover transition-all ${
+              isSelected
+                ? 'outline-1 outline-white'
+                : 'group-hover:outline-1 group-hover:outline-white'
             }`}
             src={memoizedSrc}
           />

@@ -119,6 +119,18 @@ const ProfileIcon = ({
     [apiConnected, icon.className],
   );
 
+  const overrides = [
+    {
+      id: '#user-settings-button',
+      className: 'drawer-icon fa-solid fa-gear fa interactable closedIcon',
+    },
+  ];
+
+  const overriddenClassName = useMemo(() => {
+    const override = overrides.find((o) => o.id === icon.id);
+    return override ? override.className : icon.className;
+  }, [icon.className, icon.id, overrides]);
+
   const handleClick = useCallback(() => {
     if (onClick && enabled) {
       onClick(icon);
@@ -136,7 +148,7 @@ const ProfileIcon = ({
   } else {
     return (
       <div
-        className={icon.className}
+        className={overriddenClassName}
         title={icon.title}
         onClick={handleClick}
       />

@@ -59,7 +59,7 @@ const Persona = memo(function Persona({ persona, onClick }: PersonaProps) {
   return (
     <button
       key={persona.avatar}
-      className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-lighter transition-colors"
+      className="cursor-pointer flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-lighter transition-colors"
       onClick={handleClick}
     >
       <img

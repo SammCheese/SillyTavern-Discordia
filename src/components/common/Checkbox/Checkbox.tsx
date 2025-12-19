@@ -46,12 +46,13 @@ const Checkbox = ({ label, checked = false, onChange }: CheckboxProps) => {
           onChange={toggleCheckbox}
         />
         <div
-          className="w-6 h-6  rounded flex items-center justify-center "
+          className={`w-6 h-6  rounded flex items-center justify-center cursor-pointer ${checkedState ? 'border-blurple' : 'border-white'} hover:border-blurple border-2`}
           style={{
             backgroundColor: checkedState
               ? 'var(--color-blurple)'
               : 'transparent',
-            border: '2px solid var(--color-blurple)',
+            border: checkedState ? 'none' : '2px solid var(--color-white)',
+            transition: 'all 0.2s ease-in-out',
           }}
         >
           <svg

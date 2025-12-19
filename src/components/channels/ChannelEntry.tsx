@@ -1,4 +1,4 @@
-import { useContext, memo } from 'react';
+import { useContext, memo, useCallback } from 'react';
 import Skeleton from 'react-loading-skeleton';
 import { ContextMenuContext } from '../../providers/contextMenuProvider';
 
@@ -21,13 +21,11 @@ const ChannelEntry = ({
 }: ChannelEntryProps) => {
   const { showContextMenu } = useContext(ContextMenuContext);
 
-  const handleClick = () => {
-    if (onClick) {
-      onClick(chat);
-    }
-  };
+  const handleClick = useCallback(() => {
+    onClick?.(chat);
+  }, [onClick, chat]);
 
-  const handleDelete = async () => {
+  const handleDelete = useCallback(async () => {
     try {
       let charId = chat.char_id ?? null;
       if (!charId) {
@@ -41,16 +39,14 @@ const ChannelEntry = ({
     } catch (error) {
       console.error('Error deleting chat:', error);
     }
-  };
+  }, [chat]);
 
   const handleRightClick = (e: React.MouseEvent) => {
     e.preventDefault();
     showContextMenu(e, [
       {
         label: 'Open',
-        onClick: () => {
-          handleClick();
-        },
+        onClick: handleClick,
       },
       /*{
         label: 'Export',
@@ -65,7 +61,7 @@ const ChannelEntry = ({
       {
         label: 'Delete',
         variant: 'danger',
-        onClick: () => handleDelete(),
+        onClick: handleDelete,
       },
     ]);
   };
@@ -80,7 +76,13 @@ const ChannelEntry = ({
     >
       <div className="items-stretch flex w-full box-border">
         {isLoading ? (
-          <Skeleton className="bg-lighter" count={5} />
+          <div
+            style={{ flex: '1 1 auto', padding: '8px' }}
+            className="w-full flex flex-col gap-2 h-12 "
+          >
+            <Skeleton className="h-9 mr-2 rounded-4xl bg-gray-600" />
+            <Skeleton className="w-full rounded-xl bg-gray-600" />
+          </div>
         ) : (
           <>
             <div

@@ -7,12 +7,16 @@ interface OpenPageProps {
 }
 
 const OpenPage = ({ children, isVisible, onClose }: OpenPageProps) => {
+  const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
+
   return (
     <div
       id="open-page-container"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
+      onClick={handleClick}
       className={`${
         isVisible
           ? 'bg-black/80 backdrop-blur-sm opacity-100'
