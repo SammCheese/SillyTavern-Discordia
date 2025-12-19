@@ -75,6 +75,7 @@ const CharacterModal: React.FC<CharacterModalProps> = ({
   const [avatar, setAvatar] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [charId, setCharId] = useState<number | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { closeModal } = useContext(ModalContext);
@@ -165,6 +166,8 @@ const CharacterModal: React.FC<CharacterModalProps> = ({
   const handleSave = useCallback(async () => {
     if (!characterData) return;
 
+    setLoading(true);
+
     try {
       const payload = charToPayload(characterData);
 
@@ -187,6 +190,8 @@ const CharacterModal: React.FC<CharacterModalProps> = ({
       closeModal();
     } catch (error) {
       console.error('Error saving character:', error);
+    } finally {
+      setLoading(false);
     }
   }, [onSave, charId, closeModal, avatarName, characterData, type, avatar]);
 
@@ -214,10 +219,11 @@ const CharacterModal: React.FC<CharacterModalProps> = ({
   );
 
   const disabled = useMemo(() => {
+    if (loading) return true;
     if (!characterData) return true;
     if (characterData.name.trim() === '') return true;
     return false;
-  }, [characterData]);
+  }, [characterData, loading]);
 
   return (
     <Modal>
@@ -251,7 +257,7 @@ const CharacterModal: React.FC<CharacterModalProps> = ({
             />
           </div>
 
-          <div className="grow space-y-2 ms-4 relative top-4">
+          <div className="grow  ms-4 relative top-4">
             <label className="block text-sm font-medium mb-1" htmlFor="name">
               Name
             </label>
@@ -266,7 +272,7 @@ const CharacterModal: React.FC<CharacterModalProps> = ({
         </div>
 
         <Accordion title="Creator Notes">
-          <div id="creator-notes-edit" className="p-3 w-full space-y-2">
+          <div id="creator-notes-edit">
             <BoundInput
               id="creator_notes"
               field="creatorcomment"
@@ -278,7 +284,7 @@ const CharacterModal: React.FC<CharacterModalProps> = ({
           </div>
         </Accordion>
 
-        <div id="description-edit" className="p-3 w-full space-y-2">
+        <div id="description-edit" className="mt-4">
           <label
             className="block text-sm font-medium mb-1"
             htmlFor="description"
@@ -294,7 +300,7 @@ const CharacterModal: React.FC<CharacterModalProps> = ({
           />
         </div>
 
-        <div id="first-message-edit" className="p-3 w-full space-y-2">
+        <div id="first-message-edit" className="mb-4 mt-4">
           <label
             className="block text-sm font-medium mb-1"
             htmlFor="first_message"
@@ -310,19 +316,38 @@ const CharacterModal: React.FC<CharacterModalProps> = ({
           />
         </div>
 
-        <div id="scenario-edit" className="p-3 w-full space-y-2">
-          <label className="block text-sm font-medium mb-1" htmlFor="scenario">
-            Scenario
-          </label>
-          <BoundInput
-            id="scenario"
-            field="scenario"
-            value={characterData?.scenario}
-            placeholder={'A chat between {{user}} and {{char}}.'}
-            onChange={setCharData}
-            growHeight={true}
-          />
-        </div>
+        <Accordion title="Advanced">
+          <div id="example-edit" className="mt-4">
+            <label className="block text-sm font-medium mb-1" htmlFor="example">
+              Example Conversation
+            </label>
+            <BoundInput
+              id="example"
+              field="mes_example"
+              value={characterData?.mes_example}
+              placeholder={`<START>\n{{char}}: Hello!\n{{user}}: Hi there!`}
+              onChange={setCharData}
+              growHeight={true}
+            />
+          </div>
+
+          <div id="scenario-edit" className="mb-4 mt-4">
+            <label
+              className="block text-sm font-medium mb-1"
+              htmlFor="scenario"
+            >
+              Scenario
+            </label>
+            <BoundInput
+              id="scenario"
+              field="scenario"
+              value={characterData?.scenario}
+              placeholder={'A chat between {{user}} and {{char}}.'}
+              onChange={setCharData}
+              growHeight={true}
+            />
+          </div>
+        </Accordion>
       </Modal.Content>
 
       <Modal.Footer>

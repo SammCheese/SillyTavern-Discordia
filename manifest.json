@@ -6,7 +6,7 @@
   "js": "dist/bundle.js",
   "css": "dist/main.css",
   "author": "SammCheese",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "homePage": "https://github.com/SammCheese/SillyTavern-Discordia",
   "auto_update": true
 }

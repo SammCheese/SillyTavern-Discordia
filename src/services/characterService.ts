@@ -41,8 +41,6 @@ export async function editCharacter(data: CharacterPayload): Promise<void> {
   if (data.avatar instanceof File) {
       const processed = await ensureImageFormatSupported(data.avatar);
       formData.append('avatar', processed);
-  } else {
-      formData.append('avatar_url', data.avatar);
   }
 
   const append = (key: keyof CharacterPayload) => {
@@ -258,13 +256,14 @@ export async function updateCharacter(
     throw new Error('Original character not found for update.');
   }
 
-  const editPayload: CharacterPayload = { ...payload, avatar_url: originalAvatarId };
+  // We first edit the character, then rename if necessary
+  const editPayload: CharacterPayload = { ...payload, avatar_url: originalAvatarId, ch_name: originalName };
 
   await editCharacter(editPayload);
 
-  if (payload.ch_name && payload.ch_name !== originalName) {
+  if (payload.ch_name && payload.ch_name.trim() !== originalName) {
     try {
-      return await renameCharacter(originalAvatarId, payload.ch_name);
+      return await renameCharacter(originalAvatarId, payload.ch_name.trim());
     } catch (error) {
       console.error("Edit successful, but Rename failed:", error);
       throw error;

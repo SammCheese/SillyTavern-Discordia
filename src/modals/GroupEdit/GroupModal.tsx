@@ -8,10 +8,15 @@ import Divider from '../../components/common/Divider/Divider';
 import Select from '../../components/common/Select/Select';
 import Checkbox from '../../components/common/Checkbox/Checkbox';
 import Accordion from '../../components/common/Accordion/Accordion';
-import MemberList from './MemberCard';
+import MemberList from './Members/MemberList';
 import { saveGroup } from '../../utils/groupUtils';
+import AddMembers from './AddMembers';
+import { DISCORDIA_EVENTS } from '../../events/eventTypes';
+import CharacterModal from '../Character/CharacterModal';
 
-const { deleteGroup } = await imports('@scripts/groupChats');
+const { deleteGroup, hideMutedSprites, is_group_automode_enabled } =
+  await imports('@scripts/groupChats');
+const { eventSource } = await imports('@script');
 
 interface GroupEditModalProps {
   entity: Entity;
@@ -21,8 +26,14 @@ const { getContext } = SillyTavern;
 
 const GroupEditModal = ({ entity }: GroupEditModalProps) => {
   const [group, setGroup] = useState<GroupItem | null>(entity.item || null);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [autoModeEnabled, setAutoModeEnabled] = useState<boolean>(
+    is_group_automode_enabled,
+  );
+  const [hideMutedSpritesState, setHideMutedSpritesState] =
+    useState<boolean>(hideMutedSprites);
 
-  const { closeModal } = useContext(ModalContext);
+  const { closeModal, openModal } = useContext(ModalContext);
 
   useEffect(() => {
     setGroup(entity.item || null);
@@ -40,18 +51,59 @@ const GroupEditModal = ({ entity }: GroupEditModalProps) => {
 
   const handleSave = useCallback(async () => {
     if (!entity?.id || !group) return;
-    const index = getContext().groups.findIndex((g) => g.id === entity.id);
+    setLoading(true);
 
-    if (index !== -1) {
-      getContext().groups[index] = group;
+    try {
+      const index = getContext().groups.findIndex((g) => g.id === entity.id);
+
+      if (index !== -1) {
+        getContext().groups[index] = group;
+      }
+
+      await saveGroup(group, true);
+
+      // handle special cookies
+
+      if (autoModeEnabled !== is_group_automode_enabled) {
+        $('#rm_group_automode')
+          .prop('checked', autoModeEnabled)
+          .trigger('change');
+      }
+
+      if (hideMutedSpritesState !== hideMutedSprites) {
+        $('#rm_group_hidemutedsprites')
+          .prop('checked', hideMutedSpritesState)
+          .trigger('change');
+      }
+
+      if (hideMutedSpritesState !== hideMutedSprites) {
+        SillyTavern.getContext().setHideMutedSprites(hideMutedSpritesState);
+      }
+
+      await eventSource.emit(DISCORDIA_EVENTS.ENTITIES_LENGTH_CHANGED);
+
+      closeModal();
+    } catch (error) {
+      console.error('Error saving group:', error);
+    } finally {
+      setLoading(false);
     }
+  }, [entity, group, closeModal, autoModeEnabled, hideMutedSpritesState]);
 
-    await saveGroup(group, true);
+  const handleNameChange = useCallback((e: string) => {
+    setGroup((prevGroup) =>
+      prevGroup ? { ...prevGroup, name: e } : prevGroup,
+    );
+  }, []);
 
-    closeModal();
-  }, [entity, group, closeModal]);
-
-  const handleNameChange = () => {};
+  const handleGroupSettingChange = useCallback(
+    (setting: keyof GroupItem, value: string | number | boolean) => {
+      setGroup((prevGroup) =>
+        prevGroup ? { ...prevGroup, [setting]: value } : prevGroup,
+      );
+    },
+    [],
+  );
 
   const orderOptions = [
     { label: 'Manual', value: 2 },
@@ -87,18 +139,38 @@ const GroupEditModal = ({ entity }: GroupEditModalProps) => {
     );
   };
 
-  const handleOpenProfileClick = (character: Character) => {
-    // TODO: Open character profile modal
-    console.log('Open profile for character:', character);
-  };
+  const handleOpenProfileClick = useCallback(
+    (character: Character) => {
+      openModal(
+        <CharacterModal type="edit" avatarName={character.avatar || ''} />,
+      );
+    },
+    [openModal],
+  );
 
-  const handleRemoveMember = (character: Character) => {
-    const members = group?.members || [];
-    const newMembers = members.filter((m) => m !== character.avatar);
-    setGroup((prevGroup) =>
-      prevGroup ? { ...prevGroup, members: newMembers } : prevGroup,
-    );
-  };
+  const handleRemoveMember = useCallback(
+    (character: Character) => {
+      const members = group?.members || [];
+      const newMembers = members.filter((m) => m !== character.avatar);
+      setGroup((prevGroup) =>
+        prevGroup ? { ...prevGroup, members: newMembers } : prevGroup,
+      );
+    },
+    [group, setGroup, openModal],
+  );
+
+  const handleAddMember = useCallback(
+    (character: Character) => {
+      const members = group?.members || [];
+      if (character.avatar && members.includes(character.avatar)) return;
+
+      const newMembers = [...members, character.avatar || ''];
+      setGroup((prevGroup) =>
+        prevGroup ? { ...prevGroup, members: newMembers } : prevGroup,
+      );
+    },
+    [group, setGroup, openModal],
+  );
 
   const members = useMemo(() => {
     if (!group?.members) return [];
@@ -117,6 +189,56 @@ const GroupEditModal = ({ entity }: GroupEditModalProps) => {
     return members;
   }, [group]);
 
+  const disabled = useMemo(() => {
+    if (!group) return true;
+    if (loading) return true;
+    if (group.name.trim() === '') return true;
+    return false;
+  }, [group, loading]);
+
+  const handleGenerationModeChange = useCallback(
+    (e: string | number) => {
+      handleGroupSettingChange('generation_mode', parseInt(e as string));
+    },
+    [handleGroupSettingChange],
+  );
+
+  const handleActivationStrategyChange = useCallback(
+    (e: string | number) => {
+      handleGroupSettingChange('activation_strategy', parseInt(e as string));
+    },
+    [handleGroupSettingChange],
+  );
+
+  const handleAllowSelfResponsesChange = useCallback(
+    (e: boolean) => {
+      handleGroupSettingChange('allow_self_responses', e);
+    },
+    [handleGroupSettingChange],
+  );
+
+  const handleAutoModeDelayChange = useCallback(
+    (e: string) => {
+      handleGroupSettingChange('auto_mode_delay', parseInt(e));
+    },
+    [handleGroupSettingChange],
+  );
+
+  // Special cookies
+  const handleAutoModeEnabledChange = useCallback(
+    (e: boolean) => {
+      setAutoModeEnabled(e);
+    },
+    [setAutoModeEnabled],
+  );
+
+  const handleHideMutedSpritesChange = useCallback(
+    (e: boolean) => {
+      setHideMutedSpritesState(e);
+    },
+    [setHideMutedSpritesState],
+  );
+
   return (
     <Modal>
       <Modal.Header>Edit Group</Modal.Header>
@@ -133,10 +255,7 @@ const GroupEditModal = ({ entity }: GroupEditModalProps) => {
           </div>
           <div className="flex flex-col grow">
             <label className="block mb-2 font-medium">Group Name</label>
-            <Input
-              defaultValue={entity.item?.name || ''}
-              onChange={handleNameChange}
-            />
+            <Input value={group?.name || ''} onChange={handleNameChange} />
           </div>
         </div>
 
@@ -146,7 +265,11 @@ const GroupEditModal = ({ entity }: GroupEditModalProps) => {
           <div className="flex flex-col gap-4">
             <div className="flex flex-col  gap-2">
               <label className="block mb-2 font-medium">Member Order:</label>
-              <Select value={group!.generation_mode} options={orderOptions} />
+              <Select
+                value={group!.activation_strategy}
+                options={orderOptions}
+                onChange={handleActivationStrategyChange}
+              />
             </div>
             <div className="flex flex-col  gap-2">
               <label className="block mb-2 font-medium">
@@ -155,6 +278,7 @@ const GroupEditModal = ({ entity }: GroupEditModalProps) => {
               <Select
                 value={group!.generation_mode}
                 options={generationHandlingOptions}
+                onChange={handleGenerationModeChange}
               />
             </div>
           </div>
@@ -163,22 +287,27 @@ const GroupEditModal = ({ entity }: GroupEditModalProps) => {
             <Checkbox
               label="Allow Self responses"
               checked={group!.allow_self_responses}
+              onChange={handleAllowSelfResponsesChange}
             />
 
             <div className="flex flex-row items-center gap-2">
               <Checkbox
                 label="Auto Mode"
-                checked={group!.allow_self_responses}
+                checked={is_group_automode_enabled}
+                onChange={handleAutoModeEnabledChange}
               />
               <Input
                 type="number"
                 placeholder="5"
                 value={group!.auto_mode_delay}
-                onChange={() => {}}
+                onChange={handleAutoModeDelayChange}
               />
             </div>
-            <Checkbox label="Hide Muted Members Sprites" checked={false} />
-            <Checkbox label="Universal Tracker" checked={false} />
+            <Checkbox
+              label="Hide Muted Members Sprites"
+              checked={hideMutedSprites}
+              onChange={handleHideMutedSpritesChange}
+            />
           </div>
 
           <div>
@@ -196,7 +325,9 @@ const GroupEditModal = ({ entity }: GroupEditModalProps) => {
 
           <div>
             <Accordion title="Add Members">
-              <div className="flex flex-col gap-2">TODO</div>
+              <div className="flex flex-col gap-2">
+                <AddMembers onAdd={handleAddMember} existingMembers={members} />
+              </div>
             </Accordion>
           </div>
         </div>
@@ -211,7 +342,9 @@ const GroupEditModal = ({ entity }: GroupEditModalProps) => {
         <Button look={ButtonLook.TRANSPARENT} onClick={handleClose}>
           Cancel
         </Button>
-        <Button onClick={handleSave}>Save</Button>
+        <Button onClick={handleSave} disabled={disabled}>
+          Save
+        </Button>
       </Modal.Footer>
     </Modal>
   );

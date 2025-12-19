@@ -2,6 +2,7 @@ import {
   useCallback,
   createContext,
   useState,
+  useRef,
   Suspense,
   useEffect,
   type ReactNode,
@@ -10,27 +11,42 @@ import { createPortal } from 'react-dom';
 import ErrorBoundary from '../components/common/ErrorBoundary/ErrorBoundary';
 
 export const ModalContext = createContext<{
-  openModal: (modal: ReactNode) => void;
-  closeModal: () => void;
+  openModal: (modal: ReactNode) => number;
+  closeModal: (id?: number) => void;
+  closeAll: () => void;
 }>({
-  openModal: () => {},
+  openModal: () => 0,
   closeModal: () => {},
+  closeAll: () => {},
 });
+
+interface ModalShellProps {
+  children: ReactNode;
+  isVisible: boolean;
+  isTop: boolean;
+  zIndex: number;
+  onClose: () => void;
+}
 
 const ModalShell = ({
   children,
   isVisible,
+  isTop,
+  zIndex,
   onClose,
-}: {
-  children: ReactNode;
-  isVisible: boolean;
-  onClose: () => void;
-}) => {
+}: ModalShellProps) => {
+  const handleClick = useCallback(
+    (e) => {
+      if (isTop && e.target === e.currentTarget) {
+        onClose();
+      }
+    },
+    [isTop, onClose],
+  );
+
   return (
     <div
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
+      onClick={handleClick}
       className={`
         fixed w-dvw h-dvh inset-0 z-60 flex items-center justify-center p-4
         transition-all duration-200 ease-out
@@ -40,6 +56,7 @@ const ModalShell = ({
             : 'bg-black/0 backdrop-blur-none opacity-0 pointer-events-none'
         }
       `}
+      style={{ zIndex }}
     >
       <div
         className={` w-full max-w-lg h-full max-h-[85vh] relative
@@ -58,19 +75,42 @@ const ModalShell = ({
 };
 
 export function ModalProvider({ children }: { children: ReactNode }) {
-  const [content, setContent] = useState<ReactNode>(null);
-  const [isVisible, setIsVisible] = useState<boolean>(false);
+  const [stack, setStack] = useState<Array<{ id: number; node: ReactNode }>>(
+    [],
+  );
+  const [visibleMap, setVisibleMap] = useState<Record<number, boolean>>({});
+  const idRef = useRef(0);
 
   const openModal = useCallback((modal: ReactNode) => {
-    setTimeout(() => setIsVisible(true), 10);
-    setContent(modal);
+    const id = ++idRef.current;
+    setStack((s) => [...s, { id, node: modal }]);
+    setTimeout(() => setVisibleMap((v) => ({ ...v, [id]: true })), 10);
+    return id;
   }, []);
 
-  const closeModal = useCallback(() => {
-    setIsVisible(false);
-    setTimeout(() => {
-      setContent(null);
-    }, 200);
+  const closeModal = useCallback((id?: number) => {
+    setStack((current) => {
+      const targetId = id ?? current[current.length - 1]?.id;
+      if (!targetId) return current;
+
+      setVisibleMap((v) => ({ ...v, [targetId]: false }));
+
+      setTimeout(() => {
+        setStack((cur) => cur.filter((m) => m.id !== targetId));
+        setVisibleMap((v) => {
+          const next = { ...v };
+          delete next[targetId];
+          return next;
+        });
+      }, 200);
+
+      return current;
+    });
+  }, []);
+
+  const closeAll = useCallback(() => {
+    setVisibleMap({});
+    setTimeout(() => setStack([]), 200);
   }, []);
 
   useEffect(() => {
@@ -87,16 +127,24 @@ export function ModalProvider({ children }: { children: ReactNode }) {
 
   return (
     <ErrorBoundary>
-      <ModalContext.Provider value={{ openModal, closeModal }}>
-        {content &&
+      <ModalContext.Provider value={{ openModal, closeModal, closeAll }}>
+        {stack.length > 0 &&
           createPortal(
-            <ModalShell isVisible={isVisible} onClose={closeModal}>
-              <Suspense
-                fallback={<div className="p-4 text-center">Loading...</div>}
+            stack.map(({ id, node }, idx) => (
+              <ModalShell
+                key={id}
+                isVisible={!!visibleMap[id]}
+                isTop={idx === stack.length - 1}
+                zIndex={60 + idx}
+                onClose={() => closeModal(id)}
               >
-                {content}
-              </Suspense>
-            </ModalShell>,
+                <Suspense
+                  fallback={<div className="p-4 text-center">Loading...</div>}
+                >
+                  {node}
+                </Suspense>
+              </ModalShell>
+            )),
             container,
           )}
         {children}
