@@ -33,7 +33,7 @@ export function useOpenChat() {
         // Selecting a group with a specific chat
         await selectGroup({
           id: chat.group,
-          chat_id: chat.file_id,
+          chat_id: chat.file_name,
         });
       } else if (chat?.char_id !== undefined) {
         // Selecting a character with a specific chat
@@ -46,7 +46,7 @@ export function useOpenChat() {
     // Channel Switch within selected character/group
     const { characterId, groupId } = SillyTavern.getContext();
     if (groupId !== null) {
-      await openGroupChat(groupId, chat.file_id);
+      await openGroupChat(groupId, chat.file_name);
     } else if (characterId) {
       await openCharacterChat(chat.file_id);
     }
