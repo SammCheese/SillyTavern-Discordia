@@ -10,6 +10,9 @@ const App = lazy(() => import('./App'));
 
 // @ts-expect-error Styles Import
 import './styles.css';
+// @ts-expect-error Skeleton Styles Import
+import 'react-loading-skeleton/dist/skeleton.css';
+
 import ContextMenuProvider from './providers/contextMenuProvider';
 
 // Insert sidebar before top bar

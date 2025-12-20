@@ -6,6 +6,8 @@ import { List } from 'react-window';
 import { useSearch } from '../../context/SearchContext';
 import ErrorBoundary from '../common/ErrorBoundary/ErrorBoundary';
 import { useOpenChat } from '../../hooks/useOpenChat';
+import Skeleton, { SkeletonTheme } from 'react-loading-skeleton';
+import NewChatButton from './NewChatButton';
 
 const Divider = React.lazy(() => import('../common/Divider/Divider'));
 const ChannelEntry = lazy(() => import('./ChannelEntry'));
@@ -35,15 +37,19 @@ interface ChannelBarProps {
   chats: Chat[];
   setOpen: (value: boolean) => void;
   isLoadingChats?: boolean;
-  hasActiveContext: boolean;
+  isInitialLoad?: boolean;
+  context: 'recent' | 'chat';
 }
+
+const { doNewChat } = await imports('@script');
 
 const ChannelBar = ({
   icons,
   chats,
   setOpen,
   isLoadingChats = false,
-  hasActiveContext,
+  isInitialLoad = true,
+  context,
 }: ChannelBarProps) => {
   const { openPage } = useContext(PageContext);
   const { setSearchQuery } = useSearch();
@@ -86,6 +92,11 @@ const ChannelBar = ({
     [openChat, setOpen],
   );
 
+  const handleNewChatClick = useCallback(() => {
+    doNewChat();
+    if (window.innerWidth <= 1000) setOpen(false);
+  }, [setOpen]);
+
   const iconsFiltered = React.useMemo(
     () => icons?.filter((i) => !i.showInProfile),
     [icons],
@@ -117,7 +128,7 @@ const ChannelBar = ({
   const chatsMemo = useMemo(() => chats, [chats]);
 
   const shownTitle =
-    isLoadingChats || hasActiveContext ? 'Chats' : 'Recent Chats';
+    !isLoadingChats && context !== 'chat' ? ' Recent Chats' : 'Chats';
 
   return (
     <ErrorBoundary>
@@ -139,6 +150,25 @@ const ChannelBar = ({
         <div className="section-header">{shownTitle}</div>
         <div id="channel-list">
           <div id="channels-list-container">
+            {/* Skeleton Chats for loading */}
+            {isInitialLoad ||
+              (isLoadingChats && (
+                <SkeletonTheme
+                  borderRadius={'8px'}
+                  width={'100%'}
+                  baseColor="#202025"
+                  highlightColor="#444449"
+                  enableAnimation={true}
+                  duration={1}
+                >
+                  <Skeleton
+                    count={5}
+                    height={48}
+                    className="mx-auto my-2 w-full"
+                  />
+                </SkeletonTheme>
+              ))}
+
             {chatsMemo.length > 50 ? (
               <List
                 rowComponent={Row}
@@ -159,6 +189,13 @@ const ChannelBar = ({
                   isLoading={isLoadingChats}
                 />
               ))
+            )}
+
+            {/* New Chat Button  */}
+            {context === 'chat' && !isLoadingChats && (
+              <div className="flex justify-center px-1">
+                <NewChatButton onClick={handleNewChatClick} />
+              </div>
             )}
           </div>
         </div>

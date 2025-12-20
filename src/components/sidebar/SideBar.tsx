@@ -4,6 +4,7 @@ import ErrorBoundary from '../common/ErrorBoundary/ErrorBoundary';
 const ProfileMount = lazy(() => import('../ProfileMount/ProfileMount'));
 const ChannelBar = lazy(() => import('../channels/ChannelBar'));
 const ServerBar = lazy(() => import('../servers/ServerBar'));
+
 interface SideBarProps {
   open: boolean;
   setOpen: (open: boolean) => void;
@@ -11,7 +12,8 @@ interface SideBarProps {
   chats: Chat[];
   icons: Icon[] | null;
   isLoadingChats: boolean;
-  hasActiveContext: boolean;
+  isInitialLoad: boolean;
+  context: 'recent' | 'chat';
 }
 
 const SideBar = ({
@@ -21,11 +23,19 @@ const SideBar = ({
   chats,
   icons,
   isLoadingChats,
-  hasActiveContext,
+  isInitialLoad,
+  context,
 }: SideBarProps) => {
   const memoizedEntities = useMemo(() => entities, [entities]);
   const memoizedChats = useMemo(() => chats, [chats]);
   const memoizedIcons = useMemo(() => icons, [icons]);
+  const memoizedContext = useMemo(() => context, [context]);
+  const memoizedIsLoadingChats = useMemo(
+    () => isLoadingChats,
+    [isLoadingChats],
+  );
+  const memoizedIsInitialLoad = useMemo(() => isInitialLoad, [isInitialLoad]);
+  const memoizedSetOpen = useMemo(() => setOpen, [setOpen]);
 
   return (
     <ErrorBoundary>
@@ -36,13 +46,17 @@ const SideBar = ({
         }`}
       >
         <div id="server-container">
-          <ServerBar entities={memoizedEntities} />
+          <ServerBar
+            entities={memoizedEntities}
+            isInitialLoad={memoizedIsInitialLoad}
+          />
           <ChannelBar
             icons={memoizedIcons}
             chats={memoizedChats}
-            setOpen={setOpen}
-            isLoadingChats={isLoadingChats}
-            hasActiveContext={hasActiveContext}
+            setOpen={memoizedSetOpen}
+            isLoadingChats={memoizedIsLoadingChats}
+            isInitialLoad={memoizedIsInitialLoad}
+            context={memoizedContext}
           />
         </div>
         <div id="user-container">

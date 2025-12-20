@@ -88,17 +88,24 @@ export function ContextMenuProvider({ children }: { children: ReactNode }) {
     const handleClick = () => isVisible && closeContextMenu();
     const handleResize = () => isVisible && closeContextMenu();
     const handleScroll = () => isVisible && closeContextMenu();
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (isVisible) closeContextMenu();
+      }
+    };
 
     window.addEventListener('click', handleClick);
     window.addEventListener('resize', handleResize);
     window.addEventListener('scroll', handleScroll, true);
     window.addEventListener('contextmenu', handleClick);
+    window.addEventListener('keydown', handleEscape);
 
     return () => {
       window.removeEventListener('click', handleClick);
       window.removeEventListener('resize', handleResize);
       window.removeEventListener('scroll', handleScroll, true);
       window.removeEventListener('contextmenu', handleClick);
+      window.removeEventListener('keydown', handleEscape);
     };
   }, [isVisible, closeContextMenu]);
 

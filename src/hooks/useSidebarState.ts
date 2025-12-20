@@ -1,11 +1,48 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useReducer, useRef } from 'react';
 import { getRecentChats } from "../utils/utils";
 import { DISCORDIA_EVENTS } from '../events/eventTypes';
 
 const { getGroupPastChats } = await imports('@scripts/groupChats');
 const { getEntitiesList, eventSource, event_types, getPastCharacterChats } = await imports('@script');
 
-type ChatViewMode = 'recent' | 'context';
+
+
+type SidebarAction =
+  | { type: 'SET_OPEN'; open: boolean }
+  | { type: 'REFRESH_START' }
+  | { type: 'REFRESH_SUCCESS'; chats: Chat[]; entities: Entity[] }
+  | { type: 'REFRESH_FAILURE', error: Error }
+  | { type: 'SET_ICONS'; icons: Icon[] }
+  | { type: 'SET_CONTEXT'; context: "recent" | "chat" }
+  | { type: 'SET_INITIAL_LOAD'; isInitialLoad: boolean };
+
+const PROFILE_MENU_CONFIG = [
+  { name: 'User Settings', id: '#user-settings-button' },
+  { name: 'Profile', id: '#sys-settings-button' },
+  { name: 'Account', id: '#ai-config-button' },
+];
+
+const sidebarReducer = (state: SidebarState, action: SidebarAction): SidebarState => {
+  switch (action.type) {
+    case 'SET_OPEN':
+      return { ...state, open: action.open };
+    case 'REFRESH_START':
+      return { ...state, isLoadingChats: true };
+    case 'REFRESH_SUCCESS':
+      return { ...state, chats: action.chats, entities: action.entities, isLoadingChats: false };
+    case 'REFRESH_FAILURE':
+      console.error('Failed to refresh sidebar chats:', action.error);
+      return { ...state, isLoadingChats: false };
+    case 'SET_ICONS':
+      return { ...state, icons: action.icons };
+    case 'SET_INITIAL_LOAD':
+      return { ...state, isInitialLoad: action.isInitialLoad };
+    case 'SET_CONTEXT':
+      return { ...state, context: action.context };
+    default:
+      return state;
+  }
+};
 
 interface SidebarState {
   open: boolean;
@@ -13,124 +50,94 @@ interface SidebarState {
   chats: Chat[];
   icons: Icon[];
   isLoadingChats: boolean;
+  isInitialLoad: boolean;
+  context: "recent" | "chat" ;
 }
 
-const CHANNEL_MENU_CONFIG = [
-  { name: 'Backgrounds', id: '#backgrounds-button' },
-  { name: 'Persona Management', id: '#persona-management-button' },
-  { name: 'Character Selector', id: '#rightNavHolder' },
-  { name: 'Extensions Settings', id: '#extensions-settings-button' },
-  { name: 'Advanced Formatting', id: '#advanced-formatting-button' },
-  { name: 'World Info', id: '#WI-SP-button' },
-];
+const INITIAL_STATE: SidebarState = {
+  open: true,
+  entities: [],
+  chats: [],
+  icons: [],
+  isLoadingChats: true,
+  isInitialLoad: true,
+  context: "recent",
+};
 
 
 export const useSidebarState = () => {
-  const chatViewModeRef = useRef<ChatViewMode>('recent');
-  const inFlightRefresh = useRef<Promise<void> | null>(null);
-  const queuedRefresh = useRef(false);
-  const queuedForceRecent = useRef(false);
+  const [state, dispatch] = useReducer(sidebarReducer, INITIAL_STATE);
 
-  const [state, setState] = useState<SidebarState>({
-    open: false,
-    entities: [],
-    chats: [],
-    icons: [],
-    isLoadingChats: true,
-  });
+  const isFetchingRef = useRef(false);
+  const pendingRefreshRef = useRef(false);
+  const openRef = useRef(state.open);
+
+  useEffect(() => {
+    openRef.current = state.open;
+  }, [state.open]);
+
 
   const setOpen = useCallback((open: boolean) => {
-    setState(prev => ({ ...prev, open }));
+    dispatch({ type: 'SET_OPEN', open });
   }, []);
 
 
   const refreshChats = useCallback(async (forceRecent = false) => {
-    if (inFlightRefresh.current) {
-      queuedRefresh.current = true;
-      queuedForceRecent.current = queuedForceRecent.current || forceRecent;
-      return inFlightRefresh.current;
+    if (isFetchingRef.current && !forceRecent) {
+      pendingRefreshRef.current = true;
+      return;
     }
 
-    setState(prev => prev.isLoadingChats ? prev : { ...prev, isLoadingChats: true });
-
-    const { characterId, groupId } = SillyTavern.getContext();
-    const hasGroup = groupId !== null && groupId !== undefined;
-    const hasCharacter =
-      characterId !== null &&
-      characterId !== undefined &&
-      Number(characterId) >= 0;
-    const entities = getEntitiesList({ doFilter: true, doSort: true });
+    if (!forceRecent) {
+      dispatch({ type: 'SET_CONTEXT', context: 'chat' });
+    }
 
 
-    const doRefresh = async () => {
+    isFetchingRef.current = true;
+    dispatch({ type: 'REFRESH_START' });
+
+    try {
+      const { characterId, groupId } = SillyTavern.getContext();
+      const hasGroup = groupId !== null && groupId !== undefined;
+      const hasCharacter =
+        characterId !== null &&
+        characterId !== undefined &&
+        Number(characterId) >= 0;
+
+      const entities = getEntitiesList({ doFilter: true, doSort: true });
+      let chats: Chat[] = [];
+
       if (hasGroup) {
-        const chats = await getGroupPastChats(groupId.toString());
-        chatViewModeRef.current = 'context';
-        setState(prev => {
-          if (prev.chats === chats && prev.entities === entities) {
-            return { ...prev, isLoadingChats: false };
-          }
-          return { ...prev, chats, entities, isLoadingChats: false };
-        });
-        return;
+        chats = await getGroupPastChats(groupId.toString());
+      } else if (hasCharacter) {
+        chats = await getPastCharacterChats();
+      } else if (forceRecent) {
+        chats = await getRecentChats(entities);
       }
 
-      if (hasCharacter) {
-        const chats = await getPastCharacterChats();
-        chatViewModeRef.current = 'context';
-        setState(prev => {
-          if (prev.chats === chats && prev.entities === entities) {
-            return { ...prev, isLoadingChats: false };
-          }
-          return { ...prev, chats, entities, isLoadingChats: false };
-        });
-        return;
+      dispatch({ type: 'REFRESH_SUCCESS', chats, entities });
+    } catch (error) {
+      dispatch({ type: 'REFRESH_FAILURE', error: error as Error });
+    } finally {
+      isFetchingRef.current = false;
+
+      if (pendingRefreshRef.current) {
+        pendingRefreshRef.current = false;
       }
-
-      const shouldForceRecent = forceRecent || chatViewModeRef.current !== 'context';
-
-      if (shouldForceRecent) {
-        const chats = await getRecentChats(entities);
-        chatViewModeRef.current = 'recent';
-        setState(prev => {
-          if (prev.chats === chats && prev.entities === entities && prev.open) {
-            return { ...prev, isLoadingChats: false };
-          }
-          return { ...prev, chats, entities, open: true, isLoadingChats: false };
-        });
-      } else {
-        setState(prev => ({ ...prev, entities, isLoadingChats: false }));
-      }
-    };
-
-    inFlightRefresh.current = doRefresh()
-      .catch(error => {
-        console.error('Error updating chat data:', error);
-        setState(prev => ({ ...prev, entities, isLoadingChats: false }));
-      })
-      .finally(async () => {
-        inFlightRefresh.current = null;
-        if (queuedRefresh.current) {
-          const force = queuedForceRecent.current;
-          queuedRefresh.current = false;
-          queuedForceRecent.current = false;
-          await refreshChats(force);
-        }
-      });
-
-    return inFlightRefresh.current;
+      dispatch({ type: 'SET_INITIAL_LOAD', isInitialLoad: false });
+    }
   }, []);
 
-  const handleHomeButton = useCallback(() => {
+  const handleFullRefresh = useCallback(() => {
+    dispatch({ type: 'SET_CONTEXT', context: 'recent' });
     refreshChats(true);
   }, [refreshChats]);
 
-  const handleEntitiesChanged = useCallback(() => {
-    refreshChats(true);
-  }, [refreshChats]);
-
-  const handleChatSwitchPending = useCallback(() => {
-    chatViewModeRef.current = 'context';
+  const handleChatChange = useCallback((event) => {
+    if (event === undefined) {
+      dispatch({ type: 'SET_CONTEXT', context: 'recent' });
+    }
+    refreshChats();
   }, []);
 
   const processMenuIcons = useCallback(() => {
@@ -146,13 +153,13 @@ export const useSidebarState = () => {
       icons.push({
         className: infoEl.attr('class') || '',
         title: infoEl.attr('title') || jEl.find('.drawer-toggle').attr('title') || '',
-        showInProfile: !CHANNEL_MENU_CONFIG.some((item) => item.id === id),
+        showInProfile: PROFILE_MENU_CONFIG.some((item) => item.id === id),
         id: id,
       });
     });
 
     settingsHolder.attr('style', 'display: none !important;');
-    setState(prev => ({ ...prev, icons }));
+    dispatch({ type: 'SET_ICONS', icons });
   }, []);
 
   useEffect(() => {
@@ -160,13 +167,15 @@ export const useSidebarState = () => {
 
 
     const handleSettingsUpdate = () => {
-      if (window.innerWidth > 1000 && !state.open) {
+      if (openRef.current) return;
+
+      if (window.innerWidth > 1000) {
         setOpen(true);
       }
     };
 
     // Event Handling
-    eventSource.on(event_types.APP_READY, refreshChats);
+    eventSource.on(event_types.APP_READY, handleFullRefresh);
     eventSource.on(event_types.CHAT_CHANGED, refreshChats);
     eventSource.on(event_types.CHAT_DELETED, refreshChats);
     eventSource.on(event_types.CHAT_CREATED, refreshChats);
@@ -175,9 +184,9 @@ export const useSidebarState = () => {
     eventSource.on(event_types.CHARACTER_RENAMED, refreshChats);
 
     // Our own Events
-    eventSource.on(DISCORDIA_EVENTS.ENTITIES_LENGTH_CHANGED, handleEntitiesChanged);
-    eventSource.on(DISCORDIA_EVENTS.HOME_BUTTON_CLICKED, handleHomeButton);
-    eventSource.on(DISCORDIA_EVENTS.CHAT_SWITCH_PENDING, handleChatSwitchPending);
+    eventSource.on(DISCORDIA_EVENTS.ENTITY_CHANGED, handleFullRefresh);
+    eventSource.on(DISCORDIA_EVENTS.HOME_BUTTON_CLICKED, handleFullRefresh);
+    eventSource.on(DISCORDIA_EVENTS.CHAT_UPDATE, handleChatChange);
 
     // Swipe Listeners
     const THRESHOLD = 100;
@@ -216,9 +225,9 @@ export const useSidebarState = () => {
       eventSource.removeListener(event_types.SETTINGS_UPDATED, handleSettingsUpdate);
       eventSource.removeListener(event_types.CHARACTER_EDITED, refreshChats);
       eventSource.removeListener(event_types.CHARACTER_RENAMED, refreshChats);
-      eventSource.removeListener(DISCORDIA_EVENTS.ENTITIES_LENGTH_CHANGED, handleEntitiesChanged);
-      eventSource.removeListener(DISCORDIA_EVENTS.HOME_BUTTON_CLICKED, handleHomeButton);
-      eventSource.removeListener(DISCORDIA_EVENTS.CHAT_SWITCH_PENDING, handleChatSwitchPending);
+      eventSource.removeListener(DISCORDIA_EVENTS.ENTITY_CHANGED, handleFullRefresh);
+      eventSource.removeListener(DISCORDIA_EVENTS.HOME_BUTTON_CLICKED, handleFullRefresh);
+      eventSource.removeListener(DISCORDIA_EVENTS.CHAT_UPDATE, handleChatChange);
 
       if (body) {
         body.off('pointerdown', onPointerDown);
@@ -228,12 +237,11 @@ export const useSidebarState = () => {
         body.off('touchend pointerup', onPointerUp);
       }
     };
-  }, [processMenuIcons, refreshChats, setOpen, handleHomeButton, handleChatSwitchPending]);
+  }, [handleFullRefresh, processMenuIcons, refreshChats, setOpen]);
+
 
   return {
     ...state,
     setOpen,
-    hasActiveContext: chatViewModeRef.current === 'context',
-    refreshChats,
   };
 }

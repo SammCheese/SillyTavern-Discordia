@@ -47,7 +47,7 @@ export const useServerIconMenu = (entity: Entity) => {
         await deleteGroup(entity.id.toString());
       }
 
-      eventSource.emit(DISCORDIA_EVENTS.ENTITIES_LENGTH_CHANGED);
+      eventSource.emit(DISCORDIA_EVENTS.ENTITY_CHANGED);
     } catch (error) {
       console.error('Error deleting character:', error);
     }
