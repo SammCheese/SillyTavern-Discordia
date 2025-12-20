@@ -1,4 +1,4 @@
-import { lazy } from 'react';
+import { lazy, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useSidebarState } from './hooks/useSidebarState';
 import { SearchProvider } from './context/SearchContext';
@@ -8,27 +8,25 @@ import { rootContainer } from './index';
 const SideBar = lazy(() => import('./components/sidebar/SideBar'));
 
 export const App = () => {
-  const {
-    open,
-    setOpen,
-    entities,
-    chats,
-    icons,
-    isLoadingChats,
-    hasActiveContext,
-  } = useSidebarState();
+  const sidebarState = useSidebarState();
+
+  const memoizedSidebarState = useMemo(
+    () => sidebarState,
+    [
+      sidebarState.open,
+      sidebarState.setOpen,
+      sidebarState.entities,
+      sidebarState.chats,
+      sidebarState.icons,
+      sidebarState.isLoadingChats,
+      sidebarState.isInitialLoad,
+      sidebarState.context,
+    ],
+  );
 
   return createPortal(
     <SearchProvider>
-      <SideBar
-        open={open}
-        setOpen={setOpen}
-        entities={entities}
-        chats={chats}
-        icons={icons}
-        isLoadingChats={isLoadingChats}
-        hasActiveContext={hasActiveContext}
-      />
+      <SideBar {...memoizedSidebarState} />
     </SearchProvider>,
     rootContainer,
   );

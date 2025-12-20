@@ -14,6 +14,7 @@ import ErrorBoundary from '../common/ErrorBoundary/ErrorBoundary';
 import { DISCORDIA_EVENTS } from '../../events/eventTypes';
 import { ModalContext } from '../../providers/modalProvider';
 import CharacterModal from '../../modals/Character/CharacterModal';
+import Skeleton, { SkeletonTheme } from 'react-loading-skeleton';
 
 const ServerIcon = lazy(() => import('./ServerIcon'));
 const AddCharacterIcon = lazy(() => import('./AddCharacterIcon'));
@@ -114,7 +115,12 @@ const Row = ({ index, style, data }: RowComponentProps<RowData>) => {
   );
 };
 
-const ServerBar = ({ entities }: { entities: Entity[] }) => {
+interface ServerBarProps {
+  entities: Entity[];
+  isInitialLoad?: boolean;
+}
+
+const ServerBar = ({ entities, isInitialLoad = true }: ServerBarProps) => {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const { searchQuery } = useSearch();
   const { openModal } = useContext(ModalContext);
@@ -227,6 +233,27 @@ const ServerBar = ({ entities }: { entities: Entity[] }) => {
         </div>
 
         <div id="characters-list" className="pt-0.5">
+          {/* Show skeletons while loading */}
+          {isInitialLoad && (
+            <div className="flex flex-col items-center w-full">
+              <SkeletonTheme
+                borderRadius={'25%'}
+                height={'48px'}
+                width={'48px'}
+                baseColor="#202025"
+                highlightColor="#444449"
+                enableAnimation={true}
+                duration={1.7}
+              >
+                <Skeleton
+                  containerClassName="flex-1"
+                  count={15}
+                  className="my-1 w-12 h-12 rounded-2xl"
+                />
+              </SkeletonTheme>
+            </div>
+          )}
+
           {/* A little trickery in performance */}
           {filteredEntities.length < 50 ? (
             <>
@@ -243,8 +270,7 @@ const ServerBar = ({ entities }: { entities: Entity[] }) => {
                 );
               })}
 
-              <div id="characters-divider" className="divider"></div>
-
+              <div id="characters-divider" className="divider" />
               <AddCharacterIcon onClick={handleAddCharacterClick} />
             </>
           ) : (
