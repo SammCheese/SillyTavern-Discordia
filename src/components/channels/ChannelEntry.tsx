@@ -11,7 +11,8 @@ interface ChannelEntryProps {
   isLoading?: boolean;
 }
 
-const { deleteCharacterChatByName, eventSource } = await imports('@script');
+const { deleteCharacterChatByName, eventSource, closeCurrentChat } =
+  await imports('@script');
 const { deleteGroupChatByName } = await imports('@scripts/groupChats');
 
 const ChannelEntry = ({
@@ -33,6 +34,8 @@ const ChannelEntry = ({
     if (!chat) return;
     try {
       if (groupId !== null && !characterId) {
+        await closeCurrentChat();
+
         // fucking name inconsistencies
         await deleteGroupChatByName(groupId, chat.file_name);
       } else {
@@ -42,12 +45,13 @@ const ChannelEntry = ({
         }
         if (charId === undefined || charId === -1) return;
 
+        await closeCurrentChat();
         await deleteCharacterChatByName(charId.toString(), chat.file_id);
       }
     } catch (error) {
       console.error('Error deleting chat:', error);
     } finally {
-      eventSource.emit(DISCORDIA_EVENTS.CHAT_UPDATE);
+      eventSource.emit(DISCORDIA_EVENTS.HOME_BUTTON_CLICKED);
     }
   }, [chat]);
 
