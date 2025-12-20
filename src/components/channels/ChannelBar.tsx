@@ -7,6 +7,7 @@ import { useSearch } from '../../context/SearchContext';
 import ErrorBoundary from '../common/ErrorBoundary/ErrorBoundary';
 import { useOpenChat } from '../../hooks/useOpenChat';
 import Skeleton, { SkeletonTheme } from 'react-loading-skeleton';
+import NewChatButton from './NewChatButton';
 
 const Divider = React.lazy(() => import('../common/Divider/Divider'));
 const ChannelEntry = lazy(() => import('./ChannelEntry'));
@@ -39,6 +40,8 @@ interface ChannelBarProps {
   isInitialLoad?: boolean;
   context: 'recent' | 'chat';
 }
+
+const { doNewChat } = await imports('@script');
 
 const ChannelBar = ({
   icons,
@@ -88,6 +91,11 @@ const ChannelBar = ({
     },
     [openChat, setOpen],
   );
+
+  const handleNewChatClick = useCallback(() => {
+    doNewChat();
+    if (window.innerWidth <= 1000) setOpen(false);
+  }, [setOpen]);
 
   const iconsFiltered = React.useMemo(
     () => icons?.filter((i) => !i.showInProfile),
@@ -142,6 +150,7 @@ const ChannelBar = ({
         <div className="section-header">{shownTitle}</div>
         <div id="channel-list">
           <div id="channels-list-container">
+            {/* Skeleton Chats for loading */}
             {isInitialLoad ||
               (isLoadingChats && (
                 <SkeletonTheme
@@ -159,6 +168,7 @@ const ChannelBar = ({
                   />
                 </SkeletonTheme>
               ))}
+
             {chatsMemo.length > 50 ? (
               <List
                 rowComponent={Row}
@@ -179,6 +189,13 @@ const ChannelBar = ({
                   isLoading={isLoadingChats}
                 />
               ))
+            )}
+
+            {/* New Chat Button  */}
+            {context === 'chat' && !isLoadingChats && (
+              <div className="flex justify-center px-1">
+                <NewChatButton onClick={handleNewChatClick} />
+              </div>
             )}
           </div>
         </div>

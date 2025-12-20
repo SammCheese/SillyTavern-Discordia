@@ -10,7 +10,8 @@ const { eventSource } = await imports('@script');
 export function useOpenChat() {
   const isSelectedChat = useCallback((chat: Chat): boolean => {
     try {
-      return SillyTavern.getContext().chatId === chat.file_id;
+      const name = chat.file_id ?? chat.file_name;
+      return SillyTavern.getContext().chatId === name;
     } catch {
       return false;
     }

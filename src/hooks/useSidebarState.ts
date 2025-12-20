@@ -112,7 +112,6 @@ export const useSidebarState = () => {
       } else if (hasCharacter) {
         chats = await getPastCharacterChats();
       } else if (forceRecent) {
-        console.log('No character or group selected, fetching recent chats');
         chats = await getRecentChats(entities);
       }
 
@@ -133,6 +132,13 @@ export const useSidebarState = () => {
     dispatch({ type: 'SET_CONTEXT', context: 'recent' });
     refreshChats(true);
   }, [refreshChats]);
+
+  const handleChatChange = useCallback((event) => {
+    if (event === undefined) {
+      dispatch({ type: 'SET_CONTEXT', context: 'recent' });
+    }
+    refreshChats();
+  }, []);
 
   const processMenuIcons = useCallback(() => {
     const settingsHolder = $('#top-settings-holder');
@@ -178,8 +184,9 @@ export const useSidebarState = () => {
     eventSource.on(event_types.CHARACTER_RENAMED, refreshChats);
 
     // Our own Events
-    eventSource.on(DISCORDIA_EVENTS.ENTITIES_LENGTH_CHANGED, handleFullRefresh);
+    eventSource.on(DISCORDIA_EVENTS.ENTITY_CHANGED, handleFullRefresh);
     eventSource.on(DISCORDIA_EVENTS.HOME_BUTTON_CLICKED, handleFullRefresh);
+    eventSource.on(DISCORDIA_EVENTS.CHAT_UPDATE, handleChatChange);
 
     // Swipe Listeners
     const THRESHOLD = 100;
@@ -218,8 +225,9 @@ export const useSidebarState = () => {
       eventSource.removeListener(event_types.SETTINGS_UPDATED, handleSettingsUpdate);
       eventSource.removeListener(event_types.CHARACTER_EDITED, refreshChats);
       eventSource.removeListener(event_types.CHARACTER_RENAMED, refreshChats);
-      eventSource.removeListener(DISCORDIA_EVENTS.ENTITIES_LENGTH_CHANGED, handleFullRefresh);
+      eventSource.removeListener(DISCORDIA_EVENTS.ENTITY_CHANGED, handleFullRefresh);
       eventSource.removeListener(DISCORDIA_EVENTS.HOME_BUTTON_CLICKED, handleFullRefresh);
+      eventSource.removeListener(DISCORDIA_EVENTS.CHAT_UPDATE, handleChatChange);
 
       if (body) {
         body.off('pointerdown', onPointerDown);

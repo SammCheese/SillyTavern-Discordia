@@ -1,6 +1,7 @@
 import { useContext, memo, useCallback } from 'react';
 import Skeleton from 'react-loading-skeleton';
 import { ContextMenuContext } from '../../providers/contextMenuProvider';
+import { DISCORDIA_EVENTS } from '../../events/eventTypes';
 
 interface ChannelEntryProps {
   avatar: string;
@@ -10,7 +11,8 @@ interface ChannelEntryProps {
   isLoading?: boolean;
 }
 
-const { deleteCharacterChatByName } = await imports('@script');
+const { deleteCharacterChatByName, eventSource } = await imports('@script');
+const { deleteGroupChatByName } = await imports('@scripts/groupChats');
 
 const ChannelEntry = ({
   avatar,
@@ -26,18 +28,26 @@ const ChannelEntry = ({
   }, [onClick, chat]);
 
   const handleDelete = useCallback(async () => {
-    try {
-      let charId = chat.char_id ?? null;
-      if (!charId) {
-        charId = SillyTavern.getContext().characters.findIndex(
-          (c) => c.avatar === chat.avatar,
-        );
-      }
-      if (charId === null || charId === -1) return;
+    const { characters, characterId, groupId } = SillyTavern.getContext();
 
-      await deleteCharacterChatByName(charId.toString(), chat.file_id);
+    if (!chat) return;
+    try {
+      if (groupId !== null && !characterId) {
+        // fucking name inconsistencies
+        await deleteGroupChatByName(groupId, chat.file_name);
+      } else {
+        let charId = chat.char_id ?? characterId;
+        if (!charId) {
+          charId = characters.findIndex((c) => c.avatar === chat.avatar);
+        }
+        if (charId === undefined || charId === -1) return;
+
+        await deleteCharacterChatByName(charId.toString(), chat.file_id);
+      }
     } catch (error) {
       console.error('Error deleting chat:', error);
+    } finally {
+      eventSource.emit(DISCORDIA_EVENTS.CHAT_UPDATE);
     }
   }, [chat]);
 
