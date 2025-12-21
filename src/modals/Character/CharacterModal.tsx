@@ -328,6 +328,7 @@ const CharacterModal: React.FC<CharacterModalProps> = ({
               placeholder={`<START>\n{{char}}: Hello!\n{{user}}: Hi there!`}
               onChange={setCharData}
               growHeight={true}
+              initialHeight={80}
             />
           </div>
 

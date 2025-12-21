@@ -1,5 +1,6 @@
-import { lazy, useMemo } from 'react';
+import { lazy, useCallback, useMemo } from 'react';
 import ErrorBoundary from '../common/ErrorBoundary/ErrorBoundary';
+import { useBackHandler } from '../../hooks/useBackHandler';
 
 const ProfileMount = lazy(() => import('../ProfileMount/ProfileMount'));
 const ChannelBar = lazy(() => import('../channels/ChannelBar'));
@@ -36,6 +37,12 @@ const SideBar = ({
   );
   const memoizedIsInitialLoad = useMemo(() => isInitialLoad, [isInitialLoad]);
   const memoizedSetOpen = useMemo(() => setOpen, [setOpen]);
+
+  const handleBack = useCallback(() => {
+    setOpen(false);
+  }, [setOpen]);
+
+  useBackHandler(open, handleBack, 200);
 
   return (
     <ErrorBoundary>
