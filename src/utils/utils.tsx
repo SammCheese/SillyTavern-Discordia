@@ -138,7 +138,7 @@ export const selectCharacter = async (char_id: number, chat_id?: string) => {
     await selectCharacterById(char_id);
     setActiveCharacter(char_id);
     saveSettingsDebounced();
-    if (getCurrentChatId() === chat_id) return;
+    if (getCurrentChatId() === chat_id || !chat_id) return;
 
     await openCharacterChat(chat_id);
   } catch (error) {

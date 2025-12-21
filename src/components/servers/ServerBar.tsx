@@ -20,20 +20,14 @@ const ServerIcon = lazy(() => import('./ServerIcon'));
 const AddCharacterIcon = lazy(() => import('./AddCharacterIcon'));
 const HomeIcon = lazy(() => import('./HomeIcon'));
 
-const { getGroupPastChats } = await imports('@scripts/groupChats');
-const {
-  getPastCharacterChats,
-  characters,
-  closeCurrentChat,
-  eventSource,
-  event_types,
-} = await imports('@script');
+const { characters, closeCurrentChat, eventSource, event_types } =
+  await imports('@script');
 
 interface ServerRowProps {
   entity: Entity;
   index: number;
   isSelected: boolean;
-  style: React.CSSProperties;
+  style?: React.CSSProperties;
   onClick: (entity: Entity, index: number) => void;
 }
 
@@ -62,8 +56,12 @@ const ServerRow = memo(
     );
   },
   (prevProps, nextProps) => {
+    const avatar =
+      prevProps.entity.item?.avatar ?? prevProps.entity.item?.avatar_url;
+    const nextAvatar =
+      nextProps.entity.item?.avatar ?? nextProps.entity.item?.avatar_url;
     return (
-      prevProps.entity === nextProps.entity &&
+      avatar === nextAvatar &&
       prevProps.isSelected === nextProps.isSelected &&
       prevProps.onClick === nextProps.onClick
     );
@@ -144,9 +142,7 @@ const ServerBar = ({ entities, isInitialLoad = true }: ServerBarProps) => {
 
         // Prevent sidebar from falling back to recents while IDs are cleared.
         eventSource.emit(DISCORDIA_EVENTS.CHAT_SWITCH_PENDING);
-        await closeCurrentChat();
-        const chats = await getGroupPastChats(groupId);
-        await selectGroup({ group: entity, chat_id: chats[0]?.file_id });
+        await selectGroup({ group: entity });
 
         setSelectedIndex(index);
       } else {
@@ -156,9 +152,7 @@ const ServerBar = ({ entities, isInitialLoad = true }: ServerBarProps) => {
         if (char_id === -1) return;
 
         eventSource.emit(DISCORDIA_EVENTS.CHAT_SWITCH_PENDING);
-        await closeCurrentChat();
-        const chats = await getPastCharacterChats(char_id);
-        await selectCharacter(char_id, chats[0]?.file_id);
+        await selectCharacter(char_id);
 
         setSelectedIndex(index);
       }
@@ -260,12 +254,11 @@ const ServerBar = ({ entities, isInitialLoad = true }: ServerBarProps) => {
               {filteredEntities.map(({ entity, index: actualIndex }) => {
                 return (
                   <ServerRow
-                    key={entity.id.toString()}
+                    key={entity.id}
                     entity={entity}
                     index={actualIndex}
                     isSelected={selectedIndex === actualIndex}
                     onClick={handleItemClick}
-                    style={{}}
                   />
                 );
               })}

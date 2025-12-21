@@ -14,7 +14,6 @@ interface SideBarProps {
   icons: Icon[] | null;
   isLoadingChats: boolean;
   isInitialLoad: boolean;
-  context: 'recent' | 'chat';
 }
 
 const SideBar = ({
@@ -25,12 +24,10 @@ const SideBar = ({
   icons,
   isLoadingChats,
   isInitialLoad,
-  context,
 }: SideBarProps) => {
   const memoizedEntities = useMemo(() => entities, [entities]);
   const memoizedChats = useMemo(() => chats, [chats]);
   const memoizedIcons = useMemo(() => icons, [icons]);
-  const memoizedContext = useMemo(() => context, [context]);
   const memoizedIsLoadingChats = useMemo(
     () => isLoadingChats,
     [isLoadingChats],
@@ -63,7 +60,6 @@ const SideBar = ({
             setOpen={memoizedSetOpen}
             isLoadingChats={memoizedIsLoadingChats}
             isInitialLoad={memoizedIsInitialLoad}
-            context={memoizedContext}
           />
         </div>
         <div id="user-container">

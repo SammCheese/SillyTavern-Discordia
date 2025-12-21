@@ -1,4 +1,4 @@
-import { type ReactNode, useCallback, useContext, useMemo } from 'react';
+import { memo, type ReactNode, useCallback, useContext, useMemo } from 'react';
 import { ContextMenuContext } from '../../../providers/contextMenuProvider';
 
 export interface ContextMenuItem {
@@ -84,4 +84,4 @@ const ContextMenuEntry = ({
   );
 };
 
-export default ContextMenuEntry;
+export default memo(ContextMenuEntry);

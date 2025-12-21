@@ -130,6 +130,15 @@ export function ContextMenuProvider({ children }: { children: ReactNode }) {
     },
   };
 
+  const handleDefaultContextMenu = useCallback((e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, []);
+
+  const handleClick = useCallback((e: MouseEvent) => {
+    e.stopPropagation();
+  }, []);
+
   useBackHandler(isVisible, closeContextMenu);
 
   return (
@@ -154,11 +163,8 @@ export function ContextMenuProvider({ children }: { children: ReactNode }) {
                 className={
                   isMobile ? styles.mobile.container : styles.desktop.container
                 }
-                onClick={(e) => e.stopPropagation()}
-                onContextMenu={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                }}
+                onClick={handleClick}
+                onContextMenu={handleDefaultContextMenu}
               >
                 <ContextMenuList items={menuItems || []} isMobile={isMobile} />
               </div>

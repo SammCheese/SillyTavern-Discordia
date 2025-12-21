@@ -51,15 +51,23 @@ const SettingsFrame = ({ title, children, onClose }: SettingsFrameProps) => {
   return (
     <div
       onClick={handleClick}
-      className="w-full h-full p-[5%] bg-base-discordia text-white"
+      className="w-full h-full p-[5%] bg-base-discordia text-white max-h-dvh box-border overflow-auto"
     >
-      <div className="settings-header flex justify-between items-center p-4 mb-4 border-b border-gray-700">
+      <div
+        className="settings-header flex justify-between items-center p-4 mb-4 border-b border-gray-700"
+        style={{ maxWidth: '1000px', margin: '0 auto' }}
+      >
         <h2 className="text-3xl font-semibold">{title}</h2>
         <button className="group" onClick={handleClose}>
           <CloseButton />
         </button>
       </div>
-      <div className="settings-content">{children}</div>
+      <div
+        className="settings-content w-full px-6 pb-6 box-border"
+        style={{ maxWidth: '1000px', margin: '0 auto' }}
+      >
+        {children}
+      </div>
     </div>
   );
 };

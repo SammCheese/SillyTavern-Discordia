@@ -1,15 +1,16 @@
 import { useCallback } from 'react';
 
 import { selectCharacter, selectGroup } from '../utils/utils';
-import { DISCORDIA_EVENTS } from '../events/eventTypes';
 
-const { closeCurrentChat, openCharacterChat } = await imports('@script');
+
+const {  openCharacterChat } = await imports('@script');
 const { openGroupChat } = await imports('@scripts/groupChats');
-const { eventSource } = await imports('@script');
+
 
 export function useOpenChat() {
   const isSelectedChat = useCallback((chat: Chat): boolean => {
     try {
+      // file_id is used for character chats, file_name for group chats
       const name = chat.file_id ?? chat.file_name;
       return SillyTavern.getContext().chatId === name;
     } catch {
@@ -25,9 +26,7 @@ export function useOpenChat() {
     // Recent Chat handler
     if ((chat?.char_id !== undefined && chat?.char_id >= 0) || chat?.is_group) {
       // Mark chat switch pending
-      eventSource.emit(DISCORDIA_EVENTS.CHAT_SWITCH_PENDING);
-
-      await closeCurrentChat();
+      //eventSource.emit(DISCORDIA_EVENTS.CHAT_SWITCH_PENDING);
 
       if (chat.is_group) {
         // Selecting a group with a specific chat

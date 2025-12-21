@@ -20,7 +20,6 @@ export const App = () => {
       sidebarState.icons,
       sidebarState.isLoadingChats,
       sidebarState.isInitialLoad,
-      sidebarState.context,
     ],
   );
 
