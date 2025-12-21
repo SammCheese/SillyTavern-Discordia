@@ -14,6 +14,7 @@ import './styles.css';
 import 'react-loading-skeleton/dist/skeleton.css';
 
 import ContextMenuProvider from './providers/contextMenuProvider';
+import { BackHandlerProvider } from './providers/backHandlerProvider';
 
 // Insert sidebar before top bar
 const topBar = document.getElementById('top-bar');
@@ -33,13 +34,15 @@ const root = createRoot(rootContainer);
 root.render(
   <StrictMode>
     <ErrorBoundary>
-      <PageProvider>
-        <ModalProvider>
-          <ContextMenuProvider>
-            <App />
-          </ContextMenuProvider>
-        </ModalProvider>
-      </PageProvider>
+      <BackHandlerProvider>
+        <PageProvider>
+          <ModalProvider>
+            <ContextMenuProvider>
+              <App />
+            </ContextMenuProvider>
+          </ModalProvider>
+        </PageProvider>
+      </BackHandlerProvider>
     </ErrorBoundary>
   </StrictMode>,
 );

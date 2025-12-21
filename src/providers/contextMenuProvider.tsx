@@ -13,6 +13,7 @@ import { createPortal } from 'react-dom';
 import { type ContextMenuItem } from '../components/common/ContextMenuEntry/ContextMenuEntry';
 import ContextMenuList from '../components/common/ContextMenuEntry/ContextMenuEntryList';
 import ErrorBoundary from '../components/common/ErrorBoundary/ErrorBoundary';
+import { useBackHandler } from '../hooks/useBackHandler';
 
 export const ContextMenuContext = createContext<{
   showContextMenu: (e: MouseEvent, items: ContextMenuItem[]) => void;
@@ -128,6 +129,8 @@ export function ContextMenuProvider({ children }: { children: ReactNode }) {
         'fixed z-70 min-w-[180px] max-w-[300px] bg-base-discordia border border-darker rounded-lg shadow-lg p-1 animate-in fade-in zoom-in-95 duration-100',
     },
   };
+
+  useBackHandler(isVisible, closeContextMenu);
 
   return (
     <ErrorBoundary>

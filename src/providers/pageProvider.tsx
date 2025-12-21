@@ -10,6 +10,7 @@ import { createPortal } from 'react-dom';
 
 import { rootContainer } from '../index';
 import ErrorBoundary from '../components/common/ErrorBoundary/ErrorBoundary';
+import { useBackHandler } from '../hooks/useBackHandler';
 
 const OpenPage = lazy(() => import('../pages/index'));
 
@@ -56,6 +57,8 @@ export function PageProvider({ children }: { children: ReactNode }) {
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [closePage]);
+
+  useBackHandler(isVisible, closePage);
 
   return (
     <ErrorBoundary>

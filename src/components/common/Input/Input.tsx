@@ -19,6 +19,7 @@ interface InputProps {
   id?: string;
   growHeight?: boolean;
   maxHeight?: number;
+  initialHeight?: number;
 }
 
 const Input = ({
@@ -33,6 +34,7 @@ const Input = ({
   type = 'text',
   growHeight = false,
   maxHeight = 160,
+  initialHeight,
 }: InputProps) => {
   const content = value ?? defaultValue ?? '';
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
@@ -47,9 +49,9 @@ const Input = ({
   useEffect(() => {
     if (growHeight && textAreaRef.current) {
       textAreaRef.current.style.height = 'auto';
-      textAreaRef.current.style.height = `${Math.min(textAreaRef.current.scrollHeight, maxHeight)}px`;
+      textAreaRef.current.style.height = `${Math.min(Math.max(textAreaRef.current.scrollHeight, initialHeight ?? 0), maxHeight)}px`;
     }
-  }, [content, growHeight, maxHeight]);
+  }, [content, growHeight, maxHeight, initialHeight]);
 
   return (
     <div className={`flex flex-col w-full gap-1 `} style={style}>
@@ -65,10 +67,13 @@ const Input = ({
           disabled={disabled}
           style={
             growHeight
-              ? { maxHeight: `${maxHeight}px`, overflowY: 'auto' }
+              ? {
+                  maxHeight: `${maxHeight}px`,
+                  overflowY: 'auto',
+                }
               : undefined
           }
-          className="input-field w-full px-3 py-2 bg-input-bg rounded-md outline outline-input-outline focus:ring-2 focus:ring-input-ring resize-none text-wrap wrap-break-word"
+          className="input-field grow w-full px-3 py-2 bg-input-bg rounded-md outline outline-input-outline focus:ring-2 focus:ring-input-ring resize-none text-wrap wrap-break-word"
           placeholder={placeholder}
           value={content}
           onChange={handleInputChange}
