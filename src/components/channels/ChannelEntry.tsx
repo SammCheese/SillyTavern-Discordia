@@ -1,7 +1,6 @@
-import { useContext, memo, useCallback } from 'react';
+import { memo, useCallback } from 'react';
 import Skeleton from 'react-loading-skeleton';
-import { ContextMenuContext } from '../../providers/contextMenuProvider';
-import { DISCORDIA_EVENTS } from '../../events/eventTypes';
+import { useChannelContextMenu } from './hooks/ChannelContextMenu';
 
 interface ChannelEntryProps {
   avatar: string;
@@ -11,10 +10,6 @@ interface ChannelEntryProps {
   isLoading?: boolean;
 }
 
-const { deleteCharacterChatByName, eventSource, closeCurrentChat } =
-  await imports('@script');
-const { deleteGroupChatByName } = await imports('@scripts/groupChats');
-
 const ChannelEntry = ({
   avatar,
   chat,
@@ -22,63 +17,11 @@ const ChannelEntry = ({
   onClick,
   isLoading = false,
 }: ChannelEntryProps) => {
-  const { showContextMenu } = useContext(ContextMenuContext);
+  const { handleContextMenu } = useChannelContextMenu(chat);
 
   const handleClick = useCallback(() => {
     onClick?.(chat);
   }, [onClick, chat]);
-
-  const handleDelete = useCallback(async () => {
-    const { characters, characterId, groupId } = SillyTavern.getContext();
-
-    if (!chat) return;
-    try {
-      if (groupId !== null && !characterId) {
-        await closeCurrentChat();
-
-        // fucking name inconsistencies
-        await deleteGroupChatByName(groupId, chat.file_name);
-      } else {
-        let charId = chat.char_id ?? characterId;
-        if (!charId) {
-          charId = characters.findIndex((c) => c.avatar === chat.avatar);
-        }
-        if (charId === undefined || charId === -1) return;
-
-        await closeCurrentChat();
-        await deleteCharacterChatByName(charId.toString(), chat.file_id);
-      }
-    } catch (error) {
-      console.error('Error deleting chat:', error);
-    } finally {
-      eventSource.emit(DISCORDIA_EVENTS.HOME_BUTTON_CLICKED);
-    }
-  }, [chat]);
-
-  const handleRightClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    showContextMenu(e, [
-      {
-        label: 'Open',
-        onClick: handleClick,
-      },
-      /*{
-        label: 'Export',
-        onClick: () => {
-          console.log('Export channel:', chat.file_id);
-        },
-      },*/
-      {
-        label: '---',
-        variant: 'separator',
-      },
-      {
-        label: 'Delete',
-        variant: 'danger',
-        onClick: handleDelete,
-      },
-    ]);
-  };
 
   return (
     <li
@@ -86,7 +29,7 @@ const ChannelEntry = ({
       id={`recent-chat-${chat.file_id}`}
       title={chat.file_id}
       onClick={handleClick}
-      onContextMenu={handleRightClick}
+      onContextMenu={handleContextMenu}
     >
       <div className="items-stretch flex w-full box-border">
         {isLoading ? (

@@ -1,16 +1,6 @@
 // @ts-expect-error Video Import
 import video from '../assets/cord.webm';
 
-const splashTexts = [
-  'Gathering your Characters...',
-  'Summoning the spirits...',
-  'Warning the AI...',
-  'Aligning the pixels...',
-  'Loading your chat experience...',
-  'Preparing the fun...',
-  'Delaying reality...',
-];
-
 export const performPatches = async () => {
   try {
     overrideSpinner();
@@ -20,6 +10,17 @@ export const performPatches = async () => {
     console.error('Failed to Perform Patches:', error);
   }
 };
+
+
+const splashTexts = [
+  'Gathering your Characters...',
+  'Summoning the spirits...',
+  'Warning the AI...',
+  'Aligning the pixels...',
+  'Loading your chat experience...',
+  'Preparing the fun...',
+  'Delaying reality...',
+];
 
 const overrideSpinner = () => {
   try {

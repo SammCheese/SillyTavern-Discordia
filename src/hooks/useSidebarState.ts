@@ -88,10 +88,7 @@ export const useSidebarState = () => {
       return;
     }
 
-    if (!forceRecent) {
-      dispatch({ type: 'SET_CONTEXT', context: 'chat' });
-    }
-
+    dispatch({ type: 'SET_CONTEXT', context: forceRecent ? 'recent' : "chat" });
 
     isFetchingRef.current = true;
     dispatch({ type: 'REFRESH_START' });
@@ -129,14 +126,11 @@ export const useSidebarState = () => {
   }, []);
 
   const handleFullRefresh = useCallback(() => {
-    dispatch({ type: 'SET_CONTEXT', context: 'recent' });
+
     refreshChats(true);
   }, [refreshChats]);
 
-  const handleChatChange = useCallback((event) => {
-    if (event === undefined) {
-      dispatch({ type: 'SET_CONTEXT', context: 'recent' });
-    }
+  const handleChatChange = useCallback(() => {
     refreshChats();
   }, []);
 

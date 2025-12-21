@@ -1,4 +1,4 @@
-import { memo, useCallback, useContext, type ReactNode } from 'react';
+import { memo, useCallback, useContext, useMemo, type ReactNode } from 'react';
 import { PageContext } from '../../../providers/pageProvider';
 
 const CloseButton = memo(function CloseButton() {
@@ -48,18 +48,34 @@ const SettingsFrame = ({ title, children, onClose }: SettingsFrameProps) => {
     e.stopPropagation();
   };
 
+  const isSmallScreen = useMemo(() => window.innerWidth < 1000, []);
+
   return (
     <div
       onClick={handleClick}
       className="w-full h-full p-[5%] bg-base-discordia text-white"
     >
-      <div className="settings-header flex justify-between items-center p-4 mb-4 border-b border-gray-700">
+      <div
+        className="settings-header flex justify-between items-center p-4 mb-4 border-b border-gray-700"
+        style={{
+          maxWidth: isSmallScreen ? '100%' : '800px',
+          margin: '0 auto',
+        }}
+      >
         <h2 className="text-3xl font-semibold">{title}</h2>
         <button className="group" onClick={handleClose}>
           <CloseButton />
         </button>
       </div>
-      <div className="settings-content">{children}</div>
+      <div
+        className="settings-content w-full "
+        style={{
+          maxWidth: isSmallScreen ? '100%' : '800px',
+          margin: '0 auto',
+        }}
+      >
+        {children}
+      </div>
     </div>
   );
 };

@@ -1,3 +1,5 @@
+import { memo } from 'react';
+
 const Divider = ({
   width = 'w-full',
   className = '',
@@ -17,4 +19,4 @@ const Divider = ({
   );
 };
 
-export default Divider;
+export default memo(Divider);

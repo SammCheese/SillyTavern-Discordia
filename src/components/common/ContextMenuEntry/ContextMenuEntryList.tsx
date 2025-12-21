@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import ContextMenuEntry, { type ContextMenuItem } from './ContextMenuEntry';
 
 const ContextMenuList = ({
@@ -58,4 +59,4 @@ const ContextMenuList = ({
   );
 };
 
-export default ContextMenuList;
+export default memo(ContextMenuList);

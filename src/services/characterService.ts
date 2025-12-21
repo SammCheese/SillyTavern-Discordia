@@ -240,7 +240,7 @@ export async function _deleteCharacter(
 
 export async function refreshCharacterList(): Promise<void> {
   await getCharacters();
-  eventSource.emit(DISCORDIA_EVENTS.ENTITIES_LENGTH_CHANGED);
+  eventSource.emit(DISCORDIA_EVENTS.ENTITY_CHANGED);
 }
 
 

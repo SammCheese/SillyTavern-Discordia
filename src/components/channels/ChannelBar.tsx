@@ -1,4 +1,10 @@
-import React, { lazy, useCallback, useContext, useMemo } from 'react';
+import React, {
+  lazy,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+} from 'react';
 import { PageContext } from '../../providers/pageProvider';
 import { makeAvatar } from '../../utils/utils';
 import type { RowComponentProps } from 'react-window';
@@ -38,10 +44,9 @@ interface ChannelBarProps {
   setOpen: (value: boolean) => void;
   isLoadingChats?: boolean;
   isInitialLoad?: boolean;
-  context: 'recent' | 'chat';
 }
 
-const { doNewChat } = await imports('@script');
+const { doNewChat, eventSource, event_types } = await imports('@script');
 
 const ChannelBar = ({
   icons,
@@ -49,8 +54,8 @@ const ChannelBar = ({
   setOpen,
   isLoadingChats = false,
   isInitialLoad = true,
-  context,
 }: ChannelBarProps) => {
+  const [context, setContext] = React.useState('recent');
   const { openPage } = useContext(PageContext);
   const { setSearchQuery } = useSearch();
   const { openChat, isSelectedChat } = useOpenChat();
@@ -127,8 +132,23 @@ const ChannelBar = ({
 
   const chatsMemo = useMemo(() => chats, [chats]);
 
-  const shownTitle =
-    !isLoadingChats && context !== 'chat' ? ' Recent Chats' : 'Chats';
+  useEffect(() => {
+    const handleChatChange = () => {
+      const { characterId, groupId } = SillyTavern.getContext();
+      if (typeof characterId !== 'undefined' || groupId !== null) {
+        setContext('chat');
+      } else {
+        setContext('recent');
+      }
+    };
+    eventSource.on(event_types.CHAT_CHANGED, handleChatChange);
+
+    return () => {
+      eventSource.removeListener(event_types.CHAT_CHANGED, handleChatChange);
+    };
+  }, []);
+
+  const title = context === 'recent' ? 'Recent Chats' : 'Chats';
 
   return (
     <ErrorBoundary>
@@ -147,7 +167,7 @@ const ChannelBar = ({
           </div>
         </div>
         <div id="channel-divider" className="divider"></div>
-        <div className="section-header">{shownTitle}</div>
+        <div className="section-header">{title}</div>
         <div id="channel-list">
           <div id="channels-list-container">
             {/* Skeleton Chats for loading */}
@@ -192,7 +212,7 @@ const ChannelBar = ({
             )}
 
             {/* New Chat Button  */}
-            {context === 'chat' && !isLoadingChats && (
+            {!isLoadingChats && (
               <div className="flex justify-center px-1">
                 <NewChatButton onClick={handleNewChatClick} />
               </div>
