@@ -212,7 +212,7 @@ const ChannelBar = ({
             )}
 
             {/* New Chat Button  */}
-            {!isLoadingChats && (
+            {!isLoadingChats && context === 'chat' && (
               <div className="flex justify-center px-1">
                 <NewChatButton onClick={handleNewChatClick} />
               </div>
