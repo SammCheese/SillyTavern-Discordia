@@ -13,6 +13,7 @@ import { saveGroup } from '../../utils/groupUtils';
 import AddMembers from './AddMembers';
 import { DISCORDIA_EVENTS } from '../../events/eventTypes';
 import CharacterModal from '../Character/CharacterModal';
+import IconButton from '../../components/common/IconButton/IconButton';
 
 const { deleteGroup, hideMutedSprites, is_group_automode_enabled } =
   await imports('@scripts/groupChats');
@@ -80,7 +81,7 @@ const GroupEditModal = ({ entity }: GroupEditModalProps) => {
         SillyTavern.getContext().setHideMutedSprites(hideMutedSpritesState);
       }
 
-      await eventSource.emit(DISCORDIA_EVENTS.ENTITIES_LENGTH_CHANGED);
+      await eventSource.emit(DISCORDIA_EVENTS.ENTITY_CHANGED);
 
       closeModal();
     } catch (error) {
@@ -104,6 +105,12 @@ const GroupEditModal = ({ entity }: GroupEditModalProps) => {
     },
     [],
   );
+
+  const handleFavoriteToggle = useCallback(() => {
+    setGroup((prevGroup) =>
+      prevGroup ? { ...prevGroup, fav: !prevGroup.fav } : prevGroup,
+    );
+  }, [group?.fav]);
 
   const orderOptions = [
     { label: 'Manual', value: 2 },
@@ -156,7 +163,7 @@ const GroupEditModal = ({ entity }: GroupEditModalProps) => {
         prevGroup ? { ...prevGroup, members: newMembers } : prevGroup,
       );
     },
-    [group, setGroup, openModal],
+    [group?.members, setGroup, openModal],
   );
 
   const handleAddMember = useCallback(
@@ -169,7 +176,7 @@ const GroupEditModal = ({ entity }: GroupEditModalProps) => {
         prevGroup ? { ...prevGroup, members: newMembers } : prevGroup,
       );
     },
-    [group, setGroup, openModal],
+    [group?.members, setGroup, openModal],
   );
 
   const members = useMemo(() => {
@@ -187,7 +194,7 @@ const GroupEditModal = ({ entity }: GroupEditModalProps) => {
     }
 
     return members;
-  }, [group]);
+  }, [group?.members]);
 
   const disabled = useMemo(() => {
     if (!group) return true;
@@ -244,18 +251,29 @@ const GroupEditModal = ({ entity }: GroupEditModalProps) => {
       <Modal.Header>Edit Group</Modal.Header>
 
       <Modal.Content>
-        <div className="flex flex-row gap-4 items-center">
-          <div className="shrink-0 w-16 h-16">
+        <div className="flex flex-row gap-4 items-center w-full p-6">
+          <div className="shrink-0 w-20 h-20">
             <GroupAvatar
               groupItem={entity.item}
-              width={64}
-              height={64}
+              width={80}
+              height={80}
               rounded
             />
           </div>
-          <div className="flex flex-col grow">
-            <label className="block mb-2 font-medium">Group Name</label>
-            <Input value={group?.name || ''} onChange={handleNameChange} />
+          <div className="flex flex-row justify-between items-center w-full">
+            <div className="flex flex-col w-full relative">
+              <label className="block mb-2 font-medium absolute -top-6 ">
+                Group Name
+              </label>
+              <Input value={group?.name || ''} onChange={handleNameChange} />
+            </div>
+            <div className="ms-2">
+              <IconButton
+                faIcon="fa fa-solid fa-star"
+                color={group?.fav ? 'yellow' : 'white'}
+                onClick={handleFavoriteToggle}
+              />
+            </div>
           </div>
         </div>
 

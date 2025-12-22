@@ -15,6 +15,7 @@ import 'react-loading-skeleton/dist/skeleton.css';
 
 import ContextMenuProvider from './providers/contextMenuProvider';
 import { BackHandlerProvider } from './providers/backHandlerProvider';
+import { ChatContextMenu } from './bridges/MessageContextMenu';
 
 // Insert sidebar before top bar
 const topBar = document.getElementById('top-bar');
@@ -38,6 +39,7 @@ root.render(
         <PageProvider>
           <ModalProvider>
             <ContextMenuProvider>
+              <ChatContextMenu />
               <App />
             </ContextMenuProvider>
           </ModalProvider>

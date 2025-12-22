@@ -80,6 +80,16 @@
   --character-container-width: 80px;
 }
 
+#extensionsMenu,
+#options {
+  a.interactable {
+    padding: 10px !important;
+  }
+  .interactable {
+    padding: 10px !important;
+  }
+}
+
 select {
   padding: 8px !important;
 }
@@ -195,6 +205,7 @@ select {
 }
 
 #extras_menu_button {
+  position: relative;
   transition:
     background-color 0.2s ease-in-out,
     outline 0.2s ease-in-out;
@@ -210,6 +221,7 @@ select {
   transform: translateX(0px) !important;
   position: relative !important;
   box-shadow: none !important;
+  padding: 0px !important;
 }
 
 #options .options-content {
@@ -223,17 +235,17 @@ select {
 }
 
 #extensionsMenu.options-content {
-  border-top-right-radius: 0px !important;
-  border-top-left-radius: 0px !important;
-  border-top: none !important;
+  border-top-right-radius: 0px;
+  border-top-left-radius: 0px;
+  border-top: none;
 }
 
 #unified_extras_menu {
-  bottom: var(--profile-container-height);
-  left: 0px;
+  bottom: 20px;
+  left: -5px;
   position: absolute;
-  display: flex;
-  flex-direction: column;
+  max-height: 90dvh;
+  overflow: scroll;
 }
 
 #options_button {
