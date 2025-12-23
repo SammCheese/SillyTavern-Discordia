@@ -20,6 +20,9 @@ import {
   updateCharacter,
   _deleteCharacter,
 } from '../../services/characterService';
+import Divider from '../../components/common/Divider/Divider';
+import TagManager from './TagManager';
+import IconButton from '../../components/common/IconButton/IconButton';
 
 type Type = 'edit' | 'create';
 
@@ -102,6 +105,9 @@ const CharacterModal: React.FC<CharacterModalProps> = ({
       if ('mes_example' in data) dataPatch.mes_example = data.mes_example;
       if ('creatorcomment' in data)
         dataPatch.creator_notes = data.creatorcomment;
+      if ('tags' in data) dataPatch.tags = data.tags;
+      if ('fav' in data) dataPatch.fav = data.fav;
+      if ('talkativeness' in data) dataPatch.talkativeness = data.talkativeness;
 
       const mergedData = Object.keys(dataPatch).length
         ? { ...(prev.data || {}), ...dataPatch }
@@ -209,6 +215,10 @@ const CharacterModal: React.FC<CharacterModalProps> = ({
     });
   }, [avatarName, closeModal]);
 
+  const handleFavoriteToggle = useCallback(() => {
+    setCharData({ fav: !characterData?.fav });
+  }, [setCharData, characterData?.fav]);
+
   const buttonLabel = useMemo(
     () => (isNewCharacter ? 'Create' : 'Save'),
     [isNewCharacter],
@@ -229,10 +239,10 @@ const CharacterModal: React.FC<CharacterModalProps> = ({
     <Modal>
       <Modal.Header onClose={handleClose}>{title}</Modal.Header>
       <Modal.Content>
-        <div id="avatar-name-edit" className="flex w-full align-top p-6">
-          <div className="shrink-0 w-32 flex items-center">
+        <div id="avatar-name-edit" className="flex w-full p-6">
+          <div className="shrink-0 w-32 flex items-center justify-center flex-col">
             <div
-              className="cursor-pointer  relative group"
+              className="cursor-pointer relative group"
               onClick={handleAvatarClick}
               title="Click to change avatar"
             >
@@ -257,19 +267,43 @@ const CharacterModal: React.FC<CharacterModalProps> = ({
             />
           </div>
 
-          <div className="grow  ms-4 relative top-4">
-            <label className="block text-sm font-medium mb-1" htmlFor="name">
-              Name
-            </label>
-            <BoundInput
-              id="name"
-              field="name"
-              value={characterData?.name}
-              onChange={setCharData}
-              placeholder="Enter character name"
-            />
+          <div className="grow  ms-4 relative flex items-center bottom-4">
+            <div className="grow relative">
+              <label
+                className="block text-sm font-medium mb-1 absolute -top-6"
+                htmlFor="name"
+              >
+                Name
+              </label>
+              <BoundInput
+                id="name"
+                field="name"
+                value={characterData?.name}
+                onChange={setCharData}
+                placeholder="Enter character name"
+              />
+            </div>
+
+            <div className="ms-2">
+              <IconButton
+                faIcon="fa fa-solid fa-star"
+                color={characterData?.fav ? 'yellow' : 'white'}
+                onClick={handleFavoriteToggle}
+              />
+            </div>
           </div>
         </div>
+
+        <Divider />
+
+        <Accordion title="Tags">
+          <div className="px-6 mt-4 mb-4">
+            <TagManager
+              characterData={characterData}
+              setCharData={setCharData}
+            />
+          </div>
+        </Accordion>
 
         <Accordion title="Creator Notes">
           <div id="creator-notes-edit">

@@ -117,7 +117,6 @@ const ChannelBar = ({
           onClick={handleChannelClick}
           isSelected={isSelectedChat(chat)}
           avatar={makeAvatar({ chat })}
-          isLoading={isLoadingChats}
         />
       </div>
     );
@@ -171,23 +170,22 @@ const ChannelBar = ({
         <div id="channel-list">
           <div id="channels-list-container">
             {/* Skeleton Chats for loading */}
-            {isInitialLoad ||
-              (isLoadingChats && (
-                <SkeletonTheme
-                  borderRadius={'8px'}
-                  width={'100%'}
-                  baseColor="#202025"
-                  highlightColor="#444449"
-                  enableAnimation={true}
-                  duration={1}
-                >
-                  <Skeleton
-                    count={5}
-                    height={48}
-                    className="mx-auto my-2 w-full"
-                  />
-                </SkeletonTheme>
-              ))}
+            {isInitialLoad && (
+              <SkeletonTheme
+                borderRadius={'8px'}
+                width={'100%'}
+                baseColor="#202025"
+                highlightColor="#444449"
+                enableAnimation={true}
+                duration={1}
+              >
+                <Skeleton
+                  count={5}
+                  height={48}
+                  className="mx-auto my-2 w-full"
+                />
+              </SkeletonTheme>
+            )}
 
             {chatsMemo.length > 50 ? (
               <List
@@ -206,7 +204,6 @@ const ChannelBar = ({
                   onClick={handleChannelClick}
                   isSelected={isSelectedChat(chat)}
                   avatar={makeAvatar({ chat })}
-                  isLoading={isLoadingChats}
                 />
               ))
             )}
