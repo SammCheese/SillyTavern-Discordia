@@ -1,4 +1,5 @@
 import { lazy, useEffect, useState } from 'react';
+import { getWorldInfos } from './service/worldinfo';
 
 const SettingsFrame = lazy(() => import('../base/Base'));
 const Accordion = lazy(
@@ -12,12 +13,8 @@ const Checkbox = lazy(
 );
 
 const { saveSettingsDebounced } = await imports('@script');
-const {
-  setWorldInfoSettings,
-  getWorldInfoSettings,
-  getSortedEntries,
-  selected_world_info,
-} = await imports('@scripts/worldInfo');
+const { setWorldInfoSettings, getWorldInfoSettings, selected_world_info } =
+  await imports('@scripts/worldInfo');
 
 const WorldInfoSettings = () => {
   const [settings, setSettings] = useState(getWorldInfoSettings);
@@ -25,7 +22,8 @@ const WorldInfoSettings = () => {
 
   useEffect(() => {
     const updateEntries = async () => {
-      const fetchedEntries = await getSortedEntries();
+      const fetchedEntries = await getWorldInfos();
+      console.log('Fetched Entries:', fetchedEntries);
       setEntries(fetchedEntries);
     };
 

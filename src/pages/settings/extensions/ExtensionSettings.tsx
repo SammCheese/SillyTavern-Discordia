@@ -2,6 +2,7 @@ import { useCallback, lazy, memo, useState, useRef, useEffect } from 'react';
 import Skeleton from 'react-loading-skeleton';
 
 import { getManifests } from '../../../services/extensionService';
+import { discoverExtensions } from './service/extensionService';
 
 const Divider = lazy(
   () => import('../../../components/common/Divider/Divider'),
@@ -17,26 +18,10 @@ const { extension_settings, enableExtension, disableExtension } = await imports(
 );
 const { saveSettingsDebounced } = await imports('@script');
 
-interface ExtensionInfo {
+export interface ExtensionInfo {
   name: string;
   type: string;
   disabled: boolean;
-}
-
-async function discoverExtensions(): Promise<ExtensionInfo[]> {
-  try {
-    const response = await fetch('/api/extensions/discover');
-
-    if (response.ok) {
-      const extensions = await response.json();
-      return extensions;
-    } else {
-      return [];
-    }
-  } catch (err) {
-    console.error(err);
-    return [];
-  }
 }
 
 interface ExtensionList {

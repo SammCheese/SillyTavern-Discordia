@@ -1,6 +1,9 @@
 import { memo } from 'react';
+import { useHomeIconMenu } from './hooks/HomeIconMenu';
 
 const HomeIcon = ({ onClick }: { onClick?: (() => void) | undefined }) => {
+  const { handleContextMenu } = useHomeIconMenu();
+
   const handleClick = () => {
     if (onClick) {
       onClick();
@@ -12,6 +15,7 @@ const HomeIcon = ({ onClick }: { onClick?: (() => void) | undefined }) => {
       id="home-button"
       title="Home"
       onClick={handleClick}
+      onContextMenu={handleContextMenu}
     >
       <svg
         aria-hidden="true"
