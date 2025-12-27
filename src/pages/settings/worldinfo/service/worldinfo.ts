@@ -1,27 +1,20 @@
-const { getRequestHeaders } = await imports('@script');
+import { saveWISettingsViaDOM } from "./legacy";
 
-export async function getSettings(): Promise<unknown> {
-  try {
-    const response = await fetch('/api/settings/get', {
-        method: 'POST',
-        headers: getRequestHeaders(),
-        body: JSON.stringify({}),
-        cache: 'no-cache',
-    });
-
-    if (response.ok) {
-      const settings = await response.json();
-      return settings;
-    } else {
-      return {};
-    }
-  } catch (err) {
-    console.error(err);
-    return {};
-  }
-}
 
 export async function getAllWorldInfos() {
   const { world_names } = await imports("@scripts/worldInfo")
   return world_names;
+}
+
+
+export async function saveWorldInfo(settings , active_worldinfo: string[]) {
+  try {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore trial and error really
+    const { updateWorldInfoSettings } = await imports("@scripts/worldInfo");
+    updateWorldInfoSettings(settings, active_worldinfo);
+  } catch {
+    console.warn("Error importing updateWorldInfoSettings, falling back to DOM");
+    saveWISettingsViaDOM(settings, active_worldinfo);
+  }
 }

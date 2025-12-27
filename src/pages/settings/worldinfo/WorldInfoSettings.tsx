@@ -1,5 +1,5 @@
 import { lazy, useCallback, useEffect, useState } from 'react';
-import { getAllWorldInfos } from './service/worldinfo';
+import { getAllWorldInfos, saveWorldInfo } from './service/worldinfo';
 import StackPusher from '../../../components/common/StackPusher/StackPusher';
 import GlobalWorldInfoSettings from './Settings/GlobalWorldInfoSettings';
 
@@ -11,13 +11,14 @@ const Divider = lazy(
   () => import('../../../components/common/Divider/Divider'),
 );
 
-const { getWorldInfoSettings, selected_world_info, world_names } =
+const { getWorldInfoSettings, world_names } =
   await imports('@scripts/worldInfo');
 
 const WorldInfoSettings = () => {
   const [availableWorldInfos, setAvailableWorldInfos] = useState(world_names);
-  const [selectedWorldInfo, setSelectedWorldInfo] =
-    useState(selected_world_info);
+  const [selectedWorldInfo, setSelectedWorldInfo] = useState(
+    getWorldInfoSettings().world_info.globalSelect,
+  );
   const [settings, setSettings] = useState(getWorldInfoSettings());
 
   useEffect(() => {
@@ -48,8 +49,8 @@ const WorldInfoSettings = () => {
   }, []);
 
   const handleClose = useCallback(() => {
-    //saveSettingsDebounced(settings, selectedWorldInfo);
-  }, []);
+    saveWorldInfo(settings, selectedWorldInfo);
+  }, [settings, selectedWorldInfo]);
 
   return (
     <SettingsFrame title="World Info Settings" onClose={handleClose}>
