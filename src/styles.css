@@ -94,6 +94,10 @@ select {
   padding: 8px !important;
 }
 
+.mes:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
 #sidebar-container {
   height: 100dvh;
   z-index: 31;

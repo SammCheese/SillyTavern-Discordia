@@ -48,15 +48,18 @@ const SettingsFrame = ({ title, children, onClose }: SettingsFrameProps) => {
     e.stopPropagation();
   };
 
-  const isSmallScreen = useMemo(() => window.innerWidth < 1000, []);
+  const isSmallScreen = useMemo(
+    () => window.innerWidth < 1000,
+    [window.innerWidth],
+  );
 
   return (
     <div
       onClick={handleClick}
-      className="w-full h-full p-[5%] bg-base-discordia text-white"
+      className="w-full h-full p-[5%] bg-base-discordia text-white flex flex-col overflow-hidden"
     >
       <div
-        className="settings-header flex justify-between items-center p-4 mb-4 border-b border-gray-700"
+        className="settings-header w-full flex justify-between items-center p-4 mb-4 border-b border-gray-700 shrink-0"
         style={{
           maxWidth: isSmallScreen ? '100%' : '800px',
           margin: '0 auto',
@@ -68,7 +71,7 @@ const SettingsFrame = ({ title, children, onClose }: SettingsFrameProps) => {
         </button>
       </div>
       <div
-        className="settings-content w-full "
+        className="settings-content w-full flex-1 overflow-auto overflow-x-hidden min-h-0"
         style={{
           maxWidth: isSmallScreen ? '100%' : '800px',
           margin: '0 auto',
@@ -80,4 +83,4 @@ const SettingsFrame = ({ title, children, onClose }: SettingsFrameProps) => {
   );
 };
 
-export default SettingsFrame;
+export default memo(SettingsFrame);

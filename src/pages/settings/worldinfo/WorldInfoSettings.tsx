@@ -1,4 +1,7 @@
-import { lazy, useEffect, useState } from 'react';
+import { lazy, useCallback, useEffect, useState } from 'react';
+import { getAllWorldInfos, saveWorldInfo } from './service/worldinfo';
+import StackPusher from '../../../components/common/StackPusher/StackPusher';
+import GlobalWorldInfoSettings from './Settings/GlobalWorldInfoSettings';
 
 const SettingsFrame = lazy(() => import('../base/Base'));
 const Accordion = lazy(
@@ -7,146 +10,81 @@ const Accordion = lazy(
 const Divider = lazy(
   () => import('../../../components/common/Divider/Divider'),
 );
-const Checkbox = lazy(
-  () => import('../../../components/common/Checkbox/Checkbox'),
-);
 
-const { saveSettingsDebounced } = await imports('@script');
-const {
-  setWorldInfoSettings,
-  getWorldInfoSettings,
-  getSortedEntries,
-  selected_world_info,
-} = await imports('@scripts/worldInfo');
+const { getWorldInfoSettings, world_names } =
+  await imports('@scripts/worldInfo');
 
 const WorldInfoSettings = () => {
-  const [settings, setSettings] = useState(getWorldInfoSettings);
-  const [entries, setEntries] = useState(selected_world_info);
+  const [availableWorldInfos, setAvailableWorldInfos] = useState(world_names);
+  const [selectedWorldInfo, setSelectedWorldInfo] = useState(
+    getWorldInfoSettings().world_info.globalSelect,
+  );
+  const [settings, setSettings] = useState(getWorldInfoSettings());
 
   useEffect(() => {
     const updateEntries = async () => {
-      const fetchedEntries = await getSortedEntries();
-      setEntries(fetchedEntries);
+      setAvailableWorldInfos(await getAllWorldInfos());
     };
 
     updateEntries();
-
-    console.log('World Info Settings loaded:', settings);
-
-    return () => {
-      saveSettingsDebounced();
-    };
-  }, [settings]);
+  }, []);
 
   const handleSettingsChange = (
     key: string,
-    value: string | boolean | undefined,
+    value: string | boolean | number | undefined,
   ) => {
-    setSettings((prevSettings) => {
-      const newSettings = { ...prevSettings, [key]: value };
-      setWorldInfoSettings(key, value);
-      return newSettings;
-    });
+    const updatedSettings = {
+      ...settings,
+      [key]: value,
+    };
+    setSettings(updatedSettings);
   };
 
+  const handleStackChange = useCallback((active: string[]) => {
+    setSelectedWorldInfo(active);
+    setSettings((prevSettings) => ({
+      ...prevSettings,
+      world_info: { globalSelect: active },
+    }));
+  }, []);
+
+  const handleClose = useCallback(() => {
+    saveWorldInfo(settings, selectedWorldInfo);
+  }, [settings, selectedWorldInfo]);
+
   return (
-    <SettingsFrame title="World Info Settings">
-      <div
-        className="settings-section overflow-auto"
-        style={{ maxHeight: '70dvh' }}
-      >
-        <div>
-          <div>Active Global World Info (WIP)</div>
-          <ul>
-            {entries.map((entry, index) => (
-              <li key={index} className="mb-2">
-                {entry.world}
-              </li>
-            ))}
-          </ul>
+    <SettingsFrame title="World Info Settings" onClose={handleClose}>
+      <div className="settings-section overflow-auto">
+        <div className="mb-6">
+          <div className="mb-4">
+            <h2 className="text-xl font-bold">Manage Global Entries</h2>
+            <p className="text-sm text-gray-400">
+              Select which world info entries are globally active.
+            </p>
+          </div>
+
+          <div>
+            <StackPusher
+              inactiveEntries={availableWorldInfos.filter(
+                (info) => !selectedWorldInfo.includes(info),
+              )}
+              activeEntries={availableWorldInfos.filter((info) =>
+                selectedWorldInfo.includes(info),
+              )}
+              onStackChange={handleStackChange}
+              activeLabel="Global Entries"
+              inactiveLabel="Inactive Entries"
+            />
+          </div>
         </div>
 
         <Divider />
 
         <Accordion title="Global World Info Settings">
-          <div className="mb-4">
-            <label className="block mb-2 font-medium">Scan Depth</label>
-          </div>
-          <div className="mb-4">
-            <label className="block mb-2 font-medium">Context %</label>
-          </div>
-          <div className="mb-4">
-            <label className="block mb-2 font-medium">Budget Cap</label>
-          </div>
-          <div className="mb-4">
-            <label className="block mb-2 font-medium">Min Activations</label>
-          </div>
-          <div className="mb-4">
-            <label className="block mb-2 font-medium">Max Depth</label>
-          </div>
-          <div className="mb-4">
-            <label className="block mb-2 font-medium">
-              Max Recursion Steps
-            </label>
-          </div>
-          <div className="mb-4">
-            <label className="block mb-2 font-medium">Insertion Strategy</label>
-          </div>
-
-          <div className="mb-4">
-            <Checkbox
-              label="Include Names"
-              checked={settings.world_info_include_names}
-              onChange={(checked) => {
-                handleSettingsChange('world_info_include_names', checked);
-              }}
-            />
-          </div>
-          <div className="mb-4">
-            <Checkbox
-              label="Recursive Scan"
-              checked={settings.world_info_recursive}
-              onChange={(checked) => {
-                handleSettingsChange('world_info_recursive', checked);
-              }}
-            />
-          </div>
-          <div className="mb-4">
-            <Checkbox
-              label="Case-sensitive"
-              checked={settings.world_info_case_sensitive}
-              onChange={(checked) => {
-                handleSettingsChange('world_info_case_sensitive', checked);
-              }}
-            />
-          </div>
-          <div className="mb-4">
-            <Checkbox
-              label="Match Whole Words"
-              checked={settings.world_info_match_whole_words}
-              onChange={(checked) => {
-                handleSettingsChange('world_info_match_whole_words', checked);
-              }}
-            />
-          </div>
-          <div className="mb-4">
-            <Checkbox
-              label="Use Group Scoring"
-              checked={settings.world_info_use_group_scoring}
-              onChange={(checked) => {
-                handleSettingsChange('world_info_use_group_scoring', checked);
-              }}
-            />
-          </div>
-          <div className="mb-4">
-            <Checkbox
-              label="Alert on Overflow"
-              checked={settings.world_info_overflow_alert}
-              onChange={(checked) => {
-                handleSettingsChange('world_info_overflow_alert', checked);
-              }}
-            />
-          </div>
+          <GlobalWorldInfoSettings
+            settings={settings}
+            handleSettingsChange={handleSettingsChange}
+          />
         </Accordion>
 
         <Divider />

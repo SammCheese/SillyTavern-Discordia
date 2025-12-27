@@ -9,7 +9,7 @@ import { PageContext } from '../../providers/pageProvider';
 import { makeAvatar } from '../../utils/utils';
 import type { RowComponentProps } from 'react-window';
 import { List } from 'react-window';
-import { useSearch } from '../../context/SearchContext';
+import { useSearch } from '../../providers/searchProvider';
 import ErrorBoundary from '../common/ErrorBoundary/ErrorBoundary';
 import { useOpenChat } from '../../hooks/useOpenChat';
 import Skeleton, { SkeletonTheme } from 'react-loading-skeleton';

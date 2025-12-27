@@ -9,7 +9,7 @@ import {
 } from 'react';
 import { List, type RowComponentProps } from 'react-window';
 import { selectCharacter, selectGroup } from '../../utils/utils';
-import { useSearch } from '../../context/SearchContext';
+import { useSearch } from '../../providers/searchProvider';
 import ErrorBoundary from '../common/ErrorBoundary/ErrorBoundary';
 import { DISCORDIA_EVENTS } from '../../events/eventTypes';
 import { ModalContext } from '../../providers/modalProvider';

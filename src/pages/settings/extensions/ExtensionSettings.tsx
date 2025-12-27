@@ -2,6 +2,7 @@ import { useCallback, lazy, memo, useState, useRef, useEffect } from 'react';
 import Skeleton from 'react-loading-skeleton';
 
 import { getManifests } from '../../../services/extensionService';
+import { discoverExtensions } from './service/extensionService';
 
 const Divider = lazy(
   () => import('../../../components/common/Divider/Divider'),
@@ -17,26 +18,10 @@ const { extension_settings, enableExtension, disableExtension } = await imports(
 );
 const { saveSettingsDebounced } = await imports('@script');
 
-interface ExtensionInfo {
+export interface ExtensionInfo {
   name: string;
   type: string;
   disabled: boolean;
-}
-
-async function discoverExtensions(): Promise<ExtensionInfo[]> {
-  try {
-    const response = await fetch('/api/extensions/discover');
-
-    if (response.ok) {
-      const extensions = await response.json();
-      return extensions;
-    } else {
-      return [];
-    }
-  } catch (err) {
-    console.error(err);
-    return [];
-  }
 }
 
 interface ExtensionList {
@@ -143,19 +128,6 @@ const ExtensionSettings = () => {
 
       setExtensions(categorized);
     });
-
-    return () => {
-      saveSettingsDebounced();
-
-      const initial = [...initialDisabledRef.current].sort();
-      const current = [...currentDisabledRef.current].sort();
-
-      const hasChanged = JSON.stringify(initial) !== JSON.stringify(current);
-
-      if (hasChanged) {
-        window.location.reload();
-      }
-    };
   }, []);
 
   const onToggle = useCallback(async (extension: ExtensionInfo) => {
@@ -185,12 +157,22 @@ const ExtensionSettings = () => {
     });
   }, []);
 
+  const handleClose = useCallback(() => {
+    saveSettingsDebounced();
+
+    const initial = [...initialDisabledRef.current].sort();
+    const current = [...currentDisabledRef.current].sort();
+
+    const hasChanged = JSON.stringify(initial) !== JSON.stringify(current);
+
+    if (hasChanged) {
+      window.location.reload();
+    }
+  }, []);
+
   return (
-    <SettingsFrame title="Extension Settings">
-      <div
-        className="settings-section overflow-auto"
-        style={{ maxHeight: '80dvh' }}
-      >
+    <SettingsFrame title="Extension Settings" onClose={handleClose}>
+      <div className="settings-section ">
         <h3 className="text-2xl font-semibold mb-4">System Extensions</h3>
         <ul>
           {extensions.system.map((ext) => (

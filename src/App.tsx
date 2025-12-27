@@ -1,7 +1,7 @@
 import { lazy, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useSidebarState } from './hooks/useSidebarState';
-import { SearchProvider } from './context/SearchContext';
+import { SearchProvider } from './providers/searchProvider';
 
 import { rootContainer } from './index';
 
