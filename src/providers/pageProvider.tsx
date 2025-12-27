@@ -12,7 +12,7 @@ import { rootContainer } from '../index';
 import ErrorBoundary from '../components/common/ErrorBoundary/ErrorBoundary';
 import { useBackHandler } from '../hooks/useBackHandler';
 
-const OpenPage = lazy(() => import('../pages/index'));
+const OpenPage = lazy(() => import('../pages/OpenPage'));
 
 export const PageContext = createContext<{
   openPage: (page: ReactNode) => void;

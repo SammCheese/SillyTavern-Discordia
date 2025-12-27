@@ -128,19 +128,6 @@ const ExtensionSettings = () => {
 
       setExtensions(categorized);
     });
-
-    return () => {
-      saveSettingsDebounced();
-
-      const initial = [...initialDisabledRef.current].sort();
-      const current = [...currentDisabledRef.current].sort();
-
-      const hasChanged = JSON.stringify(initial) !== JSON.stringify(current);
-
-      if (hasChanged) {
-        window.location.reload();
-      }
-    };
   }, []);
 
   const onToggle = useCallback(async (extension: ExtensionInfo) => {
@@ -170,12 +157,22 @@ const ExtensionSettings = () => {
     });
   }, []);
 
+  const handleClose = useCallback(() => {
+    saveSettingsDebounced();
+
+    const initial = [...initialDisabledRef.current].sort();
+    const current = [...currentDisabledRef.current].sort();
+
+    const hasChanged = JSON.stringify(initial) !== JSON.stringify(current);
+
+    if (hasChanged) {
+      window.location.reload();
+    }
+  }, []);
+
   return (
-    <SettingsFrame title="Extension Settings">
-      <div
-        className="settings-section overflow-auto"
-        style={{ maxHeight: '80dvh' }}
-      >
+    <SettingsFrame title="Extension Settings" onClose={handleClose}>
+      <div className="settings-section ">
         <h3 className="text-2xl font-semibold mb-4">System Extensions</h3>
         <ul>
           {extensions.system.map((ext) => (
