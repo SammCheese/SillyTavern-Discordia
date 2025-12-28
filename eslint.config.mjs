@@ -1,4 +1,3 @@
-// @ts-check
 import eslint from '@eslint/js';
 import prettier from 'eslint-config-prettier/flat';
 import react from 'eslint-plugin-react';
@@ -10,7 +9,6 @@ export default defineConfig(
   tseslint.configs.recommended,
   react.configs.flat.recommended,
   react.configs.flat['jsx-runtime'],
-  prettier,
   {
     settings: {
       react: {
@@ -18,5 +16,6 @@ export default defineConfig(
       },
     },
   },
+  prettier,
   [globalIgnores(['dist/**', 'node_modules/**', '*.config.js', '**/*.json'])],
 );

@@ -1,16 +1,159 @@
 // @ts-expect-error Video Import
 import video from '../assets/cord.webm';
+import { DISCORDIA_EVENTS } from './events/eventTypes';
+
+const templateDataCache: Record<string, object> = {};
+export const extensionTemplates: JQuery<HTMLElement>[] = [];
 
 export const performPatches = async () => {
   try {
+    await hijackJqueryError();
+    await hijackExtensionTemplateRendering();
     overrideSpinner();
     angleSendButton();
     combineChatMenu();
+    moveExtensionSettingsToUI();
   } catch (error) {
     console.error('Failed to Perform Patches:', error);
   }
 };
 
+const hijackExtensionTemplateRendering = async () => {
+  try {
+    const ctx = window.SillyTavern.getContext();
+
+    const proxy = new Proxy(ctx, {
+      get(target, prop, receiver) {
+        if (prop === 'renderExtensionTemplateAsync') {
+          return async (...args) => {
+            const [
+              extensionName,
+              templateId,
+              templateData,
+              sanitize = true,
+              localize = true,
+            ] = args;
+
+            templateDataCache[extensionName] = {
+              extensionName,
+              templateId,
+              templateData,
+              sanitize,
+              localize,
+            };
+
+            window.discordia.templateCache = templateDataCache;
+
+
+            // @ts-expect-error apply
+            // eslint-disable-next-line prefer-spread
+            return target[prop].apply(target, args);
+          };
+        }
+        return Reflect.get(target, prop, receiver);
+      },
+    });
+    SillyTavern.getContext = () => proxy;
+
+    console.debug('Successfully Hijacked Extension Template Rendering');
+  } catch (error) {
+    console.error('Failed to Hijack Extension Template Rendering:', error);
+  }
+};
+
+const hijackJqueryError = () => {
+  try {
+    const originalOn = $.fn.on;
+
+    const TARGET_CONTAINER_IDS = ['extensions_settings','extensions_settings2'];
+    const EXTENSION_NAME_REGEX = /extensions\/(?:third-party\/)?([^/]+)\//;
+
+    const IGNORED_TAGS = { 'BODY': true, 'HTML': true, 'HEAD': true };
+
+    let containers: HTMLElement[] = [];
+
+    const TARGET_CONTAINERS = TARGET_CONTAINER_IDS.map(id => document.getElementById(id)).filter(Boolean) as HTMLElement[];
+    containers = TARGET_CONTAINERS;
+
+    $.fn.on = function (this, ...args) {
+      // @ts-expect-error apply
+      if (!this.length) return originalOn.apply(this, args);
+      if (!containers.length) containers = TARGET_CONTAINERS;
+
+      const firstElem = this[0];
+
+      if (containers.length && firstElem?.isConnected && !containers.some(container => container.contains(firstElem))) {
+        // @ts-expect-error apply
+        return originalOn.apply(this, args);
+      }
+
+
+      if (IGNORED_TAGS[firstElem!.tagName]) {
+        // @ts-expect-error apply
+        return originalOn.apply(this, args);
+      }
+
+      try {
+        const err = new Error();
+
+        // Parse stack, get last two lines (to avoid this function being first)
+        const stack = err.stack?.split('\n').slice(-2).join('\n');
+
+        if (!stack) {
+          console.warn('No stack trace available to determine extension name');
+          // @ts-expect-error apply
+          return originalOn.apply(this, args);
+        }
+
+        const match = EXTENSION_NAME_REGEX.exec(stack);
+        let extensionName = 'unknown';
+
+        if (match && match[1]) {
+          extensionName = match[1];
+        }
+
+        if (extensionName != 'unknown') {
+          this.attr('discordia-settings-owner', extensionName!);
+        }
+      } catch {
+        console.warn('Failed to attach extension name to jQuery element');
+      }
+      // @ts-expect-error apply
+      return originalOn.apply(this, args);
+    };
+
+    console.debug('Successfully Hijacked jQuery HTML Method');
+  } catch (error) {
+    console.error('Failed to Hijack jQuery HTML Method:', error);
+  }
+};
+
+const moveExtensionSettingsToUI = async () => {
+  const { eventSource, event_types } = await imports('@script');
+
+  const moveSettings = async () => {
+    try {
+      const settingsContainer = $('#extensions_settings2');
+      if (settingsContainer.length === 0) return;
+
+      settingsContainer.children().each((_, elem) => {
+        extensionTemplates.push($(elem).clone(true));
+      });
+
+      window.discordia.extensionTemplates = extensionTemplates;
+
+      eventSource.emit(DISCORDIA_EVENTS.EXTENSION_HTML_POPULATED);
+    } catch (error) {
+      console.error('Failed to Move Extension Settings to UI:', error);
+    }
+    eventSource.removeListener(
+      event_types.EXTENSION_SETTINGS_LOADED,
+      moveSettings,
+    );
+  };
+
+  eventSource.on(event_types.EXTENSION_SETTINGS_LOADED, moveSettings);
+};
 
 const splashTexts = [
   'Gathering your Characters...',

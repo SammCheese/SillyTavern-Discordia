@@ -10,11 +10,20 @@ import type * as SillyScript from '../../../../script';
 
 
 
+
+
 declare global {
   type ScriptKeys = keyof typeof Scripts;
   function imports<K extends ScriptKeys>(mod: `@scripts/${K}`): Promise<typeof Scripts[K]>;
   function imports(mod: '@script'): Promise<typeof SillyScript>;
   function imports(mod: string): Promise<typeof importFunc.default>;
+
+  interface Window {
+    discordia: {
+      templateCache?: Record<string, object>;
+      extensionTemplates?: JQuery<HTMLElement>[];
+    };
+  }
 }
 
 declare module '*.webm' {
