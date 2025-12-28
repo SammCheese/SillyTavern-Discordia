@@ -113,7 +113,7 @@ const ExtensionAccordion: React.FC<ExtensionAccordionProps> = memo(
             title={title}
             disabled={disabled}
             hasSettings={!!settings}
-            hasUpdates={!!version?.isUpToDate}
+            hasUpdates={version?.isUpToDate === false}
             onUpdateClick={handleUpdateClick}
           />
         }
