@@ -7,7 +7,7 @@ export const extensionTemplates: JQuery<HTMLElement>[] = [];
 
 export const performPatches = async () => {
   try {
-    await hijackJqueryError();
+    hijackJqueryError();
     await hijackExtensionTemplateRendering();
     overrideSpinner();
     angleSendButton();
