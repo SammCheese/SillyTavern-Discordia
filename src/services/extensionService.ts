@@ -1,4 +1,4 @@
-interface Manifest {
+export interface Manifest {
   display_name: string;
   loading_order: number;
   requires: string[];
@@ -13,7 +13,7 @@ interface Manifest {
 
 
 export async function getManifests(names: string[]): Promise<Record<string, Manifest>> {
-    const obj = {};
+    const obj: Record<string, Manifest> = {};
     const promises: Promise<Manifest>[] = [];
 
     for (const name of names) {

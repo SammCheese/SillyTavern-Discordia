@@ -1,0 +1,122 @@
+// @ts-expect-error Video Import
+import video from '../../assets/cord.webm';
+
+
+const splashTexts = [
+  'Gathering your Characters...',
+  'Summoning the spirits...',
+  'Warning the AI...',
+  'Aligning the pixels...',
+  'Loading your chat experience...',
+  'Preparing the fun...',
+  'Delaying reality...',
+];
+
+export const overrideSpinner = () => {
+  try {
+    const loadSpinner = $('#load-spinner');
+    if (loadSpinner) {
+      loadSpinner.remove();
+      const randomIndex = Math.floor(Math.random() * splashTexts.length);
+      const randomText = splashTexts[randomIndex];
+      const parent = $('#loader');
+      const newSpinner = $(`
+      <div id="load-spinner">
+        <video autoplay loop muted playsinline  style="width: 300px; height: 300px; object-fit: cover; border-radius: 12px;">
+          <source src="${video}" type="video/webm" />
+        </video>
+        <span id="loading-text" style="color: white; font-size: 1.2rem; margin-top: -40px;">
+          ${randomText}
+        </span>
+      </div>
+      `).css({
+        width: '100dvw',
+        height: '100dvh',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'center',
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        zIndex: 1000,
+        backgroundColor: '#1e1e1e',
+
+      });
+      parent.append(newSpinner);
+    }
+  } catch (error) {
+    console.error('Failed to Apply Spinner Patch:', error);
+  }
+};
+
+// Rotate Send Button 45 Degrees
+export const angleSendButton = () => {
+  try {
+    const rightSendForm = $('#rightSendForm');
+    if (rightSendForm) {
+      const send_button = rightSendForm.find('#send_but');
+      send_button.addClass('fa-rotate-by');
+      send_button.attr('style', '--fa-rotate-angle: 45deg');
+    }
+  } catch (error) {
+    console.error('Failed to Apply Send Button Patch:', error);
+  }
+};
+
+// Group Both Chat Icons into one
+export const combineChatMenu = () => {
+  try {
+    const leftSendForm = $('#leftSendForm');
+    if (leftSendForm) {
+      const extensionsMenu = $('#extensionsMenu').addClass('font-family-reset');
+      const optionsMenu = $('#options').addClass('font-family-reset');
+
+      const extrasMenu = $(`
+    <div id="extras_menu_button" class="fa-solid fa-plus">
+      <div id="unified_extras_menu" class="extras_menu_dropdown">
+      </div>
+    </div>
+    `);
+
+      extrasMenu
+        .find('#unified_extras_menu')
+        .append(optionsMenu, extensionsMenu);
+
+      extrasMenu.on('click', () => {
+        if (extensionsMenu.is(':visible') || optionsMenu.is(':visible')) {
+          window.removeEventListener('click', toggleCombinedChatMenu);
+          extensionsMenu.hide();
+          optionsMenu.hide();
+          return;
+        }
+
+        window.addEventListener('click', toggleCombinedChatMenu);
+        $('#extensionsMenu').show();
+        $('#options').show();
+      });
+      leftSendForm.empty();
+      leftSendForm.append(extrasMenu);
+    }
+  } catch (error) {
+    console.error('Failed to Apply Combine Chat Menu Patch:', error);
+  }
+};
+
+const toggleCombinedChatMenu = (event: MouseEvent) => {
+  try {
+    const extensionsMenu = $('#extensionsMenu');
+    const optionsMenu = $('#options');
+
+    if (
+      !(event?.target as HTMLElement).closest('#extras_menu_button') &&
+      !(event?.target as HTMLElement).closest('#extensionsMenu') &&
+      !(event?.target as HTMLElement).closest('#options')
+    ) {
+      extensionsMenu.hide();
+      optionsMenu.hide();
+    }
+  } catch (error) {
+    console.error('Failed to Handle Extra Listener:', error);
+  }
+};

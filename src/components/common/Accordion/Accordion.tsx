@@ -34,7 +34,9 @@ export const Accordion = ({
         className="accordion-header cursor-pointer w-full flex justify-between items-center p-2 bg-accordion-header hover:bg-lighter transition-colors duration-200"
         onClick={handleToggle}
       >
-        <span className="text-lg font-medium">{title}</span>
+        <span className="text-lg font-medium w-full truncate text-start">
+          {title}
+        </span>
         <span
           className={`transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
         >
