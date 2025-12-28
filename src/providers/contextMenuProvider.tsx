@@ -47,6 +47,10 @@ export function ContextMenuProvider({ children }: { children: ReactNode }) {
       e.preventDefault();
       e.stopPropagation();
 
+      if (window.getSelection) {
+        window.getSelection()?.removeAllRanges();
+      }
+
       const clickX = e.clientX;
       const clickY = e.clientY;
 

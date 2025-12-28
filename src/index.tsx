@@ -17,6 +17,8 @@ import ContextMenuProvider from './providers/contextMenuProvider';
 import { BackHandlerProvider } from './providers/backHandlerProvider';
 import { ChatContextMenu } from './bridges/MessageContextMenu';
 
+window.discordia = window.discordia || {};
+
 // Insert sidebar before top bar
 const topBar = document.getElementById('top-bar');
 

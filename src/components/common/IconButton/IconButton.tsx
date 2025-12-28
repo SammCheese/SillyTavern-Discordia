@@ -3,7 +3,7 @@ import { memo, useCallback } from 'react';
 interface IconButtonProps {
   faIcon: string;
   size?: number;
-  onClick?: () => void;
+  onClick?: (event?: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void;
   tooltip?: string;
   disabled?: boolean;
   color?: string;
@@ -17,11 +17,14 @@ const IconButton = ({
   disabled = false,
   color,
 }: IconButtonProps) => {
-  const handleClick = useCallback(() => {
-    if (!disabled) {
-      onClick?.();
-    }
-  }, [onClick, disabled]);
+  const handleClick = useCallback(
+    (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+      if (!disabled) {
+        onClick?.(event);
+      }
+    },
+    [onClick, disabled],
+  );
 
   return (
     <button
