@@ -7,23 +7,26 @@ const TARGET_CONTAINER_IDS = ['extensions_settings', 'extensions_settings2'] as 
 const EXTENSION_NAME_REGEX = /extensions\/(?:third-party\/)?(?!(?:SillyTavern-Discordia|third-party)\/)([^/]+)\//;
 const EXTENSION_NAME_NEGLECT_SET = new Set(['SillyTavern-Discordia']);
 const IGNORED_TAGS_SET = new Set(['BODY', 'HTML', 'HEAD']);
+const LATELOADER_LEEWAY_MS = 20000;
+
+let cachedContainers: HTMLElement[] = [];
+let containersCached = false;
+
+const getContainers = (): HTMLElement[] => {
+  if (!containersCached) {
+    cachedContainers = TARGET_CONTAINER_IDS
+      .map((id) => document.getElementById(id))
+      .filter(Boolean) as HTMLElement[];
+    containersCached = true;
+  }
+  return cachedContainers;
+};
 
 export const hijackJqueryError = () => {
   try {
     const originalOn = $.fn.on;
-    let containers: HTMLElement[] = [];
-    let containersCached = false;
-
-    const initContainers = () => {
-      if (!containersCached) {
-        containers = TARGET_CONTAINER_IDS
-          .map((id) => document.getElementById(id))
-          .filter(Boolean) as HTMLElement[];
-        containersCached = true;
-      }
-    };
-
-    initContainers();
+    const containers = getContainers();
+    const hasContainers = containers.length > 0;
 
     $.fn.on = function (this, ...args) {
       // @ts-expect-error apply
@@ -31,33 +34,23 @@ export const hijackJqueryError = () => {
 
       const firstElem = this[0] as HTMLElement;
 
-      if (IGNORED_TAGS_SET.has(firstElem.tagName)) {
+      // @ts-expect-error apply
+      if (IGNORED_TAGS_SET.has(firstElem.tagName)) return originalOn.apply(this, args);
+
+      // Check if element is in target containers
+      if (hasContainers && firstElem.isConnected &&
+          !containers.some((container) => container.contains(firstElem))) {
         // @ts-expect-error apply
         return originalOn.apply(this, args);
       }
 
-      if (!containersCached) {
-        initContainers();
-      }
-
-      // Check if element is in target containers
-      if (containers.length > 0 && firstElem.isConnected) {
-        const isInside = containers.some((container) => container.contains(firstElem));
-        // @ts-expect-error apply
-        if (!isInside) return originalOn.apply(this, args);
-      }
-
       try {
         const stack = new Error().stack;
-
-        if (!stack) {
-          // @ts-expect-error apply
-          return originalOn.apply(this, args);
-        }
-
-        const match = EXTENSION_NAME_REGEX.exec(stack);
-        if (match?.[1] && !EXTENSION_NAME_NEGLECT_SET.has(match[1])) {
-          this.attr('discordia-settings-owner', match[1]);
+        if (stack) {
+          const match = EXTENSION_NAME_REGEX.exec(stack);
+          if (match?.[1] && !EXTENSION_NAME_NEGLECT_SET.has(match[1])) {
+            this.attr('discordia-settings-owner', match[1]);
+          }
         }
       } catch {
         // Silent fail
@@ -67,50 +60,84 @@ export const hijackJqueryError = () => {
       return originalOn.apply(this, args);
     };
 
-    const restore = () => {
-      $.fn.on = originalOn;
-      eventSource.removeListener(
-        DISCORDIA_EVENTS.EXTENSION_HTML_POPULATED,
-        restore,
-      );
+    const restoreAfterTime = () => {
+      setTimeout(() => {
+        $.fn.on = originalOn;
+        eventSource.removeListener(
+          DISCORDIA_EVENTS.EXTENSION_HTML_POPULATED,
+          restoreAfterTime,
+        );
+      }, LATELOADER_LEEWAY_MS);
     };
 
-    eventSource.on(DISCORDIA_EVENTS.EXTENSION_HTML_POPULATED, restore);
+    eventSource.on(DISCORDIA_EVENTS.EXTENSION_HTML_POPULATED, restoreAfterTime);
   } catch (error) {
     console.error('Failed to Hijack jQuery HTML Method:', error);
   }
 };
 
 export const poolDOMExtensions = async () => {
-  let isListenerActive = true;
+  let observer: MutationObserver | null = null;
+  let debounceTimer: number | null = null;
+  window.discordia.extensionTemplates = [];
 
-  const moveSettings = async () => {
-    if (!isListenerActive) return;
-
+  const captureExtensions = () => {
     try {
-      const containers = [
-        document.getElementById('extensions_settings'),
-        document.getElementById('extensions_settings2'),
-      ].filter(Boolean) as HTMLElement[];
-
+      const containers = getContainers();
       if (containers.length === 0) return;
 
-      window.discordia.extensionTemplates = [];
-
-      for (const container of containers) {
-        for (const elem of container.children) {
-          window.discordia.extensionTemplates.push($(elem).clone(true));
-        }
-      }
+      window.discordia.extensionTemplates = containers.flatMap((container) =>
+        Array.from(container.children).map((elem) => $(elem).clone(true))
+      );
 
       eventSource.emit(DISCORDIA_EVENTS.EXTENSION_HTML_POPULATED);
     } catch (error) {
-      console.error('Failed to Move Extension Settings:', error);
-    } finally {
-      isListenerActive = false;
-      eventSource.removeListener(event_types.EXTENSION_SETTINGS_LOADED, moveSettings);
+      console.error('Failed to Capture Extension Settings:', error);
     }
   };
 
-  eventSource.on(event_types.EXTENSION_SETTINGS_LOADED, moveSettings);
+  const debouncedCapture = () => {
+    if (debounceTimer !== null) {
+      clearTimeout(debounceTimer);
+    }
+    debounceTimer = window.setTimeout(() => {
+      captureExtensions();
+      debounceTimer = null;
+    }, 100);
+  };
+
+  const startObserving = () => {
+    const containers = getContainers();
+    if (containers.length === 0) return;
+
+    observer = new MutationObserver((mutations) => {
+      if (mutations.some((m) => m.addedNodes.length > 0)) {
+        debouncedCapture();
+      }
+    });
+
+    for (const container of containers) {
+      observer.observe(container, {
+        childList: true,
+        subtree: false,
+      });
+    }
+
+    setTimeout(() => {
+      if (observer) {
+        observer.disconnect();
+        observer = null;
+      }
+      eventSource.removeListener(
+        event_types.EXTENSION_SETTINGS_LOADED,
+        startObserving,
+      );
+    }, LATELOADER_LEEWAY_MS);
+  };
+
+  captureExtensions();
+
+  // SillyTavern fires this after extensions are loaded
+  // Start Observing for lateloaders
+  eventSource.on(event_types.EXTENSION_SETTINGS_LOADED, startObserving);
 };

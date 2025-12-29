@@ -7,11 +7,12 @@ import {
 } from '../service/extensionService';
 import type { ExtensionInfo, ExtensionList } from '../ExtensionSettings';
 import { getManifests } from '../../../../services/extensionService';
+import { DISCORDIA_EVENTS } from '../../../../events/eventTypes';
 
 const { enableExtension, disableExtension } = await imports(
   '@scripts/extensions',
 );
-const { saveSettingsDebounced } = await imports('@script');
+const { saveSettingsDebounced, eventSource } = await imports('@script');
 
 const createSettingsMap = (
   records: ExtensionRecord[],
@@ -88,6 +89,21 @@ export const useExtensionState = () => {
     fetchExtensions();
   }, []);
 
+  const versionUpdateTrigger = useMemo(() => {
+    return extensions
+      .filter((ext) => ext.type !== 'system')
+      .map((ext) =>
+        [
+          ext.name,
+          ext.type,
+          ext.version?.currentCommitHash ?? '',
+          ext.version?.currentBranchName ?? '',
+          String(ext.version?.isUpToDate ?? ''),
+        ].join(':'),
+      )
+      .join('|');
+  }, [extensions]);
+
   useEffect(() => {
     const updateVersions = async () => {
       if (extensions.length === 0) return;
@@ -128,16 +144,28 @@ export const useExtensionState = () => {
     };
 
     updateVersions();
-  }, [extensions.length]);
+  }, [versionUpdateTrigger]);
+
 
   useEffect(() => {
-    const fetchSettingsRecords = async () => {
-      if (settingsRecord && settingsRecord.length > 0) return;
+    const fetchSettingsRecords = async (override = false) => {
+      if (settingsRecord && settingsRecord.length > 0 && !override) return;
       const associations = await processExtensionHTMLs();
       setSettingsRecord(associations);
     };
 
+    const handlePopulated = () => fetchSettingsRecords(true);
+
     fetchSettingsRecords();
+
+    eventSource.on(DISCORDIA_EVENTS.EXTENSION_HTML_POPULATED, handlePopulated);
+
+    return () => {
+      eventSource.removeListener(
+        DISCORDIA_EVENTS.EXTENSION_HTML_POPULATED,
+        handlePopulated,
+      );
+    };
   }, []);
 
   const settingsMap = useMemo(() => {

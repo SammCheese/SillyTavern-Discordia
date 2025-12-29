@@ -30,7 +30,8 @@ export const Accordion = ({
 
   return (
     <div className="accordion rounded mb-4 border border-base-discordia-lighter overflow-hidden">
-      <button
+      <div
+        tabIndex={0}
         className="accordion-header cursor-pointer w-full flex justify-between items-center p-2 bg-accordion-header hover:bg-lighter transition-colors duration-200"
         onClick={handleToggle}
       >
@@ -42,7 +43,7 @@ export const Accordion = ({
         >
           <div className="fa fa-chevron-down" />
         </span>
-      </button>
+      </div>
 
       <div
         className={`accordion-content bg-input-bg transition-all duration-200 ${
