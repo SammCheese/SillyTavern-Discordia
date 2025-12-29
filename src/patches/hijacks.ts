@@ -45,11 +45,28 @@ export const hijackJqueryError = () => {
       }
 
       try {
-        const stack = new Error().stack;
-        if (stack) {
-          const match = EXTENSION_NAME_REGEX.exec(stack);
-          if (match?.[1] && !EXTENSION_NAME_NEGLECT_SET.has(match[1])) {
-            this.attr('discordia-settings-owner', match[1]);
+        // V8+ stack trace handling
+        if (Error.prepareStackTrace) {
+          const orig = Error.prepareStackTrace;
+          Error.prepareStackTrace = (_, stack) => stack;
+          const stack = new Error().stack as unknown as NodeJS.CallSite[];
+          Error.prepareStackTrace = orig;
+
+          if (stack && stack.length > 0) {
+            const frame = stack[2] || stack[1];
+            const match = EXTENSION_NAME_REGEX.exec(frame?.getFileName() || '');
+            if (match?.[1] && !EXTENSION_NAME_NEGLECT_SET.has(match[1])) {
+              this.attr('discordia-settings-owner', match[1]);
+            }
+          }
+        // Non-V8 stack trace handling
+        } else {
+          const stack = new Error().stack;
+          if (stack) {
+            const match = EXTENSION_NAME_REGEX.exec(stack);
+            if (match?.[1] && !EXTENSION_NAME_NEGLECT_SET.has(match[1])) {
+              this.attr('discordia-settings-owner', match[1]);
+            }
           }
         }
       } catch {
