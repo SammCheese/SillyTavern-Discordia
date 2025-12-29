@@ -2,6 +2,7 @@ import { useCallback, useContext, useMemo } from 'react';
 import { ContextMenuContext } from '../../../providers/contextMenuProvider';
 import { DISCORDIA_EVENTS } from '../../../events/eventTypes';
 import type { ContextMenuItem } from '../../common/ContextMenuEntry/ContextMenuEntry';
+import { PopupContext } from '../../../providers/popupProvider';
 
 const { deleteCharacterChatByName, eventSource, closeCurrentChat } =
   await imports('@script');
@@ -9,8 +10,9 @@ const { deleteGroupChatByName } = await imports('@scripts/groupChats');
 
 export const useChannelContextMenu = (chat: Chat) => {
   const { showContextMenu } = useContext(ContextMenuContext);
+  const { openPopup } = useContext(PopupContext);
 
-  const handleDelete = useCallback(async () => {
+  const performDelete = useCallback(async () => {
     const { characters, characterId, groupId } = SillyTavern.getContext();
 
     if (!chat) return;
@@ -36,6 +38,22 @@ export const useChannelContextMenu = (chat: Chat) => {
       eventSource.emit(DISCORDIA_EVENTS.HOME_BUTTON_CLICKED);
     }
   }, [chat]);
+
+  const handleDelete = useCallback(() => {
+    openPopup(null, {
+      title: 'Confirm Deletion',
+      confirmText: 'Delete',
+      confirmVariant: 'danger',
+      cancelText: 'Cancel',
+      description: `Are you sure you want to delete the chat "${chat.file_name}"? This action cannot be undone.`,
+      onCancel: () => {
+        void 0;
+      },
+      onConfirm: async () => {
+        await performDelete();
+      },
+    });
+  }, [chat, openPopup, performDelete]);
 
   const menuOptions = useMemo(() => {
     return [

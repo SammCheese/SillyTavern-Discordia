@@ -1,12 +1,14 @@
-import { useCallback, lazy, useMemo } from 'react';
+import { useCallback, lazy, useMemo, useContext } from 'react';
 
 import { useExtensionState } from './hooks/useExtensionState';
 import ExtensionAccordion from './components/ExtensionAccordion';
 import type { Manifest } from '../../../services/extensionService';
+import { PopupContext } from '../../../providers/popupProvider';
 
 const SettingsFrame = lazy(() => import('../base/Base'));
 
 const { saveSettingsDebounced } = await imports('@script');
+const { deleteExtension } = await imports('@scripts/extensions');
 
 export type Version = {
   isUpToDate: boolean;
@@ -43,6 +45,28 @@ const ExtensionSection = ({
 }: ExtensionSectionProps) => {
   if (extensions.length === 0) return null;
 
+  const { openPopup } = useContext(PopupContext);
+
+  const handleDelete = useCallback(
+    (extension: ExtensionInfo) => {
+      const extensionName = extension.name.replace('third-party/', '');
+      openPopup(null, {
+        title: 'Confirm Deletion',
+        confirmText: 'Delete',
+        confirmVariant: 'danger',
+        cancelText: 'Cancel',
+        description: `Are you sure you want to delete the extension "${extensionName}"? This action cannot be undone.`,
+        onCancel: () => {
+          void 0;
+        },
+        onConfirm: () => {
+          return deleteExtension(extensionName);
+        },
+      });
+    },
+    [openPopup],
+  );
+
   return (
     <div>
       <h3 className="text-2xl font-semibold mb-4">{title}</h3>
@@ -52,6 +76,7 @@ const ExtensionSection = ({
             key={ext.name}
             extension={ext}
             onToggle={onToggle}
+            onDelete={handleDelete}
             {...ext}
           />
         ))}
