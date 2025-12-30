@@ -22,55 +22,92 @@ const getContainers = (): HTMLElement[] => {
   return cachedContainers;
 };
 
+interface PendingTag {
+  elements: JQuery<HTMLElement>;
+  owner: string;
+}
+
+const pendingTags: PendingTag[] = [];
+let isTaggingScheduled = false;
+
+const safeRequestIdleCallback = typeof window.requestIdleCallback === 'function' ?
+  window.requestIdleCallback :
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
+  (cb: Function) => setTimeout(() => cb({ timeRemaining: () => 50 }), 1);
+
+const flushTagsNow = () => {
+  while (pendingTags.length > 0) {
+    const { elements, owner } = pendingTags.shift()!;
+    elements.each((_, elem) => {
+      try {
+        (elem as HTMLElement).setAttribute('discordia-settings-owner', owner);
+      } catch {
+        // Silent fail
+      }
+    });
+  }
+  isTaggingScheduled = false;
+};
+
+const scheduleTagging = () => {
+  if (!isTaggingScheduled) {
+    isTaggingScheduled = true;
+    safeRequestIdleCallback(flushTagsNow);
+  }
+};
+
 export const hijackJqueryError = () => {
   try {
     const originalOn = $.fn.on;
-    const containers = getContainers();
-    const hasContainers = containers.length > 0;
 
     $.fn.on = function (this, ...args) {
       // @ts-expect-error apply
       if (!this.length) return originalOn.apply(this, args);
-
-      const firstElem = this[0] as HTMLElement;
-
       // @ts-expect-error apply
-      if (IGNORED_TAGS_SET.has(firstElem.tagName)) return originalOn.apply(this, args);
+      if (IGNORED_TAGS_SET.has(this[0]?.tagName)) return originalOn.apply(this, args);
 
-      // Check if element is in target containers
-      if (hasContainers && firstElem.isConnected &&
-          !containers.some((container) => container.contains(firstElem))) {
-        // @ts-expect-error apply
-        return originalOn.apply(this, args);
+      let owner: string | null = null;
+
+      if (document.currentScript && (document.currentScript as HTMLScriptElement).src) {
+        const src = (document.currentScript as HTMLScriptElement).src;
+        const match = EXTENSION_NAME_REGEX.exec(src);
+        if (match?.[1]) owner = match[1];
       }
 
-      try {
-        // V8+ stack trace handling
-        if (Error.prepareStackTrace) {
-          const orig = Error.prepareStackTrace;
-          Error.prepareStackTrace = (_, stack) => stack;
-          const stack = new Error().stack as unknown as NodeJS.CallSite[];
-          Error.prepareStackTrace = orig;
+      if (!owner) {
+        try {
+          const oldLimit = Error.stackTraceLimit;
+          Error.stackTraceLimit = 3;
 
-          if (stack && stack.length > 0) {
-            const frame = stack[2] || stack[1];
-            const match = EXTENSION_NAME_REGEX.exec(frame?.getFileName() || '');
-            if (match?.[1] && !EXTENSION_NAME_NEGLECT_SET.has(match[1])) {
-              this.attr('discordia-settings-owner', match[1]);
+          // V8+ stack trace handling
+          if (Error.prepareStackTrace) {
+            const orig = Error.prepareStackTrace;
+            Error.prepareStackTrace = (_, stack) => stack;
+            const stack = new Error().stack as unknown as NodeJS.CallSite[];
+            Error.prepareStackTrace = orig;
+
+            if (stack[2] || stack[1]) {
+              const file = stack[2] ? stack[2].getFileName() : stack[1]?.getFileName();
+              const match = file && EXTENSION_NAME_REGEX.exec(file);
+              if (match) owner = match[1] ?? null;
+            }
+          // Non-V8 stack trace handling
+          } else {
+            const stack = new Error().stack;
+            if (stack) {
+              const match = EXTENSION_NAME_REGEX.exec(stack);
+              if (match) owner = match[1] ?? null;
             }
           }
-        // Non-V8 stack trace handling
-        } else {
-          const stack = new Error().stack;
-          if (stack) {
-            const match = EXTENSION_NAME_REGEX.exec(stack);
-            if (match?.[1] && !EXTENSION_NAME_NEGLECT_SET.has(match[1])) {
-              this.attr('discordia-settings-owner', match[1]);
-            }
-          }
+          Error.stackTraceLimit = oldLimit;
+        } catch {
+          // Silent fail
         }
-      } catch {
-        // Silent fail
+      }
+
+      if (owner && !EXTENSION_NAME_NEGLECT_SET.has(owner)) {
+        pendingTags.push({ elements: this, owner });
+        scheduleTagging();
       }
 
       // @ts-expect-error apply
@@ -100,6 +137,8 @@ export const poolDOMExtensions = async () => {
 
   const captureExtensions = () => {
     try {
+      flushTagsNow();
+
       const containers = getContainers();
       if (containers.length === 0) return;
 

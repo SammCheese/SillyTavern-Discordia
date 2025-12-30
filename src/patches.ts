@@ -1,5 +1,5 @@
 
-import { hijackJqueryError, poolDOMExtensions } from './patches/hijacks';
+import { hijackJqueryError, poolDOMExtensions } from './patches/settingsHijack';
 import { overrideSpinner, angleSendButton, combineChatMenu } from './patches/overrides';
 
 

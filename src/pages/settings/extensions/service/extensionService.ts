@@ -1,3 +1,4 @@
+import { runTaskInIdle } from '../../../../utils/utils';
 import type { ExtensionInfo } from '../ExtensionSettings';
 
 const { getRequestHeaders } = await imports('@script');
@@ -113,14 +114,16 @@ function getKnownNamesSet(knownNames?: string[]): Set<string> | null {
 
 const INTERACTIVE_SELECTOR = 'input, select, textarea, button' as const;
 
-export async function processExtensionHTMLs(
-  knownNames?: string[],
-): Promise<ExtensionRecord[]> {
-  const elements = window.discordia.extensionTemplates || [];
-  if (elements.length === 0) return [];
+const applyStyles = (content: JQuery) => {
+  content.css({ width: '100%', boxSizing: 'border-box', display: 'block' });
+};
 
-  const knownNamesSet = getKnownNamesSet(knownNames);
-  const extensions: ExtensionRecord[] = [];
+function* extensionProcessorGenerator(
+  elements: JQuery<Element>[],
+  knownNamesSet: Set<string> | null,
+): Generator<null | ExtensionRecord, void, unknown> {
+  const batchSize = 5;
+  let processedCount = 0;
 
   for (const element of elements) {
     const content = element.find('.inline-drawer-content');
@@ -130,9 +133,8 @@ export async function processExtensionHTMLs(
     if (interactives.length === 0) continue;
 
     const heuristics = new Map<string, number>();
-    interactives.each((_, interactive) => {
-      const owner =
-        interactive.getAttribute('discordia-settings-owner') || 'unknown';
+    interactives.each((_: number, interactive: HTMLElement) => {
+      const owner = interactive.getAttribute('discordia-settings-owner') || 'unknown';
       heuristics.set(owner, (heuristics.get(owner) ?? 0) + 1);
     });
 
@@ -145,17 +147,28 @@ export async function processExtensionHTMLs(
       continue;
     }
 
-    content.css({
-      width: '100%',
-      boxSizing: 'border-box',
-      display: 'block',
-    });
+    applyStyles(content);
 
-    extensions.push({
-      name: probableOwner,
-      elem: content,
-    });
+    yield { name: probableOwner, elem: content };
+
+    processedCount++;
+
+    if (processedCount % batchSize === 0) {
+        yield null;
+    }
   }
+}
 
-  return extensions;
+export async function processExtensionHTMLs(
+  knownNames?: string[],
+  signal?: AbortSignal,
+): Promise<ExtensionRecord[]> {
+  const elements = window.discordia.extensionTemplates || [];
+  if (elements.length === 0) return [];
+
+  const knownNamesSet = getKnownNamesSet(knownNames);
+
+  const generator = extensionProcessorGenerator(elements, knownNamesSet);
+
+  return runTaskInIdle(generator, signal);
 }

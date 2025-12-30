@@ -148,10 +148,23 @@ export const useExtensionState = () => {
 
 
   useEffect(() => {
+    const controller = new AbortController();
+
     const fetchSettingsRecords = async (override = false) => {
       if (settingsRecord && settingsRecord.length > 0 && !override) return;
-      const associations = await processExtensionHTMLs();
-      setSettingsRecord(associations);
+      try {
+        const associations = await processExtensionHTMLs(
+          undefined, controller.signal
+        );
+        setSettingsRecord(associations);
+
+      } catch (error) {
+        if ((error as DOMException).name === 'AbortError') {
+          console.log('Fetch extension settings aborted');
+        } else {
+          console.error('Failed to fetch extension settings:', error);
+        }
+      }
     };
 
     const handlePopulated = () => fetchSettingsRecords(true);
@@ -161,6 +174,7 @@ export const useExtensionState = () => {
     eventSource.on(DISCORDIA_EVENTS.EXTENSION_HTML_POPULATED, handlePopulated);
 
     return () => {
+      controller.abort();
       eventSource.removeListener(
         DISCORDIA_EVENTS.EXTENSION_HTML_POPULATED,
         handlePopulated,
