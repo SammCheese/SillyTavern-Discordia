@@ -1,47 +1,33 @@
 import { memo, useLayoutEffect, useRef } from 'react';
 
-const SettingsHost = ({
-  settings,
-  disabled,
-}: {
+interface SettingsHostProps {
   settings?: JQuery<HTMLElement> | null | undefined;
   disabled?: boolean;
-}) => {
+}
+
+const SettingsHost = ({ settings, disabled }: SettingsHostProps) => {
   const hostRef = useRef<HTMLDivElement>(null);
-  const attachedNodeRef = useRef<HTMLElement | null>(null);
 
   useLayoutEffect(() => {
     const host = hostRef.current;
     if (!host) return;
-
-    if (
-      attachedNodeRef.current &&
-      attachedNodeRef.current.parentElement === host
-    ) {
-      host.removeChild(attachedNodeRef.current);
-      attachedNodeRef.current = null;
-    }
 
     if (!settings || settings.length === 0 || disabled) {
       host.innerHTML = '';
       return;
     }
 
-    const $clone = settings.clone(true);
-    const node = $clone.get(0);
+    const node = settings[0];
     if (!node) return;
 
-    host.innerHTML = '';
-    host.appendChild(node);
-    attachedNodeRef.current = node;
+    if (node.parentElement !== host) {
+      host.innerHTML = '';
+      host.appendChild(node);
+    }
 
     return () => {
-      if (
-        attachedNodeRef.current &&
-        attachedNodeRef.current.parentElement === host
-      ) {
-        host.removeChild(attachedNodeRef.current);
-        attachedNodeRef.current = null;
+      if (host.contains(node)) {
+        host.removeChild(node);
       }
     };
   }, [settings, disabled]);

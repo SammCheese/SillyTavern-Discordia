@@ -119,7 +119,7 @@ const applyStyles = (content: JQuery) => {
 };
 
 function* extensionProcessorGenerator(
-  elements: JQuery<Element>[],
+  elements: JQuery<Element | Node>[],
   knownNamesSet: Set<string> | null,
 ): Generator<null | ExtensionRecord, void, unknown> {
   const batchSize = 5;
@@ -154,7 +154,7 @@ function* extensionProcessorGenerator(
     processedCount++;
 
     if (processedCount % batchSize === 0) {
-        yield null;
+      yield null;
     }
   }
 }

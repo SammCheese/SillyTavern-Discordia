@@ -1,4 +1,5 @@
 import { DISCORDIA_EVENTS } from '../events/eventTypes';
+import { runTaskInIdle } from '../utils/utils';
 
 const { eventSource, event_types } = await imports('@script');
 
@@ -130,21 +131,35 @@ export const hijackJqueryError = () => {
   }
 };
 
+function* extensionCloningGenerator(containers: HTMLElement[]): Generator<JQuery<Element|Node>, void, unknown> {
+  const allChildren = containers.flatMap((container) => Array.from(container.children));
+  for (const elem of allChildren) {
+    try {
+      yield $(elem).clone(true, true);
+    } catch (e) {
+      console.warn('Failed to clone extension element:', e);
+      yield $(elem.cloneNode(true));
+    }
+  }
+}
+
 export const poolDOMExtensions = async () => {
   let observer: MutationObserver | null = null;
   let debounceTimer: number | null = null;
   window.discordia.extensionTemplates = [];
 
-  const captureExtensions = () => {
+  const captureExtensions = async () => {
     try {
       flushTagsNow();
 
       const containers = getContainers();
       if (containers.length === 0) return;
 
-      window.discordia.extensionTemplates = containers.flatMap((container) =>
-        Array.from(container.children).map((elem) => $(elem).clone(true))
-      );
+      const generator = extensionCloningGenerator(containers);
+
+      const cloned = await runTaskInIdle(generator);
+
+      window.discordia.extensionTemplates = cloned;
 
       eventSource.emit(DISCORDIA_EVENTS.EXTENSION_HTML_POPULATED);
     } catch (error) {

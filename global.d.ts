@@ -16,7 +16,7 @@ declare global {
 
   interface Window {
     discordia: {
-      extensionTemplates?: JQuery<Element>[];
+      extensionTemplates?: JQuery<Element | Node>[];
     };
   }
 }

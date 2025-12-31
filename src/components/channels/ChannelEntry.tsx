@@ -22,7 +22,7 @@ const ChannelEntry = ({
 
   return (
     <li
-      className={`border-none relative ms-1 select-none cursor-pointer rounded-lg hover:bg-lighter ${isSelected ? 'bg-lighter' : ''}`}
+      className={`border-none list-none relative ms-1 select-none cursor-pointer rounded-lg hover:bg-lighter ${isSelected ? 'bg-lighter' : ''}`}
       id={`recent-chat-${chat.file_id}`}
       title={chat.file_id}
       onClick={handleClick}

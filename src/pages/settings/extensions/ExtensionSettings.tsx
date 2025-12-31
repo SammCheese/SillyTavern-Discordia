@@ -1,9 +1,9 @@
 import { useCallback, lazy, useMemo, useContext } from 'react';
 
-import { useExtensionState } from './hooks/useExtensionState';
 import ExtensionAccordion from './components/ExtensionAccordion';
 import type { Manifest } from '../../../services/extensionService';
 import { PopupContext } from '../../../providers/popupProvider';
+import { useExtensionState } from '../../../providers/extensionProvider';
 
 const SettingsFrame = lazy(() => import('../base/Base'));
 
