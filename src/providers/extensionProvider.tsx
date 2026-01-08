@@ -23,7 +23,7 @@ const { saveSettingsDebounced, eventSource } = await imports('@script');
 
 export interface ExtensionRecord {
   name: string;
-  elem: JQuery<HTMLElement> | null;
+  elem: JQuery<HTMLElement | Element> | HTMLElement | null;
 }
 export interface ExtensionInfo {
   name: string;
@@ -149,40 +149,44 @@ export const ExtensionProvider = ({
   }, [extensions]);
 
   useEffect(() => {
-    const fetchSettings = async (override = false) => {
-      if (settingsRecord && settingsRecord.length > 0 && !override) return;
+    const fetchSettings = async () => {
       try {
         const associations = await processExtensionHTMLs();
+        console.log('[Discordia] Fetched extension settings:', associations);
         setSettingsRecord((prev) => {
           if (!prev) return associations;
-          const newOnes = associations.filter(
-            (a) => !prev.some((p) => p.name === a.name),
-          );
-          return newOnes.length > 0 ? [...prev, ...newOnes] : prev;
+          const newMap = new Map(associations.map((a) => [a.name, a]));
+
+          const merged = prev.map((p) => {
+            if (newMap.has(p.name)) {
+              const updated = newMap.get(p.name)!;
+              newMap.delete(p.name);
+              return updated;
+            }
+            return p;
+          });
+          return [...merged, ...newMap.values()];
         });
       } catch (e) {
         console.error(e);
       }
     };
 
-    fetchSettings();
-
-    const fetchTrue = async () => {
-      await fetchSettings(true);
-    };
-
-    eventSource.on(DISCORDIA_EVENTS.EXTENSION_HTML_POPULATED, fetchTrue);
+    eventSource.on(DISCORDIA_EVENTS.EXTENSION_HTML_POPULATED, fetchSettings);
     return () => {
       eventSource.removeListener(
         DISCORDIA_EVENTS.EXTENSION_HTML_POPULATED,
-        fetchTrue,
+        fetchSettings,
       );
     };
   }, []);
 
   const settingsMap = useMemo(() => {
     if (!settingsRecord) return null;
-    const map = new Map<string, JQuery<HTMLElement> | null>();
+    const map = new Map<
+      string,
+      JQuery<HTMLElement | Element> | HTMLElement | null
+    >();
     for (const record of settingsRecord) {
       map.set(record.name, record.elem);
     }
@@ -208,7 +212,7 @@ export const ExtensionProvider = ({
       list[type].push({
         ...ext,
         disabled: disabledExtensions.includes(ext.name),
-      });
+      } as ExtensionInfo);
     }
 
     list.local = sortExtensions(list.local);

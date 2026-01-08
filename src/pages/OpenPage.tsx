@@ -1,4 +1,4 @@
-import { type ReactNode } from 'react';
+import { memo, useCallback, type ReactNode } from 'react';
 
 interface OpenPageProps {
   children: ReactNode;
@@ -7,11 +7,14 @@ interface OpenPageProps {
 }
 
 const OpenPage = ({ children, isVisible, onClose }: OpenPageProps) => {
-  const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (e.target === e.currentTarget) {
-      onClose();
-    }
-  };
+  const handleClick = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      if (e.target === e.currentTarget) {
+        onClose();
+      }
+    },
+    [onClose],
+  );
 
   return (
     <div
@@ -40,4 +43,4 @@ const OpenPage = ({ children, isVisible, onClose }: OpenPageProps) => {
   );
 };
 
-export default OpenPage;
+export default memo(OpenPage);

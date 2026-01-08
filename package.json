@@ -8,7 +8,8 @@
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "react-loading-skeleton": "^3.5.0",
-    "react-window": "^2.2.3"
+    "react-window": "^2.2.3",
+    "tracekit": "^0.4.7"
   },
   "browser": {
     "fs": false,

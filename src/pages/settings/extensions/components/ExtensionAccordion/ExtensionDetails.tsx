@@ -33,7 +33,7 @@ const ExtensionDetails = ({ manifest, version }: ExtensionDetailsProps) => {
             <b>Commit:</b>{' '}
             <a
               className=""
-              href={`${version.remoteUrl}/commit/${version.currentCommitHash}`}
+              href={`${version.remoteUrl.replace('.git', '')}/commit/${version.currentCommitHash}`}
               target="_blank"
               rel="noopener noreferrer"
             >

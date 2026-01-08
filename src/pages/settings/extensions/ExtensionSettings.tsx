@@ -1,9 +1,9 @@
-import { useCallback, lazy, useMemo, useContext } from 'react';
+import { useCallback, lazy, useMemo } from 'react';
 
-import ExtensionAccordion from './components/ExtensionAccordion';
 import type { Manifest } from '../../../services/extensionService';
-import { PopupContext } from '../../../providers/popupProvider';
 import { useExtensionState } from '../../../providers/extensionProvider';
+import { usePopup } from '../../../providers/popupProvider';
+import ExtensionSection from './components/ExtensionSection';
 
 const SettingsFrame = lazy(() => import('../base/Base'));
 
@@ -32,20 +32,20 @@ export interface ExtensionList {
   system: ExtensionInfo[];
 }
 
-interface ExtensionSectionProps {
-  title: string;
-  extensions: ExtensionInfo[];
-  onToggle: (ext: ExtensionInfo) => void;
-}
+const ExtensionSettings = () => {
+  const { toggleExtension, categorizedExtensions } = useExtensionState();
+  const { openPopup } = usePopup();
 
-const ExtensionSection = ({
-  title,
-  extensions,
-  onToggle,
-}: ExtensionSectionProps) => {
-  if (extensions.length === 0) return null;
+  const onToggle = useCallback(
+    (extension: ExtensionInfo) => {
+      toggleExtension(extension);
+    },
+    [toggleExtension],
+  );
 
-  const { openPopup } = useContext(PopupContext);
+  const handleClose = useCallback(() => {
+    saveSettingsDebounced();
+  }, []);
 
   const handleDelete = useCallback(
     (extension: ExtensionInfo) => {
@@ -67,38 +67,6 @@ const ExtensionSection = ({
     [openPopup],
   );
 
-  return (
-    <div>
-      <h3 className="text-2xl font-semibold mb-4">{title}</h3>
-      <div className="space-y-2">
-        {extensions.map((ext) => (
-          <ExtensionAccordion
-            key={ext.name}
-            extension={ext}
-            onToggle={onToggle}
-            onDelete={handleDelete}
-            {...ext}
-          />
-        ))}
-      </div>
-    </div>
-  );
-};
-
-const ExtensionSettings = () => {
-  const { toggleExtension, categorizedExtensions } = useExtensionState();
-
-  const onToggle = useCallback(
-    async (extension: ExtensionInfo) => {
-      await toggleExtension(extension);
-    },
-    [toggleExtension],
-  );
-
-  const handleClose = useCallback(() => {
-    saveSettingsDebounced();
-  }, []);
-
   const sections = useMemo(
     () => [
       { title: 'System Extensions', extensions: categorizedExtensions.system },
@@ -111,17 +79,19 @@ const ExtensionSettings = () => {
   return (
     <SettingsFrame title="Extension Settings" onClose={handleClose}>
       <div className="settings-section space-y-6">
-        {sections.map(
-          ({ title, extensions }) =>
-            extensions.length > 0 && (
-              <ExtensionSection
-                key={title}
-                title={title}
-                extensions={extensions}
-                onToggle={onToggle}
-              />
-            ),
-        )}
+        {sections &&
+          sections.map(
+            ({ title, extensions }) =>
+              extensions.length > 0 && (
+                <ExtensionSection
+                  key={title}
+                  title={title}
+                  extensions={extensions}
+                  onToggle={onToggle}
+                  onDelete={handleDelete}
+                />
+              ),
+          )}
       </div>
     </SettingsFrame>
   );

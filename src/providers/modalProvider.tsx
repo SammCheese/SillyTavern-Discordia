@@ -6,6 +6,7 @@ import {
   Suspense,
   useEffect,
   type ReactNode,
+  useContext,
 } from 'react';
 import { createPortal } from 'react-dom';
 import ErrorBoundary from '../components/common/ErrorBoundary/ErrorBoundary';
@@ -184,3 +185,11 @@ export function ModalProvider({ children }: { children: ReactNode }) {
 }
 
 export default ModalProvider;
+
+export const useModal = () => {
+  const context = useContext(ModalContext);
+  if (!context) {
+    throw new Error('useModal must be used within a ModalProvider');
+  }
+  return context;
+};

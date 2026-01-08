@@ -1,12 +1,12 @@
 
-import { hijackJqueryError, poolDOMExtensions } from './patches/settingsHijack';
+import { hijackJquery, poolDOMExtensions } from './patches/settingsHijack';
 import { overrideSpinner, angleSendButton, combineChatMenu } from './patches/overrides';
 
 
 
 export const performPatches = async () => {
   try {
-    hijackJqueryError();
+    hijackJquery();
     overrideSpinner();
     angleSendButton();
     combineChatMenu();

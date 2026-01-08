@@ -1,4 +1,5 @@
 import { runTaskInIdle } from '../../../../utils/utils';
+import {  getOwner } from '../../../../patches/settingsHijack';
 import type { ExtensionInfo } from '../ExtensionSettings';
 
 const { getRequestHeaders } = await imports('@script');
@@ -94,7 +95,7 @@ export async function updateExtension(extensionName) {
 
 export type ExtensionRecord = {
   name: string;
-  elem: JQuery<HTMLElement> | null;
+  elem: JQuery<Element> | null;
 };
 
 export type Extension = {
@@ -112,14 +113,12 @@ function getKnownNamesSet(knownNames?: string[]): Set<string> | null {
   return knownNamesCache.get(knownNames) || null;
 }
 
-const INTERACTIVE_SELECTOR = 'input, select, textarea, button' as const;
+const INTERACTIVE_SELECTOR = 'input, select, textarea, button, a, label' as const;
 
-const applyStyles = (content: JQuery) => {
-  content.css({ width: '100%', boxSizing: 'border-box', display: 'block' });
-};
+
 
 function* extensionProcessorGenerator(
-  elements: JQuery<Element | Node>[],
+  elements: JQuery<Element>[],
   knownNamesSet: Set<string> | null,
 ): Generator<null | ExtensionRecord, void, unknown> {
   const batchSize = 5;
@@ -127,32 +126,46 @@ function* extensionProcessorGenerator(
 
   for (const element of elements) {
     const content = element.find('.inline-drawer-content');
+
     if (content.length === 0) continue;
 
-    const interactives = content.find(INTERACTIVE_SELECTOR);
-    if (interactives.length === 0) continue;
+    const { elem, owner } = (() => {
+      const directOwner = getOwner(element as JQuery<HTMLElement>);
+      if (directOwner) return { elem: content, owner: directOwner };
 
-    const heuristics = new Map<string, number>();
-    interactives.each((_: number, interactive: HTMLElement) => {
-      const owner = interactive.getAttribute('discordia-settings-owner') || 'unknown';
-      heuristics.set(owner, (heuristics.get(owner) ?? 0) + 1);
-    });
+      const contentOwner = getOwner(content);
+      if (contentOwner) return { elem: content, owner: contentOwner };
 
-    const probableOwner = Array.from(heuristics.entries()).reduce(
-      (max, [owner, count]) => (count > max.count ? { owner, count } : max),
-      { owner: 'unknown', count: 0 },
-    ).owner;
+      const interactives = content.find(INTERACTIVE_SELECTOR);
+      if (interactives.length === 0) return { elem: content, owner: 'unknown' };
 
-    if (knownNamesSet && !knownNamesSet.has(probableOwner)) {
-      continue;
+      const heuristics = new Map<string, number>();
+      interactives.each((_: number, interactive: HTMLElement) => {
+        const owner = getOwner($(interactive));
+        if (!owner) return;
+        heuristics.set(owner, (heuristics.get(owner) ?? 0) + 1);
+      });
+
+      const probableOwner = Array.from(heuristics.entries()).reduce(
+        (max, [owner, count]) => (count > max.count ? { owner, count } : max),
+        { owner: 'unknown', count: 0 },
+      ).owner;
+
+      if (knownNamesSet && !knownNamesSet.has(probableOwner)) {
+        console.debug(`Skipping unknown extension: ${probableOwner}`);
+        return { elem: null, owner: probableOwner };
+      }
+
+      return { elem: content, owner: probableOwner };
+    })();
+
+    if (elem) {
+        elem.removeClass('inline-drawer-content');
     }
 
-    applyStyles(content);
-
-    yield { name: probableOwner, elem: content };
+    yield { name: owner, elem };
 
     processedCount++;
-
     if (processedCount % batchSize === 0) {
       yield null;
     }
@@ -163,7 +176,8 @@ export async function processExtensionHTMLs(
   knownNames?: string[],
   signal?: AbortSignal,
 ): Promise<ExtensionRecord[]> {
-  const elements = window.discordia.extensionTemplates || [];
+  const elements = window.discordia?.extensionTemplates || [];
+
   if (elements.length === 0) return [];
 
   const knownNamesSet = getKnownNamesSet(knownNames);

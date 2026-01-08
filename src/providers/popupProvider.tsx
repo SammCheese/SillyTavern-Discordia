@@ -1,4 +1,10 @@
-import { createContext, useCallback, useState, type ReactNode } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useState,
+  type ReactNode,
+} from 'react';
 import { createPortal } from 'react-dom';
 import { useBackHandler } from '../hooks/useBackHandler';
 import ErrorBoundary from '../components/common/ErrorBoundary/ErrorBoundary';
@@ -54,4 +60,12 @@ export const PopupProvider = ({ children }: { children: ReactNode }) => {
       </PopupContext.Provider>
     </ErrorBoundary>
   );
+};
+
+export const usePopup = () => {
+  const context = useContext(PopupContext);
+  if (!context) {
+    throw new Error('usePopup must be used within a PopupProvider');
+  }
+  return context;
 };
