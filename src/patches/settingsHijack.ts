@@ -2,7 +2,10 @@ import { DISCORDIA_EVENTS } from '../events/eventTypes';
 import { runTaskInIdle } from '../utils/utils';
 import Tracekit from 'tracekit';
 
-const { eventSource, event_types } = await imports('@script');
+const importPromise = imports('@script');
+
+Tracekit.remoteFetching = false;
+Tracekit.collectWindowErrors = false;
 
 const TARGET_CONTAINER_IDS = ['extensions_settings', 'extensions_settings2'];
 const EXTENSION_NAME_REGEX =
@@ -16,15 +19,15 @@ const IGNORED_TAGS_SET = new Set([
   'HTMLDOCUMENT',
   'DOCUMENT',
 ]);
-const LATELOADER_LEEWAY_MS = 20000;
+const LATELOADER_LEEWAY_MS = 30000;
+
+// Caches
+const stackCache = new Map<string, string | null>();
+const pendingStackMap = new WeakMap<Element, Error>();
+const elementOwnerMap = new WeakMap<Element, string>();
+const OWNER_SYMBOL = Symbol('discordia-owner');
 
 let cachedContainers: HTMLElement[] = [];
-
-const OWNER_SYMBOL = Symbol('discordia-owner');
-const elementOwnerMap = new WeakMap<Element, string>();
-
-Tracekit.remoteFetching = false;
-Tracekit.collectWindowErrors = false;
 
 const getContainers = (): HTMLElement[] => {
   if (cachedContainers.length < TARGET_CONTAINER_IDS.length) {
@@ -35,8 +38,51 @@ const getContainers = (): HTMLElement[] => {
   return cachedContainers;
 };
 
-export const getElementOwner = (element: Element): string | null => {
-  return elementOwnerMap.get(element) ?? null;
+const resolveStackToOwner = (error: Error): string | null => {
+  const stackString = error.stack || '';
+  if (!stackString) return null;
+
+  if (stackCache.has(stackString)) {
+    return stackCache.get(stackString)!;
+  }
+
+  const stackFrames = Tracekit.computeStackTrace(error).stack || [];
+  let foundOwner: string | null = null;
+
+  for (const frame of stackFrames) {
+    if (frame.url) {
+      const match = EXTENSION_NAME_REGEX.exec(frame.url);
+      if (match?.[1] && !EXTENSION_NAME_NEGLECT_SET.has(match[1])) {
+        foundOwner = match[1];
+        break;
+      }
+    }
+  }
+
+  stackCache.set(stackString, foundOwner);
+  return foundOwner;
+};
+
+const OWNER_ATTR = 'data-discordia-settings-owner';
+
+const setOwnerOnDescendants = (root: Element, owner: string) => {
+  const walker = document.createTreeWalker(
+    root,
+    NodeFilter.SHOW_ELEMENT,
+    {
+      acceptNode: (node) => {
+        const el = node as Element;
+        return !el.getAttribute(OWNER_ATTR)
+          ? NodeFilter.FILTER_ACCEPT
+          : NodeFilter.FILTER_SKIP;
+      }
+    }
+  );
+
+  let node: Node | null;
+  while ((node = walker.nextNode())) {
+    (node as Element).setAttribute(OWNER_ATTR, owner);
+  }
 };
 
 const applyOwnership = (
@@ -46,62 +92,43 @@ const applyOwnership = (
   try {
     if (element instanceof jQuery) {
       (element as JQuery<Element>).each((_, el) => {
+        if (elementOwnerMap.get(el) === owner) return;
+
         elementOwnerMap.set(el, owner);
-        el.setAttribute?.('data-discordia-settings-owner', owner);
+        el.setAttribute?.(OWNER_ATTR, owner);
+        setOwnerOnDescendants(el, owner);
+        pendingStackMap.delete(el);
       });
       element[OWNER_SYMBOL] = owner;
     } else if (element instanceof Element) {
+      if (elementOwnerMap.get(element) === owner) return;
+
       elementOwnerMap.set(element, owner);
-      element.setAttribute?.('data-discordia-settings-owner', owner);
+      element.setAttribute?.(OWNER_ATTR, owner);
+      setOwnerOnDescendants(element, owner);
+      pendingStackMap.delete(element);
     }
   } catch {
     // ignore
   }
 };
 
-export const getOwnerFromJQuery = ($el: JQuery): string | null => {
-  if ($el[OWNER_SYMBOL]) {
-    return $el[OWNER_SYMBOL];
-  }
+const resolvePendingOwner = (element: Element): string | null => {
+  if (pendingStackMap.has(element)) {
+    const error = pendingStackMap.get(element)!;
+    const owner = resolveStackToOwner(error);
 
-  for (let i = 0; i < $el.length; i++) {
-    const owner = elementOwnerMap.get($el[i] as Element);
-    if (owner) return owner;
+    if (owner) {
+      applyOwnership(element, owner);
+      return owner;
+    } else {
+      pendingStackMap.delete(element);
+    }
   }
-
-  for (let i = 0; i < $el.length; i++) {
-    const attr = $el[i]?.getAttribute?.('data-discordia-settings-owner');
-    if (attr) return attr;
-  }
-
   return null;
 };
 
-export const getOwner = (target: JQuery | Element | string): string | null => {
-  try {
-    if (typeof target === 'string') {
-      target = $(target);
-    }
-
-    if (target instanceof jQuery) {
-      return getOwnerFromJQuery(target as JQuery<HTMLElement>);
-    }
-
-    if (target instanceof Element) {
-      return (
-        elementOwnerMap.get(target) ??
-        target.getAttribute('data-discordia-settings-owner') ??
-        null
-      );
-    }
-  } catch (e) {
-    console.error('[Discordia] getOwner error:', e);
-  }
-
-  return null;
-};
-
-const findOwnerAtCreationTime = (): string | null => {
+const captureCreationContext = (): string | Error | null => {
   if (
     document.currentScript &&
     (document.currentScript as HTMLScriptElement).src
@@ -113,29 +140,81 @@ const findOwnerAtCreationTime = (): string | null => {
     }
   }
 
-  try {
-    const e = new Error('Finding owner extension');
-    const err = Tracekit.computeStackTrace(e, 10);
+  return new Error();
+};
 
-    const file = err.stack.find((frame) => {
-      if (!frame.url) return false;
-      const match = EXTENSION_NAME_REGEX.exec(frame.url);
-      return match?.[1] && !EXTENSION_NAME_NEGLECT_SET.has(match[1]);
-    })?.url;
+export const getElementOwner = (element: Element): string | null => {
+  if (elementOwnerMap.has(element)) return elementOwnerMap.get(element)!;
 
-    if (file) {
-      const match = EXTENSION_NAME_REGEX.exec(file);
-      if (match?.[1]) {
-        return match[1];
-      }
+  const resolved = resolvePendingOwner(element);
+  if (resolved) return resolved;
+
+  const attr = element.getAttribute?.(OWNER_ATTR);
+  if (attr) {
+    elementOwnerMap.set(element, attr);
+    return attr;
+  }
+
+  let parent = element.parentElement;
+  while (parent) {
+    if (elementOwnerMap.has(parent)) {
+      const owner = elementOwnerMap.get(parent)!;
+      element.setAttribute?.(OWNER_ATTR, owner);
+      elementOwnerMap.set(element, owner);
+      return owner;
     }
-
-    return null;
-  } catch (e) {
-    console.error('[Discordia] findOwnerAtCreationTime error:', e);
+    const parentAttr = parent.getAttribute?.(OWNER_ATTR);
+    if (parentAttr) {
+      element.setAttribute?.(OWNER_ATTR, parentAttr);
+      elementOwnerMap.set(element, parentAttr);
+      return parentAttr;
+    }
+    parent = parent.parentElement;
   }
 
   return null;
+};
+
+export const getOwnerFromJQuery = ($el: JQuery): string | null => {
+  if ($el[OWNER_SYMBOL]) return $el[OWNER_SYMBOL];
+
+  for (let i = 0; i < $el.length; i++) {
+    const el = $el[i] as Element;
+    const owner = getElementOwner(el);
+    if (owner) {
+      $el[OWNER_SYMBOL] = owner;
+      return owner;
+    }
+  }
+
+  return null;
+};
+
+export const getOwner = (target: JQuery | Element | string): string | null => {
+  try {
+    if (typeof target === 'string') target = $(target);
+    if (target instanceof jQuery)
+      return getOwnerFromJQuery(target as JQuery<HTMLElement>);
+    if (target instanceof Element) return getElementOwner(target);
+  } catch (e) {
+    console.error('[Discordia] getOwner error:', e);
+  }
+  return null;
+};
+
+const isTargetContainer = (target: JQuery<HTMLElement>): boolean => {
+  try {
+    if (!target.length) return false;
+    const id = target[0]?.id;
+    if (id && TARGET_CONTAINER_IDS.includes(id)) return true;
+
+    for (const tid of TARGET_CONTAINER_IDS) {
+      if (target.closest(`#${tid}`).length > 0) return true;
+    }
+    return false;
+  } catch {
+    return false;
+  }
 };
 
 export const hijackJquery = () => {
@@ -147,35 +226,27 @@ export const hijackJquery = () => {
     const originalInit = $.fn.init;
     let cleanupTimer: number | null = null;
 
-    const isTargetContainer = (target: JQuery<HTMLElement>): boolean => {
-      try {
-        const $target = $(target);
-        if (!$target.length) return false;
-        const id = $target.attr('id');
-        if (id && TARGET_CONTAINER_IDS.includes(id)) return true;
-        if (TARGET_CONTAINER_IDS.some(tid => $target.closest(`#${tid}`).length > 0)) {
-            return true;
-        }
-
-        return false;
-      } catch {
-        return false;
-      }
-    };
-
     // @ts-expect-error exists
     $.fn.init = function (selector, context) {
       const result = originalInit.call(this, selector, context);
+
       const isHTMLCreation =
         typeof selector === 'string' && selector.trim().startsWith('<');
 
-      if (isHTMLCreation || !selector) {
-        const owner = findOwnerAtCreationTime();
-        if (owner) {
-          result[OWNER_SYMBOL] = owner;
+      if ((isHTMLCreation || !selector) && result.length > 0) {
+        const ctx = captureCreationContext();
+
+        if (typeof ctx === 'string') {
+          result[OWNER_SYMBOL] = ctx;
+          for (let i = 0; i < result.length; i++) {
+            elementOwnerMap.set(result[i], ctx);
+          }
+        } else if (ctx instanceof Error) {
+          for (let i = 0; i < result.length; i++) {
+            pendingStackMap.set(result[i], ctx);
+          }
         }
       }
-
       return result;
     };
 
@@ -195,7 +266,13 @@ export const hijackJquery = () => {
         }
 
         if (!owner) {
-          owner = getOwnerFromJQuery(this) || findOwnerAtCreationTime();
+          owner = getOwnerFromJQuery(this);
+        }
+
+        if (!owner) {
+          const ctx = captureCreationContext();
+          owner =
+            typeof ctx === 'string' ? ctx : resolveStackToOwner(ctx as Error);
         }
 
         if (owner) {
@@ -206,14 +283,23 @@ export const hijackJquery = () => {
           applyOwnership(content, owner);
         }
       }
+
       // @ts-expect-error apply
       return originalAppend.apply(this, args);
     };
 
     $.fn.appendTo = function (this, ...args) {
       if (isTargetContainer($(args[0] as JQuery<HTMLElement>))) {
-        const owner = getOwnerFromJQuery(this as JQuery<HTMLElement>) || findOwnerAtCreationTime();
-        if (owner) {
+        const owner = getOwnerFromJQuery(this);
+        if (!owner) {
+          const ctx = captureCreationContext();
+          const resolvedOwner =
+            typeof ctx === 'string' ? ctx : resolveStackToOwner(ctx as Error);
+          if (resolvedOwner) {
+            applyOwnership(this, resolvedOwner);
+          }
+        } else {
+
           applyOwnership(this, owner);
         }
       }
@@ -223,19 +309,14 @@ export const hijackJquery = () => {
     $.fn.on = function (this, ...args) {
       // @ts-expect-error apply
       if (!this.length) return originalOn.apply(this, args);
-
       const first = this[0] as HTMLElement;
+
       if (first.tagName && IGNORED_TAGS_SET.has(first.tagName.toUpperCase())) {
         // @ts-expect-error apply
         return originalOn.apply(this, args);
       }
 
-      if (elementOwnerMap.has(first)) {
-        // @ts-expect-error apply
-        return originalOn.apply(this, args);
-      }
-
-      const owner = getOwnerFromJQuery(this) || findOwnerAtCreationTime();
+      const owner = getOwnerFromJQuery(this);
       if (owner) {
         for (let i = 0; i < this.length; i++) {
           // @ts-expect-error apply
@@ -253,19 +334,31 @@ export const hijackJquery = () => {
       cleanupTimer = window.setTimeout(restoreOriginals, LATELOADER_LEEWAY_MS);
     };
 
-    const restoreOriginals = () => {
+    const restoreOriginals = async () => {
       $.fn.on = originalOn;
       // @ts-expect-error exists
       $.fn.init = originalInit;
+      $.fn.append = originalAppend;
+      $.fn.appendTo = originalAppendTo;
+
+      const { eventSource } = await importPromise;
+
       eventSource.removeListener(
         DISCORDIA_EVENTS.EXTENSION_HTML_POPULATED,
         scheduleCleanup,
       );
+
+      stackCache.clear();
     };
 
     scheduleCleanup();
 
-    eventSource.on(DISCORDIA_EVENTS.EXTENSION_HTML_POPULATED, scheduleCleanup);
+    importPromise.then(({ eventSource }) => {
+      eventSource.on(
+        DISCORDIA_EVENTS.EXTENSION_HTML_POPULATED,
+        scheduleCleanup,
+      );
+    });
   } catch (error) {
     console.error('Failed to Hijack jQuery HTML Method:', error);
   }
@@ -280,9 +373,16 @@ function* extensionCloningGenerator(
 
   for (const elem of allChildren) {
     try {
-      const original = $(elem);
+      const original = $(elem) as JQuery<HTMLElement>;
+      getOwner(original);
+
+      const drawerContent = original.find('.inline-drawer-content');
+      if (drawerContent.length) {
+        getOwner(drawerContent);
+      }
 
       const clone = original.clone(true, true);
+
       clone.find('.inline-drawer-content').css('display', 'block');
 
       yield clone;
@@ -294,6 +394,7 @@ function* extensionCloningGenerator(
 }
 
 export const poolDOMExtensions = async () => {
+  const { eventSource, event_types } = await importPromise;
   let observer: MutationObserver | null = null;
   let debounceTimer: number | null = null;
   window.discordia.extensionTemplates = [];
