@@ -152,7 +152,6 @@ export const ExtensionProvider = ({
     const fetchSettings = async () => {
       try {
         const associations = await processExtensionHTMLs();
-        console.log('[Discordia] Fetched extension settings:', associations);
         setSettingsRecord((prev) => {
           if (!prev) return associations;
           const newMap = new Map(associations.map((a) => [a.name, a]));

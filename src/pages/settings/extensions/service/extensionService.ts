@@ -140,19 +140,24 @@ function* extensionProcessorGenerator(
       if (interactives.length === 0) return { elem: content, owner: 'unknown' };
 
       const heuristics = new Map<string, number>();
+      let maxCount = 0;
+      let probableOwner = 'unknown';
+
       interactives.each((_: number, interactive: HTMLElement) => {
         const owner = getOwner($(interactive));
         if (!owner) return;
-        heuristics.set(owner, (heuristics.get(owner) ?? 0) + 1);
+
+        const count = (heuristics.get(owner) ?? 0) + 1;
+        heuristics.set(owner, count);
+
+        if (count > maxCount) {
+          maxCount = count;
+          probableOwner = owner;
+        }
       });
 
-      const probableOwner = Array.from(heuristics.entries()).reduce(
-        (max, [owner, count]) => (count > max.count ? { owner, count } : max),
-        { owner: 'unknown', count: 0 },
-      ).owner;
-
-      if (knownNamesSet && !knownNamesSet.has(probableOwner)) {
-        console.debug(`Skipping unknown extension: ${probableOwner}`);
+      if (knownNamesSet && probableOwner !== 'unknown' && !knownNamesSet.has(probableOwner)) {
+        console.debug(`[Discordia] Skipping unknown extension: ${probableOwner}`);
         return { elem: null, owner: probableOwner };
       }
 
