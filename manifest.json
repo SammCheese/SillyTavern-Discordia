@@ -1,12 +1,12 @@
 {
   "display_name": "Discordia",
-  "loading_order": -999,
+  "loading_order": -9999,
   "requires": [],
   "optional": [],
   "js": "dist/bundle.js",
   "css": "dist/main.css",
   "author": "SammCheese",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "homePage": "https://github.com/SammCheese/SillyTavern-Discordia",
   "auto_update": true
 }

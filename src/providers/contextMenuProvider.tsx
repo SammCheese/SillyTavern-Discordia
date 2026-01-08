@@ -1,6 +1,7 @@
 import {
   createContext,
   useCallback,
+  useContext,
   useEffect,
   useLayoutEffect,
   useMemo,
@@ -182,3 +183,11 @@ export function ContextMenuProvider({ children }: { children: ReactNode }) {
 }
 
 export default ContextMenuProvider;
+
+export const useContextMenu = () => {
+  const context = useContext(ContextMenuContext);
+  if (!context) {
+    throw new Error('useContextMenu must be used within a ContextMenuProvider');
+  }
+  return context;
+};

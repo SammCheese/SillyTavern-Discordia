@@ -5,6 +5,7 @@ export enum ButtonLook {
   PRIMARY = 'primary',
   SECONDARY = 'secondary',
   TRANSPARENT = 'transparent',
+  SUCCESS = 'success',
 }
 interface ButtonProps {
   label?: string;
@@ -37,6 +38,8 @@ const Button = ({
         return 'hover:bg-blurple-lighter bg-blurple border-blurple';
       case ButtonLook.TRANSPARENT:
         return 'bg-transparent hover:border-blurple border-white';
+      case ButtonLook.SUCCESS:
+        return 'bg-green-600 hover:bg-green-700 border-green-700';
       default:
         return 'hover:bg-blurple-lighter bg-blurple border-blurple';
     }

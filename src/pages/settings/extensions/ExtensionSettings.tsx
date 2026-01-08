@@ -1,12 +1,14 @@
 import { useCallback, lazy, useMemo } from 'react';
 
-import { useExtensionState } from './hooks/useExtensionState';
-import ExtensionAccordion from './components/ExtensionAccordion';
 import type { Manifest } from '../../../services/extensionService';
+import { useExtensionState } from '../../../providers/extensionProvider';
+import { usePopup } from '../../../providers/popupProvider';
+import ExtensionSection from './components/ExtensionSection';
 
 const SettingsFrame = lazy(() => import('../base/Base'));
 
 const { saveSettingsDebounced } = await imports('@script');
+const { deleteExtension } = await imports('@scripts/extensions');
 
 export type Version = {
   isUpToDate: boolean;
@@ -30,42 +32,13 @@ export interface ExtensionList {
   system: ExtensionInfo[];
 }
 
-interface ExtensionSectionProps {
-  title: string;
-  extensions: ExtensionInfo[];
-  onToggle: (ext: ExtensionInfo) => void;
-}
-
-const ExtensionSection = ({
-  title,
-  extensions,
-  onToggle,
-}: ExtensionSectionProps) => {
-  if (extensions.length === 0) return null;
-
-  return (
-    <div>
-      <h3 className="text-2xl font-semibold mb-4">{title}</h3>
-      <div className="space-y-2">
-        {extensions.map((ext) => (
-          <ExtensionAccordion
-            key={ext.name}
-            extension={ext}
-            onToggle={onToggle}
-            {...ext}
-          />
-        ))}
-      </div>
-    </div>
-  );
-};
-
 const ExtensionSettings = () => {
   const { toggleExtension, categorizedExtensions } = useExtensionState();
+  const { openPopup } = usePopup();
 
   const onToggle = useCallback(
-    async (extension: ExtensionInfo) => {
-      await toggleExtension(extension);
+    (extension: ExtensionInfo) => {
+      toggleExtension(extension);
     },
     [toggleExtension],
   );
@@ -73,6 +46,26 @@ const ExtensionSettings = () => {
   const handleClose = useCallback(() => {
     saveSettingsDebounced();
   }, []);
+
+  const handleDelete = useCallback(
+    (extension: ExtensionInfo) => {
+      const extensionName = extension.name.replace('third-party/', '');
+      openPopup(null, {
+        title: 'Confirm Deletion',
+        confirmText: 'Delete',
+        confirmVariant: 'danger',
+        cancelText: 'Cancel',
+        description: `Are you sure you want to delete the extension "${extensionName}"? This action cannot be undone.`,
+        onCancel: () => {
+          void 0;
+        },
+        onConfirm: () => {
+          return deleteExtension(extensionName);
+        },
+      });
+    },
+    [openPopup],
+  );
 
   const sections = useMemo(
     () => [
@@ -86,17 +79,19 @@ const ExtensionSettings = () => {
   return (
     <SettingsFrame title="Extension Settings" onClose={handleClose}>
       <div className="settings-section space-y-6">
-        {sections.map(
-          ({ title, extensions }) =>
-            extensions.length > 0 && (
-              <ExtensionSection
-                key={title}
-                title={title}
-                extensions={extensions}
-                onToggle={onToggle}
-              />
-            ),
-        )}
+        {sections &&
+          sections.map(
+            ({ title, extensions }) =>
+              extensions.length > 0 && (
+                <ExtensionSection
+                  key={title}
+                  title={title}
+                  extensions={extensions}
+                  onToggle={onToggle}
+                  onDelete={handleDelete}
+                />
+              ),
+          )}
       </div>
     </SettingsFrame>
   );

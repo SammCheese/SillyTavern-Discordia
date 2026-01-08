@@ -5,6 +5,7 @@ import {
   useEffect,
   createContext,
   type ReactNode,
+  useContext,
 } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -77,3 +78,11 @@ export function PageProvider({ children }: { children: ReactNode }) {
     </ErrorBoundary>
   );
 }
+
+export const usePage = () => {
+  const context = useContext(PageContext);
+  if (!context) {
+    throw new Error('usePage must be used within a PageProvider');
+  }
+  return context;
+};

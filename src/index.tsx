@@ -16,6 +16,9 @@ import 'react-loading-skeleton/dist/skeleton.css';
 import ContextMenuProvider from './providers/contextMenuProvider';
 import { BackHandlerProvider } from './providers/backHandlerProvider';
 import { ChatContextMenu } from './bridges/MessageContextMenu';
+import { PopupProvider } from './providers/popupProvider';
+import Compose from './utils/Compose';
+import { ExtensionProvider } from './providers/extensionProvider';
 
 window.discordia = window.discordia || {};
 
@@ -32,21 +35,27 @@ topBar?.remove();
 
 performPatches();
 
+// Compose all providers
+const providers = [
+  // Necessary Evil
+  StrictMode,
+  ErrorBoundary,
+  // Functionality Provider
+  BackHandlerProvider,
+  // Data Providers
+  ExtensionProvider,
+  // UI Providers
+  PopupProvider,
+  PageProvider,
+  ModalProvider,
+  ContextMenuProvider,
+];
+
 // Create React root
 const root = createRoot(rootContainer);
 root.render(
-  <StrictMode>
-    <ErrorBoundary>
-      <BackHandlerProvider>
-        <PageProvider>
-          <ModalProvider>
-            <ContextMenuProvider>
-              <ChatContextMenu />
-              <App />
-            </ContextMenuProvider>
-          </ModalProvider>
-        </PageProvider>
-      </BackHandlerProvider>
-    </ErrorBoundary>
-  </StrictMode>,
+  <Compose components={providers}>
+    <ChatContextMenu />
+    <App />
+  </Compose>,
 );

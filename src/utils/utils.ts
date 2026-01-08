@@ -206,3 +206,42 @@ export const makeAvatar = ({
 
   return getThumbnailUrl('avatar', character.avatar || '');
 };
+
+export const runTaskInIdle = <T>(
+  taskGenerator: Generator<T | null, void, unknown>,
+  signal?: AbortSignal
+): Promise<T[]> => {
+  return new Promise((resolve, reject) => {
+    const results: T[] = [];
+
+    const processBatch = (deadline: IdleDeadline) => {
+      if (signal?.aborted) {
+        reject(new DOMException('Aborted', 'AbortError'));
+        return;
+      }
+
+      while (deadline.timeRemaining() > 1 || deadline.didTimeout) {
+        const next = taskGenerator.next();
+
+        if (next.done) {
+          resolve(results);
+          return;
+        }
+
+        if (next.value !== null) {
+          results.push(next.value);
+        }
+
+        if (next.value === null && deadline.timeRemaining() <= 1) {
+            break;
+        }
+      }
+
+      if (!signal?.aborted) {
+        requestIdleCallback(processBatch);
+      }
+    };
+
+    requestIdleCallback(processBatch);
+  });
+};

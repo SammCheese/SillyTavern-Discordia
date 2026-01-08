@@ -3,6 +3,7 @@ import { ContextMenuContext } from '../../../providers/contextMenuProvider';
 import { ModalContext } from '../../../providers/modalProvider';
 import type { ContextMenuItem } from '../../common/ContextMenuEntry/ContextMenuEntry';
 import { DISCORDIA_EVENTS } from '../../../events/eventTypes';
+import { PopupContext } from '../../../providers/popupProvider';
 
 const CharacterModal = lazy(
   () => import('../../../modals/Character/CharacterModal'),
@@ -18,8 +19,9 @@ const { deleteGroup } = await imports('@scripts/groupChats');
 export const useServerIconMenu = (entity: Entity) => {
   const { showContextMenu } = useContext(ContextMenuContext);
   const { openModal } = useContext(ModalContext);
+  const { openPopup } = useContext(PopupContext);
 
-  const handleDelete = useCallback(async () => {
+  const performDelete = useCallback(async () => {
     try {
       if (entity.type === 'character') {
         if (!entity.item?.avatar) return;
@@ -52,6 +54,24 @@ export const useServerIconMenu = (entity: Entity) => {
       console.error('Error deleting character:', error);
     }
   }, [entity]);
+
+  const handleDelete = useCallback(() => {
+    openPopup(null, {
+      title: 'Confirm Deletion',
+      confirmText: 'Delete',
+      confirmVariant: 'danger',
+      cancelText: 'Cancel',
+      description: `Are you sure you want to delete the ${
+        entity.type === 'character' ? 'character' : 'group'
+      } "${entity.item?.name}"? This action cannot be undone.`,
+      onCancel: () => {
+        void 0;
+      },
+      onConfirm: async () => {
+        await performDelete();
+      },
+    });
+  }, [entity, openPopup, performDelete]);
 
   const handleEdit = useCallback(() => {
     if (entity.type === 'character') {
