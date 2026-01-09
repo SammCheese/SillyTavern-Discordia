@@ -31,7 +31,6 @@ export const BackHandlerProvider = ({ children }: { children: ReactNode }) => {
 
   const beforeUnloadHandler = useCallback((e: BeforeUnloadEvent) => {
     e.preventDefault();
-    e.returnValue = '';
   }, []);
 
   const detachBeforeUnload = useCallback(() => {

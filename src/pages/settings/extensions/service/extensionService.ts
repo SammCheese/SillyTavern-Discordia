@@ -48,7 +48,7 @@ export async function getExtensionVersion(extensionName, signal?) {
     });
 
     const data = await response.json();
-    return data;
+    return data as ExtensionInfo['version'];
   } catch (error) {
     console.error('Error:', error);
   }

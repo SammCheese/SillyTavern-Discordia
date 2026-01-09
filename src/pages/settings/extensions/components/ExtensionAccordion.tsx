@@ -6,7 +6,10 @@ import Skeleton from 'react-loading-skeleton';
 import { type Manifest } from '../../../../services/extensionService';
 import type { ExtensionInfo, Version } from '../ExtensionSettings';
 import Divider from '../../../../components/common/Divider/Divider';
-import { updateExtension } from '../service/extensionService';
+import {
+  getExtensionVersion,
+  updateExtension,
+} from '../service/extensionService';
 import ExtensionTitle from './ExtensionAccordion/ExtensionTitle';
 import ExtensionDetails from './ExtensionAccordion/ExtensionDetails';
 import ExtensionOptions from './ExtensionAccordion/ExtensionOptions';
@@ -47,10 +50,8 @@ const ExtensionAccordion = memo(function ExtensionAccordion({
   const handleUpdateClick = useCallback(() => {
     updateExtension(extension.name)
       .then(() => {
-        setVersionState((prev) => {
-          const base = prev ?? version;
-          if (!base) return prev ?? version;
-          return { ...base, isUpToDate: true } as Version;
+        getExtensionVersion(extension.name).then((version) => {
+          setVersionState(version);
         });
       })
       .catch((error) => {
