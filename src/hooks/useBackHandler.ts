@@ -1,7 +1,11 @@
 import { useContext, useEffect, useId } from 'react';
 import { BackHandlerContext } from '../providers/backHandlerProvider';
 
-export const useBackHandler = (isActive: boolean, onBack: () => void, timeout?: number) => {
+export const useBackHandler = (
+  isActive: boolean,
+  onBack: () => void,
+  timeout?: number,
+) => {
   const { register, unregister } = useContext(BackHandlerContext);
 
   const id = useId();

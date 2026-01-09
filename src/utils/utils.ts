@@ -209,7 +209,7 @@ export const makeAvatar = ({
 
 export const runTaskInIdle = <T>(
   taskGenerator: Generator<T | null, void, unknown>,
-  signal?: AbortSignal
+  signal?: AbortSignal,
 ): Promise<T[]> => {
   return new Promise((resolve, reject) => {
     const results: T[] = [];
@@ -233,7 +233,7 @@ export const runTaskInIdle = <T>(
         }
 
         if (next.value === null && deadline.timeRemaining() <= 1) {
-            break;
+          break;
         }
       }
 

@@ -1,6 +1,12 @@
-import { DISCORDIA_EVENTS } from "../events/eventTypes";
+import { DISCORDIA_EVENTS } from '../events/eventTypes';
 
-const { getRequestHeaders, getCharacters, eventSource, deleteCharacter, closeCurrentChat } = await imports('@script');
+const {
+  getRequestHeaders,
+  getCharacters,
+  eventSource,
+  deleteCharacter,
+  closeCurrentChat,
+} = await imports('@script');
 const { ensureImageFormatSupported } = await imports('@scripts/utils');
 
 export interface CharacterPayload {
@@ -33,14 +39,13 @@ export interface CharacterPayload {
   extensions?: string;
 }
 
-
 export async function editCharacter(data: CharacterPayload): Promise<void> {
   const url = '/api/characters/edit';
   const formData = new FormData();
 
   if (data.avatar instanceof File) {
-      const processed = await ensureImageFormatSupported(data.avatar);
-      formData.append('avatar', processed);
+    const processed = await ensureImageFormatSupported(data.avatar);
+    formData.append('avatar', processed);
   }
 
   const append = (key: keyof CharacterPayload) => {
@@ -51,7 +56,7 @@ export async function editCharacter(data: CharacterPayload): Promise<void> {
       if (key === 'tags') {
         formData.append(key, value.join(','));
       } else {
-        value.forEach(v => formData.append(key, String(v)));
+        value.forEach((v) => formData.append(key, String(v)));
       }
     } else {
       formData.append(key, String(value));
@@ -100,7 +105,10 @@ export function charToPayload(char: any): CharacterPayload {
 
   let tags = getData('tags');
   if (typeof tags === 'string') {
-    tags = tags.split(',').map((x: string) => x.trim()).filter((x: string) => x);
+    tags = tags
+      .split(',')
+      .map((x: string) => x.trim())
+      .filter((x: string) => x);
   } else if (!Array.isArray(tags)) {
     tags = [];
   }
@@ -144,10 +152,14 @@ export function charToPayload(char: any): CharacterPayload {
   return payload;
 }
 
-
-export async function renameCharacter(avatarUrl: string, newName: string): Promise<string> {
+export async function renameCharacter(
+  avatarUrl: string,
+  newName: string,
+): Promise<string> {
   if (!avatarUrl || !newName) {
-    throw new Error('Avatar URL and new name are required to rename character.');
+    throw new Error(
+      'Avatar URL and new name are required to rename character.',
+    );
   }
 
   const url = '/api/characters/rename';
@@ -169,16 +181,18 @@ export async function renameCharacter(avatarUrl: string, newName: string): Promi
   return res;
 }
 
-export async function createCharacter(payload: CharacterPayload): Promise<string> {
+export async function createCharacter(
+  payload: CharacterPayload,
+): Promise<string> {
   const url = '/api/characters/create';
   const formData = new FormData();
 
   if (payload.avatar instanceof File) {
-      const processed = await ensureImageFormatSupported(payload.avatar);
-      const filename = (payload.avatar as File).name || 'avatar.png';
-      formData.append('avatar', processed, filename);
+    const processed = await ensureImageFormatSupported(payload.avatar);
+    const filename = (payload.avatar as File).name || 'avatar.png';
+    formData.append('avatar', processed, filename);
   } else if (typeof payload.avatar === 'string') {
-      formData.append('avatar_url', payload.avatar);
+    formData.append('avatar_url', payload.avatar);
   }
 
   const append = (key: keyof CharacterPayload) => {
@@ -189,7 +203,7 @@ export async function createCharacter(payload: CharacterPayload): Promise<string
       if (key === 'tags') {
         formData.append(key, value.join(','));
       } else {
-        value.forEach(v => formData.append(key, String(v)));
+        value.forEach((v) => formData.append(key, String(v)));
       }
     } else {
       formData.append(key, String(value));
@@ -218,7 +232,7 @@ export async function createCharacter(payload: CharacterPayload): Promise<string
 
 export async function _deleteCharacter(
   avatarUrl: string,
-  options: { deleteChats?: boolean } = {}
+  options: { deleteChats?: boolean } = {},
 ): Promise<void> {
   if (!avatarUrl) {
     throw new Error('Avatar URL is required to delete character.');
@@ -226,7 +240,11 @@ export async function _deleteCharacter(
 
   const { characters, characterId } = SillyTavern.getContext();
   const character = characters.find((c) => c.avatar?.toString() === avatarUrl);
-  const isCurrentCharacter = characterId !== null && characterId !== undefined && character && characters[characterId] === character;
+  const isCurrentCharacter =
+    characterId !== null &&
+    characterId !== undefined &&
+    character &&
+    characters[characterId] === character;
 
   // Close chat BEFORE deletion if this is the current character
   if (isCurrentCharacter) {
@@ -243,13 +261,12 @@ export async function refreshCharacterList(): Promise<void> {
   eventSource.emit(DISCORDIA_EVENTS.ENTITY_CHANGED);
 }
 
-
 export async function updateCharacter(
   originalAvatarId: string,
-  payload: CharacterPayload
+  payload: CharacterPayload,
 ): Promise<string> {
   const originalName = SillyTavern.getContext().characters.find(
-    (c) => c.avatar?.toString() === originalAvatarId
+    (c) => c.avatar?.toString() === originalAvatarId,
   )?.name;
 
   if (!originalName) {
@@ -257,7 +274,11 @@ export async function updateCharacter(
   }
 
   // We first edit the character, then rename if necessary
-  const editPayload: CharacterPayload = { ...payload, avatar_url: originalAvatarId, ch_name: originalName };
+  const editPayload: CharacterPayload = {
+    ...payload,
+    avatar_url: originalAvatarId,
+    ch_name: originalName,
+  };
 
   await editCharacter(editPayload);
 
@@ -265,7 +286,7 @@ export async function updateCharacter(
     try {
       return await renameCharacter(originalAvatarId, payload.ch_name.trim());
     } catch (error) {
-      console.error("Edit successful, but Rename failed:", error);
+      console.error('Edit successful, but Rename failed:', error);
       throw error;
     }
   }

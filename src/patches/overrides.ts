@@ -1,7 +1,6 @@
 // @ts-expect-error Video Import
 import video from '../../assets/cord.webm';
 
-
 const splashTexts = [
   'Gathering your Characters...',
   'Summoning the spirits...',
@@ -41,7 +40,6 @@ export const overrideSpinner = () => {
         left: 0,
         zIndex: 1000,
         backgroundColor: '#1e1e1e',
-
       });
       parent.append(newSpinner);
     }
