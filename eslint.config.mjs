@@ -1,6 +1,6 @@
 import eslint from '@eslint/js';
-import prettier from 'eslint-config-prettier/flat';
 import react from 'eslint-plugin-react';
+import prettierRecommended from 'eslint-plugin-prettier/recommended';
 import { defineConfig, globalIgnores } from 'eslint/config';
 import tseslint from 'typescript-eslint';
 
@@ -16,6 +16,14 @@ export default defineConfig(
       },
     },
   },
-  prettier,
-  [globalIgnores(['dist/**', 'node_modules/**', '*.config.js', '**/*.json'])],
+  prettierRecommended,
+  [
+    globalIgnores([
+      'dist/**',
+      'node_modules/**',
+      '**/*.css',
+      '**/*.json',
+      '*.config.{js,cjs,mjs,ts,cts,mts}',
+    ]),
+  ],
 );

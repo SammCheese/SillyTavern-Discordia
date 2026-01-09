@@ -14,7 +14,6 @@ type Icon = {
   id: string;
 };
 
-
 type Chat = {
   file_id: string;
   file_name: string;
@@ -24,14 +23,12 @@ type Chat = {
   group?: string;
 };
 
-
 type ConnectAPIMap = {
-    selected: string;
-    button?: string | null;
-    type?: string | null;
-    source?: string | null;
-}
-
+  selected: string;
+  button?: string | null;
+  type?: string | null;
+  source?: string | null;
+};
 
 type Character = {
   name: string;
@@ -51,13 +48,12 @@ type Character = {
   avatar?: string;
   json_data?: string;
   shallow?: boolean;
-}
+};
 
 type Persona = {
   name: string;
   avatar: string;
 };
-
 
 type GroupItem = {
   activation_strategy: number;

@@ -1,6 +1,5 @@
 import { useCallback, useState } from 'react';
 
-
 const { lodash } = SillyTavern.libs;
 const _ = lodash;
 
@@ -41,15 +40,20 @@ export type MainAPIValues =
 
 const { getContext } = SillyTavern;
 
-const { changeMainAPI, saveSettingsDebounced, eventSource, event_types } = await imports('@script');
+const { changeMainAPI, saveSettingsDebounced, eventSource, event_types } =
+  await imports('@script');
 
 export const useConnectionManager = () => {
   const [profiles, setProfilesState] = useState<ConnectionProfile[]>(() => {
     return getContext().extensionSettings.connectionManager.profiles || [];
   });
-  const [selectedProfileId, setSelectedProfileIdState] = useState<string>(() => {
-    return getContext().extensionSettings.connectionManager.selectedProfile || '';
-  });
+  const [selectedProfileId, setSelectedProfileIdState] = useState<string>(
+    () => {
+      return (
+        getContext().extensionSettings.connectionManager.selectedProfile || ''
+      );
+    },
+  );
 
   const getSelectedProfile = (): ConnectionProfile | undefined => {
     return profiles.find((profile) => profile.id === selectedProfileId);
@@ -59,7 +63,6 @@ export const useConnectionManager = () => {
     return getContext().mainApi as MainAPIValues;
   }, []);
 
-
   const setProfiles = useCallback((newProfiles: ConnectionProfile[]) => {
     setProfilesState(newProfiles);
     getContext().extensionSettings.connectionManager.profiles = newProfiles;
@@ -67,7 +70,8 @@ export const useConnectionManager = () => {
 
   const setSelectedProfile = useCallback((profileId: string) => {
     setSelectedProfileIdState(profileId);
-    getContext().extensionSettings.connectionManager.selectedProfile = profileId;
+    getContext().extensionSettings.connectionManager.selectedProfile =
+      profileId;
     eventSource.emit(event_types.CONNECTION_PROFILE_LOADED, profileId);
   }, []);
 
@@ -78,10 +82,14 @@ export const useConnectionManager = () => {
         // @ts-expect-error shut up
         changeMainAPI(api);
       } else {
-        throw new Error('changeMainAPI has unexpected signature, attempting fallback');
+        throw new Error(
+          'changeMainAPI has unexpected signature, attempting fallback',
+        );
       }
     } catch {
-      console.warn('Failed to change main API via function, falling back to DOM');
+      console.warn(
+        'Failed to change main API via function, falling back to DOM',
+      );
       // Whoever made the api setting DOM dependent
       // can be lucky I'm not a violent person.
       $('#main_api').val(api).trigger('change');
@@ -101,7 +109,6 @@ export const useConnectionManager = () => {
     saveSettingsDebounced();
     _.debounce(() => {
       eventSource.emit(event_types.CONNECTION_PROFILE_UPDATED, updatedProfile);
-
     }, 300)();
   };
 
@@ -115,5 +122,4 @@ export const useConnectionManager = () => {
     setCurrentApi,
     setSelectedProfile,
   };
-}
-
+};

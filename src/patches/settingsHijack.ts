@@ -66,18 +66,14 @@ const resolveStackToOwner = (error: Error): string | null => {
 const OWNER_ATTR = 'data-discordia-settings-owner';
 
 const setOwnerOnDescendants = (root: Element, owner: string) => {
-  const walker = document.createTreeWalker(
-    root,
-    NodeFilter.SHOW_ELEMENT,
-    {
-      acceptNode: (node) => {
-        const el = node as Element;
-        return !el.getAttribute(OWNER_ATTR)
-          ? NodeFilter.FILTER_ACCEPT
-          : NodeFilter.FILTER_SKIP;
-      }
-    }
-  );
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT, {
+    acceptNode: (node) => {
+      const el = node as Element;
+      return !el.getAttribute(OWNER_ATTR)
+        ? NodeFilter.FILTER_ACCEPT
+        : NodeFilter.FILTER_SKIP;
+    },
+  });
 
   let node: Node | null;
   while ((node = walker.nextNode())) {
@@ -299,7 +295,6 @@ export const hijackJquery = () => {
             applyOwnership(this, resolvedOwner);
           }
         } else {
-
           applyOwnership(this, owner);
         }
       }
@@ -364,6 +359,18 @@ export const hijackJquery = () => {
   }
 };
 
+const resolveAllOwnership = (containers: HTMLElement[]): void => {
+  for (const container of containers) {
+    const children = Array.from(container.children);
+    for (const child of children) {
+      getOwner(child);
+
+      const drawers = child.querySelectorAll('.inline-drawer-content');
+      drawers.forEach((drawer) => getOwner(drawer));
+    }
+  }
+};
+
 function* extensionCloningGenerator(
   containers: HTMLElement[],
 ): Generator<JQuery<Element>, void, unknown> {
@@ -371,18 +378,27 @@ function* extensionCloningGenerator(
     Array.from(container.children),
   );
 
+  console.debug(
+    '[Discordia] Cloning',
+    allChildren.length,
+    'direct children from containers',
+  );
+
   for (const elem of allChildren) {
     try {
       const original = $(elem) as JQuery<HTMLElement>;
-      getOwner(original);
 
-      const drawerContent = original.find('.inline-drawer-content');
-      if (drawerContent.length) {
-        getOwner(drawerContent);
-      }
+      const owner = getOwner(original);
+      console.debug(
+        '[Discordia] Cloning element, owner:',
+        owner || 'unknown',
+        'class:',
+        elem.className,
+      );
 
       const clone = original.clone(true, true);
 
+      // Force visibility
       clone.find('.inline-drawer-content').css('display', 'block');
 
       yield clone;
@@ -404,10 +420,22 @@ export const poolDOMExtensions = async () => {
       const containers = getContainers();
       if (containers.length === 0) return;
 
+      resolveAllOwnership(containers);
+
       const generator = extensionCloningGenerator(containers);
       const cloned = await runTaskInIdle(generator);
 
       window.discordia.extensionTemplates = cloned;
+
+      // Mobile has this wonderful issue where off-spec elements nuke their children
+      const isCoping = cloned.some(
+        (c) => c.length > 0 && c[0]?.childNodes.length === 0 && c[0]?.innerHTML,
+      );
+      if (isCoping) {
+        console.warn(
+          '[Discordia] Some elements lost children, this may affect mobile rendering',
+        );
+      }
 
       eventSource.emit(DISCORDIA_EVENTS.EXTENSION_HTML_POPULATED);
     } catch (error) {
@@ -449,14 +477,33 @@ export const poolDOMExtensions = async () => {
       }
       eventSource.removeListener(
         event_types.EXTENSION_SETTINGS_LOADED,
-        startObserving,
+        idleCapture,
       );
       eventSource.emit(DISCORDIA_EVENTS.EXTENSION_HTML_POPULATED);
     }, LATELOADER_LEEWAY_MS);
   };
 
   captureExtensions();
+
+  const idleCapture = () => {
+    if (typeof requestIdleCallback !== 'undefined') {
+      requestIdleCallback(
+        () => {
+          captureExtensions();
+          startObserving();
+        },
+        { timeout: 1000 },
+      );
+    } else {
+      // polyfill
+      setTimeout(() => {
+        captureExtensions();
+        startObserving();
+      }, 100);
+    }
+  };
+
   // SillyTavern fires this after extensions are loaded
   // Start Observing for lateloaders
-  eventSource.on(event_types.EXTENSION_SETTINGS_LOADED, startObserving);
+  eventSource.on(event_types.EXTENSION_SETTINGS_LOADED, idleCapture);
 };

@@ -1,19 +1,18 @@
 import { useCallback, useEffect, useReducer, useRef } from 'react';
-import { getRecentChats } from "../utils/utils";
+import { getRecentChats } from '../utils/utils';
 import { DISCORDIA_EVENTS } from '../events/eventTypes';
 
 const { getGroupPastChats } = await imports('@scripts/groupChats');
-const { getEntitiesList, eventSource, event_types, getPastCharacterChats } = await imports('@script');
-
-
+const { getEntitiesList, eventSource, event_types, getPastCharacterChats } =
+  await imports('@script');
 
 type SidebarAction =
   | { type: 'SET_OPEN'; open: boolean }
   | { type: 'REFRESH_START' }
   | { type: 'REFRESH_SUCCESS'; chats: Chat[]; entities: Entity[] }
-  | { type: 'REFRESH_FAILURE', error: Error }
+  | { type: 'REFRESH_FAILURE'; error: Error }
   | { type: 'SET_ICONS'; icons: Icon[] }
-  | { type: 'SET_CONTEXT'; context: "recent" | "chat" }
+  | { type: 'SET_CONTEXT'; context: 'recent' | 'chat' }
   | { type: 'SET_INITIAL_LOAD'; isInitialLoad: boolean };
 
 const PROFILE_MENU_CONFIG = [
@@ -22,14 +21,22 @@ const PROFILE_MENU_CONFIG = [
   { name: 'Account', id: '#ai-config-button' },
 ];
 
-const sidebarReducer = (state: SidebarState, action: SidebarAction): SidebarState => {
+const sidebarReducer = (
+  state: SidebarState,
+  action: SidebarAction,
+): SidebarState => {
   switch (action.type) {
     case 'SET_OPEN':
       return { ...state, open: action.open };
     case 'REFRESH_START':
       return { ...state, isLoadingChats: true };
     case 'REFRESH_SUCCESS':
-      return { ...state, chats: action.chats, entities: action.entities, isLoadingChats: false };
+      return {
+        ...state,
+        chats: action.chats,
+        entities: action.entities,
+        isLoadingChats: false,
+      };
     case 'REFRESH_FAILURE':
       console.error('Failed to refresh sidebar chats:', action.error);
       return { ...state, isLoadingChats: false };
@@ -51,7 +58,7 @@ interface SidebarState {
   icons: Icon[];
   isLoadingChats: boolean;
   isInitialLoad: boolean;
-  context: "recent" | "chat" ;
+  context: 'recent' | 'chat';
 }
 
 const INITIAL_STATE: SidebarState = {
@@ -61,9 +68,8 @@ const INITIAL_STATE: SidebarState = {
   icons: [],
   isLoadingChats: true,
   isInitialLoad: true,
-  context: "recent",
+  context: 'recent',
 };
-
 
 export const useSidebarState = () => {
   const [state, dispatch] = useReducer(sidebarReducer, INITIAL_STATE);
@@ -76,11 +82,9 @@ export const useSidebarState = () => {
     openRef.current = state.open;
   }, [state.open]);
 
-
   const setOpen = useCallback((open: boolean) => {
     dispatch({ type: 'SET_OPEN', open });
   }, []);
-
 
   const refreshChats = useCallback(async (forceRecent = false) => {
     if (isFetchingRef.current && !forceRecent) {
@@ -88,7 +92,7 @@ export const useSidebarState = () => {
       return;
     }
 
-    dispatch({ type: 'SET_CONTEXT', context: forceRecent ? 'recent' : "chat" });
+    dispatch({ type: 'SET_CONTEXT', context: forceRecent ? 'recent' : 'chat' });
 
     isFetchingRef.current = true;
     dispatch({ type: 'REFRESH_START' });
@@ -126,7 +130,6 @@ export const useSidebarState = () => {
   }, []);
 
   const handleFullRefresh = useCallback(() => {
-
     refreshChats(true);
   }, [refreshChats]);
 
@@ -146,7 +149,10 @@ export const useSidebarState = () => {
 
       icons.push({
         className: infoEl.attr('class') || '',
-        title: infoEl.attr('title') || jEl.find('.drawer-toggle').attr('title') || '',
+        title:
+          infoEl.attr('title') ||
+          jEl.find('.drawer-toggle').attr('title') ||
+          '',
         showInProfile: PROFILE_MENU_CONFIG.some((item) => item.id === id),
         id: id,
       });
@@ -158,7 +164,6 @@ export const useSidebarState = () => {
 
   useEffect(() => {
     processMenuIcons();
-
 
     const handleSettingsUpdate = () => {
       if (openRef.current) return;
@@ -188,10 +193,18 @@ export const useSidebarState = () => {
     let touchStartX = 0;
     let touchEndX = 0;
 
-    const onPointerDown = (e) => { touchStartX = e.clientX ?? 0; };
-    const onPointerMove = (e) => { touchEndX = e.clientX ?? 0; };
-    const onTouchStart = (e) => { touchStartX = e.originalEvent?.touches[0]?.clientX ?? 0; };
-    const onTouchMove = (e) => { touchEndX = e.originalEvent?.touches[0]?.clientX ?? 0; };
+    const onPointerDown = (e) => {
+      touchStartX = e.clientX ?? 0;
+    };
+    const onPointerMove = (e) => {
+      touchEndX = e.clientX ?? 0;
+    };
+    const onTouchStart = (e) => {
+      touchStartX = e.originalEvent?.touches[0]?.clientX ?? 0;
+    };
+    const onTouchMove = (e) => {
+      touchEndX = e.originalEvent?.touches[0]?.clientX ?? 0;
+    };
 
     const onPointerUp = () => {
       if (touchStartX === 0 || touchEndX === 0) return;
@@ -216,12 +229,24 @@ export const useSidebarState = () => {
       eventSource.removeListener(event_types.CHAT_CHANGED, refreshChats);
       eventSource.removeListener(event_types.CHAT_DELETED, refreshChats);
       eventSource.removeListener(event_types.CHAT_CREATED, refreshChats);
-      eventSource.removeListener(event_types.SETTINGS_UPDATED, handleSettingsUpdate);
+      eventSource.removeListener(
+        event_types.SETTINGS_UPDATED,
+        handleSettingsUpdate,
+      );
       eventSource.removeListener(event_types.CHARACTER_EDITED, refreshChats);
       eventSource.removeListener(event_types.CHARACTER_RENAMED, refreshChats);
-      eventSource.removeListener(DISCORDIA_EVENTS.ENTITY_CHANGED, handleFullRefresh);
-      eventSource.removeListener(DISCORDIA_EVENTS.HOME_BUTTON_CLICKED, handleFullRefresh);
-      eventSource.removeListener(DISCORDIA_EVENTS.CHAT_UPDATE, handleChatChange);
+      eventSource.removeListener(
+        DISCORDIA_EVENTS.ENTITY_CHANGED,
+        handleFullRefresh,
+      );
+      eventSource.removeListener(
+        DISCORDIA_EVENTS.HOME_BUTTON_CLICKED,
+        handleFullRefresh,
+      );
+      eventSource.removeListener(
+        DISCORDIA_EVENTS.CHAT_UPDATE,
+        handleChatChange,
+      );
 
       if (body) {
         body.off('pointerdown', onPointerDown);
@@ -233,9 +258,8 @@ export const useSidebarState = () => {
     };
   }, [handleFullRefresh, processMenuIcons, refreshChats, setOpen]);
 
-
   return {
     ...state,
     setOpen,
   };
-}
+};

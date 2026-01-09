@@ -1,5 +1,5 @@
 import { runTaskInIdle } from '../../../../utils/utils';
-import {  getOwner } from '../../../../patches/settingsHijack';
+import { getOwner } from '../../../../patches/settingsHijack';
 import type { ExtensionInfo } from '../ExtensionSettings';
 
 const { getRequestHeaders } = await imports('@script');
@@ -48,7 +48,7 @@ export async function getExtensionVersion(extensionName, signal?) {
     });
 
     const data = await response.json();
-    return data;
+    return data as ExtensionInfo['version'];
   } catch (error) {
     console.error('Error:', error);
   }
@@ -113,9 +113,8 @@ function getKnownNamesSet(knownNames?: string[]): Set<string> | null {
   return knownNamesCache.get(knownNames) || null;
 }
 
-const INTERACTIVE_SELECTOR = 'input, select, textarea, button, a, label' as const;
-
-
+const INTERACTIVE_SELECTOR =
+  'input, select, textarea, button, a, label' as const;
 
 function* extensionProcessorGenerator(
   elements: JQuery<Element>[],
@@ -156,8 +155,14 @@ function* extensionProcessorGenerator(
         }
       });
 
-      if (knownNamesSet && probableOwner !== 'unknown' && !knownNamesSet.has(probableOwner)) {
-        console.debug(`[Discordia] Skipping unknown extension: ${probableOwner}`);
+      if (
+        knownNamesSet &&
+        probableOwner !== 'unknown' &&
+        !knownNamesSet.has(probableOwner)
+      ) {
+        console.debug(
+          `[Discordia] Skipping unknown extension: ${probableOwner}`,
+        );
         return { elem: null, owner: probableOwner };
       }
 
@@ -165,7 +170,7 @@ function* extensionProcessorGenerator(
     })();
 
     if (elem) {
-        elem.removeClass('inline-drawer-content');
+      elem.removeClass('inline-drawer-content');
     }
 
     yield { name: owner, elem };
@@ -177,6 +182,10 @@ function* extensionProcessorGenerator(
   }
 }
 
+interface JQueryDOMElement extends JQuery<Element> {
+  prevObject?: JQuery<HTMLElement>;
+}
+
 export async function processExtensionHTMLs(
   knownNames?: string[],
   signal?: AbortSignal,
@@ -185,9 +194,23 @@ export async function processExtensionHTMLs(
 
   if (elements.length === 0) return [];
 
+  // Mobile Fix
+  const validElements = elements.map((el: JQueryDOMElement) => {
+    if (
+      el.length > 0 &&
+      el[0]?.childNodes.length === 0 &&
+      el?.prevObject &&
+      el?.prevObject.length > 0
+    ) {
+      console.debug('[Discordia] Mitigating dead element', el);
+      return el.prevObject.clone(true, true);
+    }
+    return el;
+  });
+
   const knownNamesSet = getKnownNamesSet(knownNames);
 
-  const generator = extensionProcessorGenerator(elements, knownNamesSet);
+  const generator = extensionProcessorGenerator(validElements, knownNamesSet);
 
   return runTaskInIdle(generator, signal);
 }
