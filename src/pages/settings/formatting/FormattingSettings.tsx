@@ -13,7 +13,13 @@ const FormattingSettings = () => {
 
   return (
     <SettingsFrame title="Formatting Settings">
-      <div className="settings-section"></div>
+      <div className="settings-section">
+        <div className="text-2xlxl text-gray-500 text-center mt-20">
+          <span>Nothing to see here yet!</span>
+          <br />
+          <span>Check back later.</span>
+        </div>
+      </div>
     </SettingsFrame>
   );
 };
