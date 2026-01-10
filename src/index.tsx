@@ -38,7 +38,6 @@ performPatches();
 // Compose all providers
 const providers = [
   // Necessary Evil
-  StrictMode,
   ErrorBoundary,
   // Functionality Provider
   BackHandlerProvider,
@@ -54,8 +53,10 @@ const providers = [
 // Create React root
 const root = createRoot(rootContainer);
 root.render(
-  <Compose components={providers}>
-    <ChatContextMenu />
-    <App />
-  </Compose>,
+  <StrictMode>
+    <Compose components={providers}>
+      <ChatContextMenu />
+      <App />
+    </Compose>
+  </StrictMode>,
 );

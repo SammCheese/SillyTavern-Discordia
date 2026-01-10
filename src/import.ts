@@ -54,7 +54,7 @@ const initializePaths = async () => {
 
   pathsInitialized = true;
   console.log(
-    `[SillyTavern-Discordia] Running as ${isLocal ? 'local' : 'global'} extension.`,
+    `[Discordia] Running as ${isLocal ? 'local' : 'global'} extension.`,
   );
 };
 

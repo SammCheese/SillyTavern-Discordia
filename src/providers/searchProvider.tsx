@@ -1,3 +1,4 @@
+import type _ from 'lodash';
 import {
   createContext,
   useState,
@@ -15,11 +16,15 @@ export const SearchContext = createContext<SearchContextType | undefined>(
   undefined,
 );
 
+const lodash = SillyTavern.libs.lodash as typeof _;
+
 export const SearchProvider = ({ children }: { children: ReactNode }) => {
   const [searchQuery, setSearchQuery] = useState('');
 
   const handleSetSearchQuery = useCallback((query: string) => {
-    setSearchQuery(query);
+    lodash.debounce(() => {
+      setSearchQuery(query);
+    }, 300)();
   }, []);
 
   return (

@@ -11,6 +11,7 @@ interface SideBarProps {
   setOpen: (open: boolean) => void;
   entities: Entity[];
   chats: Chat[];
+  recentChats: Chat[];
   icons: Icon[] | null;
   isLoadingChats: boolean;
   isInitialLoad: boolean;
@@ -21,12 +22,14 @@ const SideBar = ({
   setOpen,
   entities,
   chats,
+  recentChats,
   icons,
   isLoadingChats,
   isInitialLoad,
 }: SideBarProps) => {
   const memoizedEntities = useMemo(() => entities, [entities]);
   const memoizedChats = useMemo(() => chats, [chats]);
+  const memoizedRecentChats = useMemo(() => recentChats, [recentChats]);
   const memoizedIcons = useMemo(() => icons, [icons]);
   const memoizedIsLoadingChats = useMemo(
     () => isLoadingChats,
@@ -55,6 +58,7 @@ const SideBar = ({
             isInitialLoad={memoizedIsInitialLoad}
           />
           <ChannelBar
+            recentChats={memoizedRecentChats}
             icons={memoizedIcons}
             chats={memoizedChats}
             setOpen={memoizedSetOpen}

@@ -108,7 +108,7 @@ dialog.popup {
   width: var(--sidebar-width);
   position: relative;
   backdrop-filter: blur(calc(var(--SmartThemeBlurStrength) * 2), 10px);
-  background-color: var(--SmartThemeChatTintColor, rgba(54, 57, 63, 0.95));
+  background-color: var(--SmartThemeChatTintColor, rgba(255, 255, 255, 0.95));
   border-right: rgba(255, 255, 255, 0.1) 1px solid;
 }
 

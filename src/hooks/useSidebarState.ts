@@ -9,7 +9,12 @@ const { getEntitiesList, eventSource, event_types, getPastCharacterChats } =
 type SidebarAction =
   | { type: 'SET_OPEN'; open: boolean }
   | { type: 'REFRESH_START' }
-  | { type: 'REFRESH_SUCCESS'; chats: Chat[]; entities: Entity[] }
+  | {
+      type: 'REFRESH_SUCCESS';
+      chats?: Chat[];
+      entities?: Entity[];
+      recentChats?: Chat[];
+    }
   | { type: 'REFRESH_FAILURE'; error: Error }
   | { type: 'SET_ICONS'; icons: Icon[] }
   | { type: 'SET_CONTEXT'; context: 'recent' | 'chat' }
@@ -33,8 +38,7 @@ const sidebarReducer = (
     case 'REFRESH_SUCCESS':
       return {
         ...state,
-        chats: action.chats,
-        entities: action.entities,
+        ...action,
         isLoadingChats: false,
       };
     case 'REFRESH_FAILURE':
@@ -55,6 +59,7 @@ interface SidebarState {
   open: boolean;
   entities: Entity[];
   chats: Chat[];
+  recentChats: Chat[];
   icons: Icon[];
   isLoadingChats: boolean;
   isInitialLoad: boolean;
@@ -65,6 +70,7 @@ const INITIAL_STATE: SidebarState = {
   open: true,
   entities: [],
   chats: [],
+  recentChats: [],
   icons: [],
   isLoadingChats: true,
   isInitialLoad: true,
@@ -86,6 +92,26 @@ export const useSidebarState = () => {
     dispatch({ type: 'SET_OPEN', open });
   }, []);
 
+  const refreshCharacters = useCallback(async () => {
+    dispatch({ type: 'REFRESH_START' });
+    try {
+      const entities = getEntitiesList({ doFilter: true, doSort: true });
+      dispatch({ type: 'REFRESH_SUCCESS', entities });
+    } catch (error) {
+      dispatch({ type: 'REFRESH_FAILURE', error: error as Error });
+    }
+  }, []);
+
+  const refreshRecentChats = useCallback(async () => {
+    dispatch({ type: 'REFRESH_START' });
+    try {
+      const recentChats = await getRecentChats();
+      dispatch({ type: 'REFRESH_SUCCESS', recentChats });
+    } catch (error) {
+      console.error('Failed to refresh recent chats:', error);
+    }
+  }, []);
+
   const refreshChats = useCallback(async (forceRecent = false) => {
     if (isFetchingRef.current && !forceRecent) {
       pendingRefreshRef.current = true;
@@ -105,18 +131,18 @@ export const useSidebarState = () => {
         characterId !== undefined &&
         Number(characterId) >= 0;
 
-      const entities = getEntitiesList({ doFilter: true, doSort: true });
       let chats: Chat[] = [];
 
       if (hasGroup) {
-        chats = await getGroupPastChats(groupId.toString());
+        chats = (await getGroupPastChats(groupId.toString())) as Chat[];
       } else if (hasCharacter) {
         chats = await getPastCharacterChats();
-      } else if (forceRecent) {
-        chats = await getRecentChats(entities);
       }
 
-      dispatch({ type: 'REFRESH_SUCCESS', chats, entities });
+      dispatch({
+        type: 'REFRESH_SUCCESS',
+        chats,
+      });
     } catch (error) {
       dispatch({ type: 'REFRESH_FAILURE', error: error as Error });
     } finally {
@@ -130,8 +156,10 @@ export const useSidebarState = () => {
   }, []);
 
   const handleFullRefresh = useCallback(() => {
-    refreshChats(true);
-  }, [refreshChats]);
+    refreshCharacters();
+    refreshChats();
+    refreshRecentChats();
+  }, [refreshCharacters, refreshChats, refreshRecentChats]);
 
   const handleChatChange = useCallback(() => {
     refreshChats();
@@ -162,6 +190,12 @@ export const useSidebarState = () => {
     dispatch({ type: 'SET_ICONS', icons });
   }, []);
 
+  const showRecentChats = async () => {
+    dispatch({ type: 'SET_CONTEXT', context: 'recent' });
+    refreshRecentChats();
+    refreshCharacters();
+  };
+
   useEffect(() => {
     processMenuIcons();
 
@@ -179,12 +213,12 @@ export const useSidebarState = () => {
     eventSource.on(event_types.CHAT_DELETED, refreshChats);
     eventSource.on(event_types.CHAT_CREATED, refreshChats);
     eventSource.on(event_types.SETTINGS_UPDATED, handleSettingsUpdate);
-    eventSource.on(event_types.CHARACTER_EDITED, refreshChats);
-    eventSource.on(event_types.CHARACTER_RENAMED, refreshChats);
+    eventSource.on(event_types.CHARACTER_EDITED, refreshCharacters);
+    eventSource.on(event_types.CHARACTER_RENAMED, refreshCharacters);
 
     // Our own Events
-    eventSource.on(DISCORDIA_EVENTS.ENTITY_CHANGED, handleFullRefresh);
-    eventSource.on(DISCORDIA_EVENTS.HOME_BUTTON_CLICKED, handleFullRefresh);
+    eventSource.on(DISCORDIA_EVENTS.ENTITY_CHANGED, refreshCharacters);
+    eventSource.on(DISCORDIA_EVENTS.HOME_BUTTON_CLICKED, showRecentChats);
     eventSource.on(DISCORDIA_EVENTS.CHAT_UPDATE, handleChatChange);
 
     // Swipe Listeners
@@ -225,7 +259,7 @@ export const useSidebarState = () => {
     }
 
     return () => {
-      eventSource.removeListener(event_types.APP_READY, refreshChats);
+      eventSource.removeListener(event_types.APP_READY, handleFullRefresh);
       eventSource.removeListener(event_types.CHAT_CHANGED, refreshChats);
       eventSource.removeListener(event_types.CHAT_DELETED, refreshChats);
       eventSource.removeListener(event_types.CHAT_CREATED, refreshChats);
@@ -233,15 +267,21 @@ export const useSidebarState = () => {
         event_types.SETTINGS_UPDATED,
         handleSettingsUpdate,
       );
-      eventSource.removeListener(event_types.CHARACTER_EDITED, refreshChats);
-      eventSource.removeListener(event_types.CHARACTER_RENAMED, refreshChats);
+      eventSource.removeListener(
+        event_types.CHARACTER_EDITED,
+        refreshCharacters,
+      );
+      eventSource.removeListener(
+        event_types.CHARACTER_RENAMED,
+        refreshCharacters,
+      );
       eventSource.removeListener(
         DISCORDIA_EVENTS.ENTITY_CHANGED,
-        handleFullRefresh,
+        refreshCharacters,
       );
       eventSource.removeListener(
         DISCORDIA_EVENTS.HOME_BUTTON_CLICKED,
-        handleFullRefresh,
+        showRecentChats,
       );
       eventSource.removeListener(
         DISCORDIA_EVENTS.CHAT_UPDATE,
