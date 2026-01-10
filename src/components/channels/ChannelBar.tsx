@@ -41,6 +41,7 @@ const FormattingSettings = lazy(
 interface ChannelBarProps {
   icons: Icon[] | null;
   chats: Chat[];
+  recentChats: Chat[];
   setOpen: (value: boolean) => void;
   isLoadingChats?: boolean;
   isInitialLoad?: boolean;
@@ -51,6 +52,7 @@ const { doNewChat, eventSource, event_types } = await imports('@script');
 const ChannelBar = ({
   icons,
   chats,
+  recentChats,
   setOpen,
   isLoadingChats = false,
   isInitialLoad = true,
@@ -129,7 +131,9 @@ const ChannelBar = ({
     [setSearchQuery],
   );
 
-  const chatsMemo = useMemo(() => chats, [chats]);
+  const chatsMemo = useMemo(() => {
+    return context === 'recent' ? recentChats : chats;
+  }, [chats, recentChats, context]);
 
   useEffect(() => {
     const handleChatChange = () => {
