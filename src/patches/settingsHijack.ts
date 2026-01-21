@@ -124,6 +124,77 @@ const resolvePendingOwner = (element: Element): string | null => {
   return null;
 };
 
+type OwnershipTarget = JQuery | Element | Element[] | NodeListOf<Element>;
+
+type OwnershipJob = {
+  targets: OwnershipTarget;
+  ownerHint?: string | null;
+  context?: string | Error | null;
+};
+
+const ownershipQueue: OwnershipJob[] = [];
+let ownershipIdleHandle: number | null = null;
+
+const normalizeTargets = (targets: OwnershipTarget): (JQuery | Element)[] => {
+  if (targets instanceof jQuery) return [targets] as JQuery[];
+  if (targets instanceof Element) return [targets];
+  if (Array.isArray(targets)) return targets;
+  return Array.from(targets);
+};
+
+const scheduleOwnershipProcessing = () => {
+  if (ownershipIdleHandle !== null) return;
+
+  const processQueue = () => {
+    ownershipIdleHandle = null;
+    const jobs = ownershipQueue.splice(0, ownershipQueue.length);
+
+    for (const job of jobs) {
+      let owner = job.ownerHint ?? null;
+
+      if (!owner && job.context) {
+        owner =
+          typeof job.context === 'string'
+            ? job.context
+            : resolveStackToOwner(job.context as Error);
+      }
+
+      const targets = normalizeTargets(job.targets);
+
+      if (owner) {
+        for (const target of targets) {
+          applyOwnership(target as JQuery | Element, owner);
+        }
+        continue;
+      }
+
+      for (const target of targets) {
+        const resolved =
+          target instanceof jQuery
+            ? getOwnerFromJQuery(target as JQuery)
+            : getElementOwner(target as Element);
+
+        if (resolved) {
+          applyOwnership(target as JQuery | Element, resolved);
+        }
+      }
+    }
+
+    if (ownershipQueue.length > 0) scheduleOwnershipProcessing();
+  };
+
+  if (typeof requestIdleCallback !== 'undefined') {
+    ownershipIdleHandle = requestIdleCallback(processQueue, { timeout: 64 });
+  } else {
+    ownershipIdleHandle = window.setTimeout(processQueue, 0);
+  }
+};
+
+const enqueueOwnershipJob = (job: OwnershipJob) => {
+  ownershipQueue.push(job);
+  scheduleOwnershipProcessing();
+};
+
 const captureCreationContext = (): string | Error | null => {
   if (
     document.currentScript &&
@@ -253,10 +324,12 @@ export const hijackJquery = () => {
       // @ts-expect-error apply
       if (!this.length) return originalAppend.apply(this, args);
 
-      if (isTargetContainer(this)) {
-        let owner: string | null = null;
-        let content = args[0];
+      const isTarget = isTargetContainer(this);
+      let content = args[0];
+      let owner: string | null = null;
+      let ctx: string | Error | null = null;
 
+      if (isTarget) {
         if (content instanceof jQuery) {
           owner = getOwnerFromJQuery(content as JQuery<HTMLElement>);
         }
@@ -266,39 +339,52 @@ export const hijackJquery = () => {
         }
 
         if (!owner) {
-          const ctx = captureCreationContext();
-          owner =
-            typeof ctx === 'string' ? ctx : resolveStackToOwner(ctx as Error);
+          ctx = captureCreationContext();
+          owner = typeof ctx === 'string' ? ctx : null;
         }
 
-        if (owner) {
-          if (typeof content === 'string') {
-            content = $(content);
-            args[0] = content;
-          }
-          applyOwnership(content, owner);
+        if (typeof content === 'string') {
+          content = $(content);
+          args[0] = content;
         }
       }
 
       // @ts-expect-error apply
-      return originalAppend.apply(this, args);
+      const result = originalAppend.apply(this, args);
+
+      if (isTarget && typeof content !== 'undefined') {
+        enqueueOwnershipJob({
+          targets: content as OwnershipTarget,
+          ownerHint: owner,
+          context: owner ? null : ctx,
+        });
+      }
+
+      return result;
     };
 
     $.fn.appendTo = function (this, ...args) {
-      if (isTargetContainer($(args[0] as JQuery<HTMLElement>))) {
-        const owner = getOwnerFromJQuery(this);
-        if (!owner) {
-          const ctx = captureCreationContext();
-          const resolvedOwner =
-            typeof ctx === 'string' ? ctx : resolveStackToOwner(ctx as Error);
-          if (resolvedOwner) {
-            applyOwnership(this, resolvedOwner);
-          }
-        } else {
-          applyOwnership(this, owner);
-        }
+      const destination = $(args[0] as JQuery<HTMLElement>);
+      const isTarget = isTargetContainer(destination);
+      let owner = isTarget ? getOwnerFromJQuery(this) : null;
+      let ctx: string | Error | null = null;
+
+      if (isTarget && !owner) {
+        ctx = captureCreationContext();
+        owner = typeof ctx === 'string' ? ctx : null;
       }
-      return originalAppendTo.apply(this, args);
+
+      const result = originalAppendTo.apply(this, args);
+
+      if (isTarget) {
+        enqueueOwnershipJob({
+          targets: this as OwnershipTarget,
+          ownerHint: owner,
+          context: owner ? null : ctx,
+        });
+      }
+
+      return result;
     };
 
     $.fn.on = function (this, ...args) {

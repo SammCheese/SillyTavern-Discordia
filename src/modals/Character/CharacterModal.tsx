@@ -187,11 +187,12 @@ const CharacterModal: React.FC<CharacterModalProps> = ({
         if (!avatarName) return;
         await updateCharacter(avatarName, payload);
       }
+
       if (onSave) {
         onSave();
       }
 
-      await refreshCharacterList();
+      refreshCharacterList();
 
       closeModal();
     } catch (error) {
