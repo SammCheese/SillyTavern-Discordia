@@ -1,9 +1,15 @@
-import { useCallback, lazy, useMemo } from 'react';
+import { useCallback, lazy, useMemo, useRef, Suspense } from 'react';
 
 import type { Manifest } from '../../../services/extensionService';
 import { useExtensionState } from '../../../providers/extensionProvider';
 import { usePopup } from '../../../providers/popupProvider';
 import ExtensionSection from './components/ExtensionSection';
+import Card, {
+  CardBackground,
+  CardBorder,
+  CardColor,
+} from '../../../components/common/Card/Card';
+import Button from '../../../components/common/Button/Button';
 
 const SettingsFrame = lazy(() => import('../base/Base'));
 
@@ -33,8 +39,11 @@ export interface ExtensionList {
 }
 
 const ExtensionSettings = () => {
-  const { toggleExtension, categorizedExtensions } = useExtensionState();
+  const { toggleExtension, categorizedExtensions, disabledExtensions } =
+    useExtensionState();
   const { openPopup } = usePopup();
+
+  const initialDisabledState = useRef<Set<string>>(new Set(disabledExtensions));
 
   const onToggle = useCallback(
     (extension: ExtensionInfo) => {
@@ -56,9 +65,6 @@ const ExtensionSettings = () => {
         confirmVariant: 'danger',
         cancelText: 'Cancel',
         description: `Are you sure you want to delete the extension "${extensionName}"? This action cannot be undone.`,
-        onCancel: () => {
-          void 0;
-        },
         onConfirm: () => {
           return deleteExtension(extensionName);
         },
@@ -76,24 +82,76 @@ const ExtensionSettings = () => {
     [categorizedExtensions],
   );
 
+  const hasPendingChanges = useMemo(() => {
+    if (disabledExtensions.length !== initialDisabledState.current.size)
+      return true;
+
+    for (const ext of disabledExtensions) {
+      if (!initialDisabledState.current.has(ext)) return true;
+    }
+    return false;
+  }, [disabledExtensions]);
+
+  const reloadWindow = useCallback(() => {
+    window.location.reload();
+  }, []);
+
   return (
-    <SettingsFrame title="Extension Settings" onClose={handleClose}>
-      <div className="settings-section space-y-6">
-        {sections &&
-          sections.map(
-            ({ title, extensions }) =>
-              extensions.length > 0 && (
-                <ExtensionSection
-                  key={title}
-                  title={title}
-                  extensions={extensions}
-                  onToggle={onToggle}
-                  onDelete={handleDelete}
-                />
-              ),
-          )}
-      </div>
-    </SettingsFrame>
+    <>
+      <Suspense fallback={null}>
+        <SettingsFrame
+          title="Extension Settings"
+          onClose={handleClose}
+          header={
+            hasPendingChanges ? (
+              <PendingChangesBanner onReload={reloadWindow} />
+            ) : null
+          }
+        >
+          <div className="settings-section space-y-6">
+            <div>
+              {sections &&
+                sections.map(
+                  ({ title, extensions }) =>
+                    extensions.length > 0 && (
+                      <ExtensionSection
+                        key={title}
+                        title={title}
+                        extensions={extensions}
+                        onToggle={onToggle}
+                        onDelete={handleDelete}
+                      />
+                    ),
+                )}
+            </div>
+          </div>
+        </SettingsFrame>
+      </Suspense>
+    </>
+  );
+};
+
+const PendingChangesBanner = ({ onReload }: { onReload: () => void }) => {
+  return (
+    <div className="mb-6 mt-6 w-full top-16 left-0 px-6 z-50 pointer-events-none">
+      <Card
+        color={CardColor.YELLOW}
+        border={CardBorder.DASHED}
+        background={CardBackground.YELLOW}
+        className="p-4 mb-4 flex flex-row justify-between items-center pointer-events-auto shadow-md"
+      >
+        <div className="font-medium">
+          <div>
+            <i className="fa-solid fa-exclamation-triangle mr-2 text-yellow-700" />
+            <span>
+              <strong>Note: </strong>
+              Some Changes may require a reload to take effect
+            </span>
+          </div>
+          <Button onClick={onReload}>Reload</Button>
+        </div>
+      </Card>
+    </div>
   );
 };
 

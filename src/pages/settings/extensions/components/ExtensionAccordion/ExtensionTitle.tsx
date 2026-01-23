@@ -7,6 +7,7 @@ interface TitleProps {
   hasSettings: boolean;
   hasUpdates: boolean;
   onUpdateClick?: () => void;
+  isUpdating?: boolean;
 }
 
 const ExtensionTitle = ({
@@ -15,9 +16,11 @@ const ExtensionTitle = ({
   hasSettings,
   hasUpdates,
   onUpdateClick,
+  isUpdating = false,
 }: TitleProps) => {
   const handleUpdateClick = useCallback(
     (event) => {
+      if (isUpdating) return;
       event.stopPropagation();
       onUpdateClick?.();
     },
@@ -47,6 +50,7 @@ const ExtensionTitle = ({
             color="#4ade80"
             tooltip="Update Available"
             onClick={handleUpdateClick}
+            disabled={isUpdating}
           />
         )}
       </div>

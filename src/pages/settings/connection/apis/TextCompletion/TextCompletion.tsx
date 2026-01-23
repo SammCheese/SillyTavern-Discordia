@@ -56,8 +56,8 @@ const TextGenerationSettings = ({ entries }: TextGenerationSettingsProps) => {
   const [apiKeyInput, setApiKeyInput] = useState('');
 
   // Handlers
-  const handleTypeChange = (value: string) => {
-    updateCurrentProfile({ api: value });
+  const handleTypeChange = (value: string | number) => {
+    updateCurrentProfile({ api: value as string });
     updateGlobalSetting('type', value);
   };
 

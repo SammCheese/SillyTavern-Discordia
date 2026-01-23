@@ -77,6 +77,8 @@ export const ExtensionProvider = ({
   const [disabledExtensions, setDisabledExtensions] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  const isMounted = useRef(false);
+
   useEffect(() => {
     const init = async () => {
       const { extension_settings } = await imports('@scripts/extensions');
@@ -85,7 +87,6 @@ export const ExtensionProvider = ({
     init();
   }, []);
 
-  const isMounted = useRef(false);
   useEffect(() => {
     if (isMounted.current) {
       saveSettingsDebounced();
@@ -106,6 +107,8 @@ export const ExtensionProvider = ({
       }));
 
       setExtensions(enriched);
+
+      fetchVersions(enriched);
     } catch (err) {
       console.error('Failed to load extensions', err);
     } finally {
@@ -113,58 +116,54 @@ export const ExtensionProvider = ({
     }
   }, []);
 
+  const fetchVersions = useCallback(async (exts: ExtensionInfo[]) => {
+    const needVersion = exts.filter((e) => e.type !== 'system');
+    if (needVersion.length === 0) return;
+
+    const results = await Promise.allSettled(
+      needVersion.map(async (ext) => {
+        const ver = await getExtensionVersion(ext.name);
+        return { name: ext.name, version: ver };
+      }),
+    );
+
+    setExtensions((prev) => {
+      const updates = new Map();
+      results.forEach((r) => {
+        if (r.status === 'fulfilled' && r.value?.version) {
+          updates.set(r.value.name, r.value.version);
+        }
+      });
+
+      if (updates.size === 0) return prev;
+
+      return prev.map((ext) => {
+        if (updates.has(ext.name)) {
+          return { ...ext, version: updates.get(ext.name) };
+        }
+        return ext;
+      });
+    });
+  }, []);
+
   useEffect(() => {
     fetchBaseData();
   }, [fetchBaseData]);
 
   useEffect(() => {
-    const targets = extensions.filter((e) => e.type !== 'system' && !e.version);
-    if (targets.length === 0) return;
-
-    const t = setTimeout(async () => {
-      const updates = await Promise.allSettled(
-        targets.map(async (ext) => {
-          try {
-            const ver = await getExtensionVersion(ext.name);
-            return { name: ext.name, version: ver };
-          } catch {
-            return null;
-          }
-        }),
-      );
-
-      setExtensions((prev) =>
-        prev.map((ext) => {
-          const update = updates.find(
-            (u) => u.status === 'fulfilled' && u.value?.name === ext.name,
-          );
-          if (update && update.status === 'fulfilled' && update.value) {
-            return { ...ext, version: update.value.version };
-          }
-          return ext;
-        }),
-      );
-    }, 100);
-    return () => clearTimeout(t);
-  }, [extensions]);
-
-  useEffect(() => {
     const fetchSettings = async () => {
       try {
         const associations = await processExtensionHTMLs();
+
         setSettingsRecord((prev) => {
           if (!prev) return associations;
-          const newMap = new Map(associations.map((a) => [a.name, a]));
 
-          const merged = prev.map((p) => {
-            if (newMap.has(p.name)) {
-              const updated = newMap.get(p.name)!;
-              newMap.delete(p.name);
-              return updated;
-            }
-            return p;
-          });
-          return [...merged, ...newMap.values()];
+          const distinctMap = new Map<string, ExtensionRecord>();
+
+          prev.forEach((p) => distinctMap.set(p.name, p));
+          associations.forEach((a) => distinctMap.set(a.name, a));
+
+          return Array.from(distinctMap.values());
         });
       } catch (e) {
         console.error(e);

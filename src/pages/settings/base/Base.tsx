@@ -33,10 +33,16 @@ const CloseButton = memo(function CloseButton() {
 interface SettingsFrameProps {
   title: string;
   children: ReactNode;
+  header?: ReactNode;
   onClose?: () => void;
 }
 
-const SettingsFrame = ({ title, children, onClose }: SettingsFrameProps) => {
+const SettingsFrame = ({
+  title,
+  children,
+  header,
+  onClose,
+}: SettingsFrameProps) => {
   const { closePage } = useContext(PageContext);
 
   const handleClose = useCallback(() => {
@@ -70,6 +76,8 @@ const SettingsFrame = ({ title, children, onClose }: SettingsFrameProps) => {
           <CloseButton />
         </button>
       </div>
+      <div>{header}</div>
+
       <div
         className="settings-content w-full flex-1 overflow-auto overflow-x-hidden min-h-0"
         style={{

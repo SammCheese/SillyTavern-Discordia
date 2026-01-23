@@ -2,9 +2,9 @@ import type _ from 'lodash';
 import {
   createContext,
   useState,
-  useCallback,
   useContext,
   type ReactNode,
+  useMemo,
 } from 'react';
 
 interface SearchContextType {
@@ -21,15 +21,11 @@ const lodash = SillyTavern.libs.lodash as typeof _;
 export const SearchProvider = ({ children }: { children: ReactNode }) => {
   const [searchQuery, setSearchQuery] = useState('');
 
-  const handleSetSearchQuery = useCallback((query: string) => {
-    lodash.debounce(() => {
-      setSearchQuery(query);
-    }, 300)();
-  }, []);
+  const debouncedSet = useMemo(() => lodash.debounce(setSearchQuery, 300), []);
 
   return (
     <SearchContext.Provider
-      value={{ searchQuery, setSearchQuery: handleSetSearchQuery }}
+      value={{ searchQuery, setSearchQuery: debouncedSet }}
     >
       {children}
     </SearchContext.Provider>

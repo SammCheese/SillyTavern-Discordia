@@ -36,6 +36,7 @@ const ExtensionAccordion = memo(function ExtensionAccordion({
   const [versionState, setVersionState] = useState<Version | undefined>(
     version,
   );
+  const [isUpdating, setIsUpdating] = useState(false);
 
   useEffect(() => {
     setVersionState(version);
@@ -48,6 +49,7 @@ const ExtensionAccordion = memo(function ExtensionAccordion({
   }, [onToggle, extension]);
 
   const handleUpdateClick = useCallback(() => {
+    setIsUpdating(true);
     updateExtension(extension.name)
       .then(() => {
         getExtensionVersion(extension.name).then((version) => {
@@ -56,6 +58,9 @@ const ExtensionAccordion = memo(function ExtensionAccordion({
       })
       .catch((error) => {
         console.error(`Failed to update extension ${extension.name}:`, error);
+      })
+      .finally(() => {
+        setIsUpdating(false);
       });
   }, [extension.name, version]);
 
@@ -85,6 +90,7 @@ const ExtensionAccordion = memo(function ExtensionAccordion({
           hasSettings={!!settings}
           hasUpdates={versionState?.isUpToDate === false}
           onUpdateClick={handleUpdateClick}
+          isUpdating={isUpdating}
         />
       }
     >

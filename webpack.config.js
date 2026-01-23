@@ -1,7 +1,6 @@
 const path = require('path');
 const webpack = require('webpack');
 const TerserPlugin = require('terser-webpack-plugin');
-
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 
@@ -28,6 +27,7 @@ module.exports = (env, argv) => {
       rules: [
         {
           test: /\.tsx?$/,
+          exclude: /node_modules/,
           use: [
             {
               loader: 'ts-loader',
@@ -39,7 +39,6 @@ module.exports = (env, argv) => {
               },
             },
           ],
-          exclude: /node_modules/,
         },
         {
           test: /\.css$/i,

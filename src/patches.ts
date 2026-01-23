@@ -16,7 +16,7 @@ export const performPatches = async () => {
 
   try {
     for (const patch of patches) {
-      await Promise.resolve(patch.run());
+      patch.run();
     }
   } catch (error) {
     console.error('Failed to Perform Patches:', error);

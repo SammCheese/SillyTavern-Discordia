@@ -8,6 +8,7 @@ Tracekit.remoteFetching = false;
 Tracekit.collectWindowErrors = false;
 
 const TARGET_CONTAINER_IDS = ['extensions_settings', 'extensions_settings2'];
+const FAST_FAIL_REGEX = /extensions\//;
 const EXTENSION_NAME_REGEX =
   /extensions\/(?:third-party\/)?(?!(?:SillyTavern-Discordia|third-party)\/)([^/]+)\//;
 const EXTENSION_NAME_NEGLECT_SET = new Set(['SillyTavern-Discordia']);
@@ -22,6 +23,7 @@ const IGNORED_TAGS_SET = new Set([
 const LATELOADER_LEEWAY_MS = 30000;
 
 // Caches
+const MAX_CACHE_SIZE = 500;
 const stackCache = new Map<string, string | null>();
 const pendingStackMap = new WeakMap<Element, Error>();
 const elementOwnerMap = new WeakMap<Element, string>();
@@ -46,7 +48,16 @@ const resolveStackToOwner = (error: Error): string | null => {
     return stackCache.get(stackString)!;
   }
 
-  const stackFrames = Tracekit.computeStackTrace(error).stack || [];
+  if (stackCache.size > MAX_CACHE_SIZE) {
+    stackCache.clear();
+  }
+
+  if (!FAST_FAIL_REGEX.test(stackString)) {
+    stackCache.set(stackString, null);
+    return null;
+  }
+
+  const stackFrames = Tracekit.computeStackTrace(error, 10).stack || [];
   let foundOwner: string | null = null;
 
   for (const frame of stackFrames) {
@@ -66,18 +77,16 @@ const resolveStackToOwner = (error: Error): string | null => {
 const OWNER_ATTR = 'data-discordia-settings-owner';
 
 const setOwnerOnDescendants = (root: Element, owner: string) => {
-  const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT, {
-    acceptNode: (node) => {
-      const el = node as Element;
-      return !el.getAttribute(OWNER_ATTR)
-        ? NodeFilter.FILTER_ACCEPT
-        : NodeFilter.FILTER_SKIP;
-    },
-  });
+  if (elementOwnerMap.get(root) === owner) return;
 
-  let node: Node | null;
-  while ((node = walker.nextNode())) {
-    (node as Element).setAttribute(OWNER_ATTR, owner);
+  elementOwnerMap.set(root, owner);
+  root.setAttribute(OWNER_ATTR, owner);
+  pendingStackMap.delete(root);
+
+  const descendants = root.querySelectorAll(`:not([${OWNER_ATTR}])`);
+  for (let i = 0; i < descendants.length; i++) {
+    descendants[i]?.setAttribute(OWNER_ATTR, owner);
+    elementOwnerMap.set(descendants[i]!, owner);
   }
 };
 
@@ -87,14 +96,16 @@ const applyOwnership = (
 ) => {
   try {
     if (element instanceof jQuery) {
-      (element as JQuery<Element>).each((_, el) => {
+      // @ts-expect-error exists
+      for (let i = 0; i < element.length; i++) {
+        const el = element[i];
         if (elementOwnerMap.get(el) === owner) return;
 
         elementOwnerMap.set(el, owner);
         el.setAttribute?.(OWNER_ATTR, owner);
         setOwnerOnDescendants(el, owner);
         pendingStackMap.delete(el);
-      });
+      }
       element[OWNER_SYMBOL] = owner;
     } else if (element instanceof Element) {
       if (elementOwnerMap.get(element) === owner) return;
@@ -142,51 +153,58 @@ const normalizeTargets = (targets: OwnershipTarget): (JQuery | Element)[] => {
   return Array.from(targets);
 };
 
+const processQueue = (deadline: IdleDeadline) => {
+  ownershipIdleHandle = null;
+
+  while (ownershipQueue.length > 0 && deadline.timeRemaining() > 1) {
+    const job = ownershipQueue.shift();
+    if (!job) break;
+
+    let owner = job.ownerHint ?? null;
+
+    if (!owner && job.context) {
+      owner =
+        typeof job.context === 'string'
+          ? job.context
+          : resolveStackToOwner(job.context as Error);
+    }
+
+    const targets = normalizeTargets(job.targets);
+
+    if (owner) {
+      for (const target of targets) {
+        applyOwnership(target as JQuery | Element, owner);
+      }
+      continue;
+    }
+
+    for (const target of targets) {
+      const resolved =
+        target instanceof jQuery
+          ? getOwnerFromJQuery(target as JQuery)
+          : getElementOwner(target as Element);
+
+      if (resolved) {
+        applyOwnership(target as JQuery | Element, resolved);
+      }
+    }
+  }
+
+  if (ownershipQueue.length > 0) scheduleOwnershipProcessing();
+};
+
 const scheduleOwnershipProcessing = () => {
   if (ownershipIdleHandle !== null) return;
 
-  const processQueue = () => {
-    ownershipIdleHandle = null;
-    const jobs = ownershipQueue.splice(0, ownershipQueue.length);
-
-    for (const job of jobs) {
-      let owner = job.ownerHint ?? null;
-
-      if (!owner && job.context) {
-        owner =
-          typeof job.context === 'string'
-            ? job.context
-            : resolveStackToOwner(job.context as Error);
-      }
-
-      const targets = normalizeTargets(job.targets);
-
-      if (owner) {
-        for (const target of targets) {
-          applyOwnership(target as JQuery | Element, owner);
-        }
-        continue;
-      }
-
-      for (const target of targets) {
-        const resolved =
-          target instanceof jQuery
-            ? getOwnerFromJQuery(target as JQuery)
-            : getElementOwner(target as Element);
-
-        if (resolved) {
-          applyOwnership(target as JQuery | Element, resolved);
-        }
-      }
-    }
-
-    if (ownershipQueue.length > 0) scheduleOwnershipProcessing();
-  };
-
   if (typeof requestIdleCallback !== 'undefined') {
-    ownershipIdleHandle = requestIdleCallback(processQueue, { timeout: 64 });
+    ownershipIdleHandle = requestIdleCallback(processQueue, { timeout: 1000 });
   } else {
-    ownershipIdleHandle = window.setTimeout(processQueue, 0);
+    ownershipIdleHandle = window.setTimeout(() => {
+      processQueue({
+        didTimeout: false,
+        timeRemaining: () => 50, // 50ms Deadline
+      });
+    }, 10);
   }
 };
 
@@ -245,7 +263,8 @@ export const getElementOwner = (element: Element): string | null => {
 export const getOwnerFromJQuery = ($el: JQuery): string | null => {
   if ($el[OWNER_SYMBOL]) return $el[OWNER_SYMBOL];
 
-  for (let i = 0; i < $el.length; i++) {
+  const len = Math.min($el.length, 5);
+  for (let i = 0; i < len; i++) {
     const el = $el[i] as Element;
     const owner = getElementOwner(el);
     if (owner) {
@@ -272,11 +291,12 @@ export const getOwner = (target: JQuery | Element | string): string | null => {
 const isTargetContainer = (target: JQuery<HTMLElement>): boolean => {
   try {
     if (!target.length) return false;
-    const id = target[0]?.id;
-    if (id && TARGET_CONTAINER_IDS.includes(id)) return true;
+    const node = target[0];
+    if (node?.id && TARGET_CONTAINER_IDS.includes(node?.id)) return true;
 
-    for (const tid of TARGET_CONTAINER_IDS) {
-      if (target.closest(`#${tid}`).length > 0) return true;
+    const containers = getContainers();
+    for (let i = 0; i < containers.length; i++) {
+      if (containers[i]?.contains(node ?? null)) return true;
     }
     return false;
   } catch {
@@ -297,20 +317,20 @@ export const hijackJquery = () => {
     $.fn.init = function (selector, context) {
       const result = originalInit.call(this, selector, context);
 
-      const isHTMLCreation =
-        typeof selector === 'string' && selector.trim().startsWith('<');
+      // Quick check for HTML string (60 is '<')
+      if (typeof selector === 'string' && selector.charCodeAt(0) === 60) {
+        if (result.length > 0) {
+          const ctx = captureCreationContext();
 
-      if ((isHTMLCreation || !selector) && result.length > 0) {
-        const ctx = captureCreationContext();
-
-        if (typeof ctx === 'string') {
-          result[OWNER_SYMBOL] = ctx;
-          for (let i = 0; i < result.length; i++) {
-            elementOwnerMap.set(result[i], ctx);
-          }
-        } else if (ctx instanceof Error) {
-          for (let i = 0; i < result.length; i++) {
-            pendingStackMap.set(result[i], ctx);
+          if (typeof ctx === 'string') {
+            result[OWNER_SYMBOL] = ctx;
+            for (let i = 0; i < result.length; i++) {
+              elementOwnerMap.set(result[i], ctx);
+            }
+          } else if (ctx instanceof Error) {
+            for (let i = 0; i < result.length; i++) {
+              pendingStackMap.set(result[i], ctx);
+            }
           }
         }
       }
@@ -325,34 +345,37 @@ export const hijackJquery = () => {
       if (!this.length) return originalAppend.apply(this, args);
 
       const isTarget = isTargetContainer(this);
+
+      if (!isTarget)
+        // @ts-expect-error apply
+        return originalAppend.apply(this, args);
+
       let content = args[0];
       let owner: string | null = null;
       let ctx: string | Error | null = null;
 
-      if (isTarget) {
-        if (content instanceof jQuery) {
-          owner = getOwnerFromJQuery(content as JQuery<HTMLElement>);
-        }
+      if (content instanceof jQuery) {
+        owner = getOwnerFromJQuery(content as JQuery<HTMLElement>);
+      }
 
-        if (!owner) {
-          owner = getOwnerFromJQuery(this);
-        }
+      if (!owner) {
+        owner = getOwnerFromJQuery(this);
+      }
 
-        if (!owner) {
-          ctx = captureCreationContext();
-          owner = typeof ctx === 'string' ? ctx : null;
-        }
+      if (!owner) {
+        ctx = captureCreationContext();
+        owner = typeof ctx === 'string' ? ctx : null;
+      }
 
-        if (typeof content === 'string') {
-          content = $(content);
-          args[0] = content;
-        }
+      if (typeof content === 'string') {
+        content = $(content);
+        args[0] = content;
       }
 
       // @ts-expect-error apply
       const result = originalAppend.apply(this, args);
 
-      if (isTarget && typeof content !== 'undefined') {
+      if (content) {
         enqueueOwnershipJob({
           targets: content as OwnershipTarget,
           ownerHint: owner,
@@ -364,25 +387,28 @@ export const hijackJquery = () => {
     };
 
     $.fn.appendTo = function (this, ...args) {
-      const destination = $(args[0] as JQuery<HTMLElement>);
-      const isTarget = isTargetContainer(destination);
+      const destArg = args[0];
+      const destination =
+        destArg instanceof jQuery ? destArg : $(destArg as HTMLElement);
+      const isTarget = isTargetContainer(destination as JQuery<HTMLElement>);
+
+      if (!isTarget) return originalAppendTo.apply(this, args);
+
       let owner = isTarget ? getOwnerFromJQuery(this) : null;
       let ctx: string | Error | null = null;
 
-      if (isTarget && !owner) {
+      if (!owner) {
         ctx = captureCreationContext();
         owner = typeof ctx === 'string' ? ctx : null;
       }
 
       const result = originalAppendTo.apply(this, args);
 
-      if (isTarget) {
-        enqueueOwnershipJob({
-          targets: this as OwnershipTarget,
-          ownerHint: owner,
-          context: owner ? null : ctx,
-        });
-      }
+      enqueueOwnershipJob({
+        targets: this as OwnershipTarget,
+        ownerHint: owner,
+        context: owner ? null : ctx,
+      });
 
       return result;
     };
@@ -397,11 +423,13 @@ export const hijackJquery = () => {
         return originalOn.apply(this, args);
       }
 
-      const owner = getOwnerFromJQuery(this);
-      if (owner) {
-        for (let i = 0; i < this.length; i++) {
-          // @ts-expect-error apply
-          if (this[i]) applyOwnership(this[i], owner);
+      if (this[OWNER_SYMBOL] || elementOwnerMap.has(first)) {
+        const owner = getOwnerFromJQuery(this);
+        if (owner) {
+          for (let i = 0; i < this.length; i++) {
+            // @ts-expect-error apply
+            if (this[i]) applyOwnership(this[i], owner);
+          }
         }
       }
 
@@ -428,7 +456,6 @@ export const hijackJquery = () => {
         DISCORDIA_EVENTS.EXTENSION_HTML_POPULATED,
         scheduleCleanup,
       );
-
       stackCache.clear();
     };
 
@@ -447,12 +474,14 @@ export const hijackJquery = () => {
 
 const resolveAllOwnership = (containers: HTMLElement[]): void => {
   for (const container of containers) {
-    const children = Array.from(container.children);
-    for (const child of children) {
+    const children = container.children;
+    for (let i = 0; i < children.length; i++) {
+      const child = children[i]!;
       getOwner(child);
-
       const drawers = child.querySelectorAll('.inline-drawer-content');
-      drawers.forEach((drawer) => getOwner(drawer));
+      for (let j = 0; j < drawers.length; j++) {
+        getOwner(drawers[j] as Element);
+      }
     }
   }
 };
@@ -473,15 +502,7 @@ function* extensionCloningGenerator(
   for (const elem of allChildren) {
     try {
       const original = $(elem) as JQuery<HTMLElement>;
-
-      const owner = getOwner(original);
-      console.debug(
-        '[Discordia] Cloning element, owner:',
-        owner || 'unknown',
-        'class:',
-        elem.className,
-      );
-
+      getOwner(original);
       const clone = original.clone(true, true);
 
       // Force visibility

@@ -25,6 +25,9 @@ export const ChatContextMenu = () => {
       const messageId = messageEl.getAttribute('mesid');
       if (!messageId) return;
 
+      const isEditing = messageEl.querySelector('textarea#curEditTextarea');
+      if (isEditing) return;
+
       const id = parseInt(messageId);
       //const isUser = messageEl.getAttribute('is_user');
       const isSystem = messageEl.getAttribute('is_system');
