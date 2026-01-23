@@ -6,12 +6,18 @@ import {
 } from './patches/overrides';
 
 export const performPatches = async () => {
+  const patches = [
+    { name: 'hijackJquery', run: hijackJquery },
+    { name: 'overrideSpinner', run: overrideSpinner },
+    { name: 'angleSendButton', run: angleSendButton },
+    { name: 'combineChatMenu', run: combineChatMenu },
+    { name: 'poolDOMExtensions', run: poolDOMExtensions },
+  ];
+
   try {
-    hijackJquery();
-    overrideSpinner();
-    angleSendButton();
-    combineChatMenu();
-    poolDOMExtensions();
+    for (const patch of patches) {
+      patch.run();
+    }
   } catch (error) {
     console.error('Failed to Perform Patches:', error);
   }

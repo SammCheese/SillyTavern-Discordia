@@ -94,8 +94,8 @@ const ConnectionSettings = () => {
     }));
   }, [profiles]);
 
-  const handleProfileChange = (profile_id: string) => {
-    setSelectedProfile(profile_id);
+  const handleProfileChange = (profile_id: string | number) => {
+    setSelectedProfile(profile_id as string);
     const aiMode = profiles.find((p) => p.id === profile_id)?.mode;
     const api = AIOptions.find((option) => option.short === aiMode)
       ?.value as MainAPIValues;
@@ -105,7 +105,7 @@ const ConnectionSettings = () => {
     }
   };
 
-  const handleApiChange = (value: string) => {
+  const handleApiChange = (value: string | number) => {
     const apiValue = value as MainAPIValues;
     setCurrentApi(apiValue);
     setCurrentApiState(apiValue);

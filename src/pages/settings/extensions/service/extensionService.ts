@@ -4,16 +4,17 @@ import type { ExtensionInfo } from '../ExtensionSettings';
 
 const { getRequestHeaders } = await imports('@script');
 
+let extensionTypesCache: Record<string, string> | null = null;
+
 export async function discoverExtensions(): Promise<ExtensionInfo[]> {
   try {
     const response = await fetch('/api/extensions/discover');
 
     if (response.ok) {
-      const extensions = await response.json();
-      return extensions;
-    } else {
-      return [];
+      return await response.json();
     }
+
+    return [];
   } catch (err) {
     console.error(err);
     return [];
@@ -26,13 +27,21 @@ export async function discoverExtensions(): Promise<ExtensionInfo[]> {
  * @returns {string} Type of the extension (global, local, system, or empty string if not found)
  */
 async function getExtensionType(externalId) {
-  const { extensionTypes } = await imports('@scripts/extensions');
-  const id = Object.keys(extensionTypes).find(
+  if (!extensionTypesCache) {
+    const { extensionTypes } = await imports('@scripts/extensions');
+    extensionTypesCache = extensionTypes;
+  }
+
+  if (extensionTypesCache[externalId]) {
+    return extensionTypesCache[externalId];
+  }
+
+  const id = Object.keys(extensionTypesCache).find(
     (id) =>
       id === externalId ||
       (id.startsWith('third-party') && id.endsWith(externalId)),
   );
-  return id ? extensionTypes[id] : '';
+  return id ? extensionTypesCache[id] : '';
 }
 
 export async function getExtensionVersion(extensionName, signal?) {
@@ -47,10 +56,9 @@ export async function getExtensionVersion(extensionName, signal?) {
       signal,
     });
 
-    const data = await response.json();
-    return data as ExtensionInfo['version'];
-  } catch (error) {
-    console.error('Error:', error);
+    return (await response.json()) as ExtensionInfo['version'];
+  } catch {
+    return undefined;
   }
 }
 
@@ -110,41 +118,55 @@ function getKnownNamesSet(knownNames?: string[]): Set<string> | null {
   if (!knownNamesCache.has(knownNames)) {
     knownNamesCache.set(knownNames, new Set(knownNames));
   }
-  return knownNamesCache.get(knownNames) || null;
+  return knownNamesCache.get(knownNames)!;
 }
 
 const INTERACTIVE_SELECTOR =
   'input, select, textarea, button, a, label' as const;
 
+interface JQueryDOMElement extends JQuery<Element> {
+  prevObject?: JQuery<HTMLElement>;
+}
+
 function* extensionProcessorGenerator(
   elements: JQuery<Element>[],
   knownNamesSet: Set<string> | null,
 ): Generator<null | ExtensionRecord, void, unknown> {
-  const batchSize = 5;
+  const batchSize = 10;
   let processedCount = 0;
 
-  for (const element of elements) {
-    const content = element.find('.inline-drawer-content');
+  for (let i = 0; i < elements.length; i++) {
+    let element = elements[i] as JQueryDOMElement;
 
+    if (element.length > 0 && element[0]?.childNodes.length === 0) {
+      if (element.prevObject && element.prevObject.length > 0) {
+        element = element.prevObject.clone(true, true);
+      }
+    }
+
+    const content = element.find('.inline-drawer-content');
     if (content.length === 0) continue;
 
-    const { elem, owner } = (() => {
-      const directOwner = getOwner(element as JQuery<HTMLElement>);
+    const result = (() => {
+      const directOwner = getOwner(element.get(0)!);
       if (directOwner) return { elem: content, owner: directOwner };
 
       const contentOwner = getOwner(content);
       if (contentOwner) return { elem: content, owner: contentOwner };
 
-      const interactives = content.find(INTERACTIVE_SELECTOR);
+      const nativeContent = content.get(0);
+      if (!nativeContent) return { elem: content, owner: 'unknown' };
+
+      const interactives = nativeContent.querySelectorAll(INTERACTIVE_SELECTOR);
       if (interactives.length === 0) return { elem: content, owner: 'unknown' };
 
       const heuristics = new Map<string, number>();
       let maxCount = 0;
       let probableOwner = 'unknown';
 
-      interactives.each((_: number, interactive: HTMLElement) => {
-        const owner = getOwner($(interactive));
-        if (!owner) return;
+      for (let j = 0; j < interactives.length; j++) {
+        const owner = getOwner(interactives[j] as Element);
+        if (!owner) continue;
 
         const count = (heuristics.get(owner) ?? 0) + 1;
         heuristics.set(owner, count);
@@ -153,7 +175,7 @@ function* extensionProcessorGenerator(
           maxCount = count;
           probableOwner = owner;
         }
-      });
+      }
 
       if (
         knownNamesSet &&
@@ -169,21 +191,16 @@ function* extensionProcessorGenerator(
       return { elem: content, owner: probableOwner };
     })();
 
-    if (elem) {
-      elem.removeClass('inline-drawer-content');
+    if (result.elem) {
+      result.elem.removeClass('inline-drawer-content');
+      yield { name: result.owner, elem: result.elem };
     }
-
-    yield { name: owner, elem };
 
     processedCount++;
     if (processedCount % batchSize === 0) {
       yield null;
     }
   }
-}
-
-interface JQueryDOMElement extends JQuery<Element> {
-  prevObject?: JQuery<HTMLElement>;
 }
 
 export async function processExtensionHTMLs(
@@ -194,23 +211,9 @@ export async function processExtensionHTMLs(
 
   if (elements.length === 0) return [];
 
-  // Mobile Fix
-  const validElements = elements.map((el: JQueryDOMElement) => {
-    if (
-      el.length > 0 &&
-      el[0]?.childNodes.length === 0 &&
-      el?.prevObject &&
-      el?.prevObject.length > 0
-    ) {
-      console.debug('[Discordia] Mitigating dead element', el);
-      return el.prevObject.clone(true, true);
-    }
-    return el;
-  });
-
   const knownNamesSet = getKnownNamesSet(knownNames);
 
-  const generator = extensionProcessorGenerator(validElements, knownNamesSet);
+  const generator = extensionProcessorGenerator(elements, knownNamesSet);
 
   return runTaskInIdle(generator, signal);
 }
