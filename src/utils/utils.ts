@@ -1,8 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 const {
-  characters,
-  getRequestHeaders,
   getThumbnailUrl,
   system_avatar,
   openCharacterChat,
@@ -12,73 +8,8 @@ const {
   saveSettingsDebounced,
   selectCharacterById,
 } = await imports('@script');
-const { groups, openGroupById, openGroupChat } = await imports(
-  '@scripts/groupChats',
-);
-const { sortMoments, timestampToMoment, isDataURL } =
-  await imports('@scripts/utils');
-
-export async function getRecentChats(entities?: Entity[], amount = 20) {
-  const response = await fetch('/api/chats/recent', {
-    method: 'POST',
-    headers: getRequestHeaders(),
-    body: JSON.stringify({ max: amount }),
-  });
-
-  if (!response.ok) {
-    console.warn('Failed to fetch recent character chats');
-    return [];
-  }
-
-  const data: any[] = await response.json();
-
-  if (!Array.isArray(data) || data.length === 0) {
-    return [];
-  }
-
-  const dataWithEntities = data
-    .sort((a, b) =>
-      sortMoments(timestampToMoment(a.last_mes), timestampToMoment(b.last_mes)),
-    )
-    .map((chat) => ({
-      chat,
-      character: characters.find((x) => x.avatar === chat.avatar),
-      group: groups.find((x) => x.id === chat.group),
-    }))
-    .filter((t) => t.character || t.group)
-    .filter((t) => {
-      if (!entities || entities.length === 0) return true;
-
-      const chatEntity = entities.find(
-        (e) =>
-          (t.character &&
-            e.type === 'character' &&
-            e.item.avatar.toString() === t.character!.avatar?.toString()) ||
-          (t.group &&
-            e.type === 'group' &&
-            e.id.toString() === t.group!.id.toString()),
-      );
-      return !!chatEntity;
-    });
-
-  dataWithEntities.forEach(({ chat, character, group }, index) => {
-    const chatTimestamp = timestampToMoment(chat.last_mes);
-    chat.char_name = character?.name || group?.name || '';
-    chat.date_short = chatTimestamp.format('l');
-    chat.date_long = chatTimestamp.format('LL LT');
-    chat.chat_name = chat.file_name.replace('.jsonl', '');
-    chat.char_thumbnail = character
-      ? getThumbnailUrl('avatar', character?.avatar ?? '')
-      : system_avatar;
-    chat.is_group = !!group;
-    chat.hidden = index >= 15;
-    chat.avatar = chat.avatar || '';
-    chat.group = chat.group || '';
-    chat.char_id = character ? characters.indexOf(character) : undefined;
-  });
-
-  return dataWithEntities.map((t) => t.chat);
-}
+const { openGroupById, openGroupChat } = await imports('@scripts/groupChats');
+const { isDataURL } = await imports('@scripts/utils');
 
 export async function resetScrollHeight(element) {
   $(element).css('height', '0px');
@@ -94,7 +25,7 @@ export function toggleDrawer(drawer, expand = true) {
   const content = drawer.querySelector(':scope > .inline-drawer-content');
 
   if (!icon || !content) {
-    console.debug(
+    dislog.debug(
       'toggleDrawer: No icon or content found in the drawer element.',
     );
     return;
@@ -142,7 +73,7 @@ export const selectCharacter = async (char_id: number, chat_id?: string) => {
 
     await openCharacterChat(chat_id);
   } catch (error) {
-    console.error('Error selecting character:', error);
+    dislog.error('Error selecting character:', error);
   }
 };
 
@@ -169,7 +100,7 @@ export const selectGroup = async ({
 
     await openGroupChat(groupId, chat_id);
   } catch (error) {
-    console.error('Error selecting group:', error);
+    dislog.error('Error selecting group:', error);
   }
 };
 

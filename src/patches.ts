@@ -19,6 +19,6 @@ export const performPatches = async () => {
       patch.run();
     }
   } catch (error) {
-    console.error('Failed to Perform Patches:', error);
+    dislog.error('Failed to Perform Patches:', error);
   }
 };

@@ -4,6 +4,9 @@ import Tracekit from 'tracekit';
 
 const importPromise = imports('@script');
 
+// Track load time
+const timerStart = Date.now();
+
 Tracekit.remoteFetching = false;
 Tracekit.collectWindowErrors = false;
 
@@ -283,7 +286,7 @@ export const getOwner = (target: JQuery | Element | string): string | null => {
       return getOwnerFromJQuery(target as JQuery<HTMLElement>);
     if (target instanceof Element) return getElementOwner(target);
   } catch (e) {
-    console.error('[Discordia] getOwner error:', e);
+    dislog.error('[Discordia] getOwner error:', e);
   }
   return null;
 };
@@ -468,7 +471,7 @@ export const hijackJquery = () => {
       );
     });
   } catch (error) {
-    console.error('Failed to Hijack jQuery HTML Method:', error);
+    dislog.error('Failed to Hijack jQuery HTML Method:', error);
   }
 };
 
@@ -493,7 +496,7 @@ function* extensionCloningGenerator(
     Array.from(container.children),
   );
 
-  console.debug(
+  dislog.debug(
     '[Discordia] Cloning',
     allChildren.length,
     'direct children from containers',
@@ -510,7 +513,7 @@ function* extensionCloningGenerator(
 
       yield clone;
     } catch (e) {
-      console.warn('Failed to clone extension element, using fallback:', e);
+      dislog.warn('Failed to clone extension element, using fallback:', e);
       yield $(elem.cloneNode(true) as Element);
     }
   }
@@ -539,14 +542,14 @@ export const poolDOMExtensions = async () => {
         (c) => c.length > 0 && c[0]?.childNodes.length === 0 && c[0]?.innerHTML,
       );
       if (isCoping) {
-        console.warn(
+        dislog.warn(
           '[Discordia] Some elements lost children, this may affect mobile rendering',
         );
       }
 
       eventSource.emit(DISCORDIA_EVENTS.EXTENSION_HTML_POPULATED);
     } catch (error) {
-      console.error('Failed to Capture Extension Settings:', error);
+      dislog.error('Failed to Capture Extension Settings:', error);
     }
   };
 
@@ -593,6 +596,7 @@ export const poolDOMExtensions = async () => {
   captureExtensions();
 
   const idleCapture = () => {
+    dislog.log('Completed Load in ' + (Date.now() - timerStart) + 'ms');
     if (typeof requestIdleCallback !== 'undefined') {
       requestIdleCallback(
         () => {

@@ -110,7 +110,7 @@ export const ExtensionProvider = ({
 
       fetchVersions(enriched);
     } catch (err) {
-      console.error('Failed to load extensions', err);
+      dislog.error('Failed to load extensions', err);
     } finally {
       setIsLoading(false);
     }
@@ -166,7 +166,7 @@ export const ExtensionProvider = ({
           return Array.from(distinctMap.values());
         });
       } catch (e) {
-        console.error(e);
+        dislog.error(e);
       }
     };
 
@@ -232,7 +232,7 @@ export const ExtensionProvider = ({
         setDisabledExtensions((prev) => [...prev, extension.name]);
       }
     } catch (error) {
-      console.error('Failed to toggle extension:', error);
+      dislog.error('Failed to toggle extension:', error);
       throw error;
     }
   }, []);

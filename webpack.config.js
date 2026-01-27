@@ -57,6 +57,7 @@ module.exports = (env, argv) => {
     plugins: [
       new webpack.ProvidePlugin({
         imports: [path.resolve(__dirname, 'src/import.ts'), 'imports'],
+        dislog: [path.resolve(__dirname, 'src/utils/logger.ts'), 'dislog'],
       }),
       ...(isProduction
         ? [new MiniCssExtractPlugin({ filename: '[name].css' })]

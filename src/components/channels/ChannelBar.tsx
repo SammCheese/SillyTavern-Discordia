@@ -85,7 +85,7 @@ const ChannelBar = ({
           openPage(<CharacterSettings />);
           break;
         default:
-          console.log(`No action defined for icon with id: ${id}`);
+          dislog.log(`No action defined for icon with id: ${id}`);
       }
     },
     [openPage],

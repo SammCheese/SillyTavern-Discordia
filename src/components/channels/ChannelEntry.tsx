@@ -1,8 +1,9 @@
 import { memo, useCallback } from 'react';
 import { useChannelContextMenu } from './hooks/ChannelContextMenu';
+import GroupAvatar from '../groupAvatar/GroupAvatar';
 
 interface ChannelEntryProps {
-  avatar: string;
+  avatar?: string;
   chat: Chat;
   isSelected: boolean;
   onClick?: (chat: Chat) => void;
@@ -23,8 +24,8 @@ const ChannelEntry = ({
   return (
     <li
       className={`border-none list-none relative ms-1 select-none cursor-pointer rounded-lg hover:bg-lighter ${isSelected ? 'bg-lighter' : ''}`}
-      id={`recent-chat-${chat.file_id}`}
-      title={chat.file_id}
+      id={`recent-chat-${chat.file_id ?? chat.file_name}`}
+      title={chat.file_id ?? chat.file_name}
       onClick={handleClick}
       onContextMenu={handleContextMenu}
     >
@@ -39,12 +40,24 @@ const ChannelEntry = ({
             className="items-center flex gap-2 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap w-full"
           >
             <div className="h-12 items-center flex rounded-sm min-w-0 p-0">
-              <img
-                loading="lazy"
-                style={{ flex: '0 0 auto' }}
-                className="rounded-4xl h-9 w-9 object-cover flex me-3 justify-center"
-                src={avatar}
-              />
+              {chat.is_group ? (
+                <div className="me-3 flex shrink-0 justify-center">
+                  <GroupAvatar
+                    height={36}
+                    width={36}
+                    rounded={100}
+                    groupId={chat?.group?.toString()}
+                  />
+                </div>
+              ) : (
+                <img
+                  loading="lazy"
+                  style={{ flex: '0 0 auto' }}
+                  className="rounded-4xl h-9 w-9 object-cover flex me-3 justify-center"
+                  src={avatar}
+                />
+              )}
+
               <div className="truncate select-none">
                 {chat?.file_id ?? chat.file_name}
               </div>

@@ -286,7 +286,7 @@ export async function updateCharacter(
     try {
       return await renameCharacter(originalAvatarId, payload.ch_name.trim());
     } catch (error) {
-      console.error('Edit successful, but Rename failed:', error);
+      dislog.error('Edit successful, but Rename failed:', error);
       throw error;
     }
   }

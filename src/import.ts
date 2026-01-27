@@ -53,7 +53,7 @@ const initializePaths = async () => {
   };
 
   pathsInitialized = true;
-  console.log(
+  dislog.important(
     `[Discordia] Running as ${isLocal ? 'local' : 'global'} extension.`,
   );
 };
@@ -68,7 +68,7 @@ export const imports = async <T = any>(mod: string): Promise<T> => {
     const res = await import(/* webpackIgnore: true */ resolvedPath);
     return res as T;
   } catch (error) {
-    console.error(`Error importing ${mod} (${PATH_MAP![mod]}):`, error);
+    dislog.error(`Error importing ${mod} (${PATH_MAP![mod]}):`, error);
     return {} as T;
   }
 };

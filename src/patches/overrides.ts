@@ -44,7 +44,7 @@ export const overrideSpinner = () => {
       parent.append(newSpinner);
     }
   } catch (error) {
-    console.error('Failed to Apply Spinner Patch:', error);
+    dislog.error('Failed to Apply Spinner Patch:', error);
   }
 };
 
@@ -58,7 +58,7 @@ export const angleSendButton = () => {
       send_button.attr('style', '--fa-rotate-angle: 45deg');
     }
   } catch (error) {
-    console.error('Failed to Apply Send Button Patch:', error);
+    dislog.error('Failed to Apply Send Button Patch:', error);
   }
 };
 
@@ -97,7 +97,7 @@ export const combineChatMenu = () => {
       leftSendForm.append(extrasMenu);
     }
   } catch (error) {
-    console.error('Failed to Apply Combine Chat Menu Patch:', error);
+    dislog.error('Failed to Apply Combine Chat Menu Patch:', error);
   }
 };
 
@@ -115,6 +115,6 @@ const toggleCombinedChatMenu = (event: MouseEvent) => {
       optionsMenu.hide();
     }
   } catch (error) {
-    console.error('Failed to Handle Extra Listener:', error);
+    dislog.error('Failed to Handle Extra Listener:', error);
   }
 };
