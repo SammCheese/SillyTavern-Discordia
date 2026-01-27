@@ -152,6 +152,7 @@ export function ContextMenuProvider({ children }: { children: ReactNode }) {
         {isRendered &&
           createPortal(
             <div
+              id="context-menu-backdrop"
               className={`z-60 fixed top-0 left-0 w-dvw h-dvh
               ${isMobile ? (isVisible ? 'bg-black/60 backdrop-blur-[2px] opacity-100' : 'bg-black/0 opacity-0') : ''}`}
             >
@@ -165,9 +166,7 @@ export function ContextMenuProvider({ children }: { children: ReactNode }) {
                         left: position?.x,
                       }
                 }
-                className={
-                  isMobile ? styles.mobile.container : styles.desktop.container
-                }
+                className={`discordia-context-menu ${isMobile ? styles.mobile.container : styles.desktop.container} `}
                 onClick={handleClick}
                 onContextMenu={handleDefaultContextMenu}
               >

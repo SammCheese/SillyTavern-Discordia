@@ -3,7 +3,7 @@ import { ContextMenuContext } from '../providers/contextMenuProvider';
 
 const { messageEdit, deleteMessage } = await imports('@script');
 
-export const ChatContextMenu = () => {
+const MessageContextMenu = () => {
   const { showContextMenu } = useContext(ContextMenuContext);
 
   const handleCopyMessage = (el) => {
@@ -76,3 +76,5 @@ export const ChatContextMenu = () => {
 
   return null;
 };
+
+export default MessageContextMenu;

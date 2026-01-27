@@ -49,7 +49,7 @@ const Button = ({
 
   return (
     <button
-      className={`px-4 py-2 text-white font-bold border cursor-pointer rounded disabled:opacity-50 ${buttonClass}`}
+      className={`px-4 py-2 text-white font-bold border cursor-pointer rounded disabled:opacity-50 ${buttonClass} transition-colors duration-200 ease-in-out active:scale-95`}
       onClick={handleClick}
       disabled={disabled}
     >

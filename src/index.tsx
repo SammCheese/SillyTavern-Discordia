@@ -15,7 +15,7 @@ import 'react-loading-skeleton/dist/skeleton.css';
 
 import ContextMenuProvider from './providers/contextMenuProvider';
 import { BackHandlerProvider } from './providers/backHandlerProvider';
-import { ChatContextMenu } from './bridges/MessageContextMenu';
+import MessageContextMenu from './bridges/MessageContextMenu';
 import { PopupProvider } from './providers/popupProvider';
 import Compose from './utils/Compose';
 import { ExtensionProvider } from './providers/extensionProvider';
@@ -55,7 +55,7 @@ const root = createRoot(rootContainer);
 root.render(
   <StrictMode>
     <Compose components={providers}>
-      <ChatContextMenu />
+      <MessageContextMenu />
       <App />
     </Compose>
   </StrictMode>,
