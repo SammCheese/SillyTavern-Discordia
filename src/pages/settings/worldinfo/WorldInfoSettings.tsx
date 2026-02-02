@@ -17,9 +17,9 @@ const { getWorldInfoSettings, world_names } =
 const WorldInfoSettings = () => {
   const [availableWorldInfos, setAvailableWorldInfos] = useState(world_names);
   const [selectedWorldInfo, setSelectedWorldInfo] = useState(
-    getWorldInfoSettings().world_info.globalSelect,
+    () => getWorldInfoSettings().world_info.globalSelect,
   );
-  const [settings, setSettings] = useState(getWorldInfoSettings());
+  const [settings, setSettings] = useState(() => getWorldInfoSettings());
 
   useEffect(() => {
     const updateEntries = async () => {

@@ -1,15 +1,7 @@
-import {
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type MouseEvent,
-} from 'react';
-import { ContextMenuContext } from '../../providers/contextMenuProvider';
-import { logout } from '../../utils/userUtils';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+
 import PersonaSelector from './PersonaSelector';
+import { useProfileContextMenu } from './hooks/ProfileContextMenu';
 
 const { getThumbnailUrl } = await imports('@script');
 const { getUserAvatars, setUserAvatar } = await imports('@scripts/personas');
@@ -21,52 +13,11 @@ const ProfilePersona = () => {
   const [currentPersona, setCurrentPersona] = useState<Persona | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
-  const { showContextMenu } = useContext(ContextMenuContext);
-
-  const handleLogout = useCallback(() => {
-    logout().catch((error) => {
-      console.error('Error during logout:', error);
-    });
-  }, []);
+  const { handleContextMenu } = useProfileContextMenu();
 
   const handleAvatarClick = useCallback(() => {
     setShowSelector((prev) => !prev);
   }, []);
-
-  const handleFullscreen = useCallback(() => {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch((err) => {
-        console.error(
-          `Error attempting to enable full-screen mode: ${err.message} (${err.name})`,
-        );
-      });
-    } else {
-      document.exitFullscreen().catch((err) => {
-        console.error(
-          `Error attempting to exit full-screen mode: ${err.message} (${err.name})`,
-        );
-      });
-    }
-  }, [document.fullscreenElement]);
-
-  const handleRightClick = useCallback(
-    (e: MouseEvent) => {
-      e.preventDefault();
-
-      showContextMenu(e, [
-        {
-          label: `${document.fullscreenElement ? 'Exit' : 'Enter'} Fullscreen`,
-          onClick: handleFullscreen,
-        },
-        {
-          label: 'Log Out',
-          variant: 'danger',
-          onClick: handleLogout,
-        },
-      ]);
-    },
-    [showContextMenu, handleLogout, handleFullscreen],
-  );
 
   useEffect(() => {
     const fetchPersonas = async () => {
@@ -82,7 +33,7 @@ const ProfilePersona = () => {
     };
 
     fetchPersonas();
-  }, [power_user]);
+  }, []);
 
   useEffect(() => {
     if (!showSelector) return;
@@ -116,7 +67,7 @@ const ProfilePersona = () => {
       personas.find((p) => p.avatar === currentPersona?.avatar)?.name ||
       'User'
     );
-  }, [currentPersona, personas, power_user]);
+  }, [currentPersona, personas]);
 
   const imageSrc = useMemo(() => {
     return getThumbnailUrl(
@@ -130,7 +81,7 @@ const ProfilePersona = () => {
       <div
         id="profile-persona-container"
         className="hover:bg-lighter select-none w-full cursor-pointer flex items-center rounded-md transition-colors ease-in-out"
-        onContextMenu={handleRightClick}
+        onContextMenu={handleContextMenu}
         onClick={handleAvatarClick}
       >
         <div

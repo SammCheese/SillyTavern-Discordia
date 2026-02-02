@@ -1,4 +1,4 @@
-import { memo, useMemo } from 'react';
+import { memo, useCallback, useMemo } from 'react';
 
 interface MemberCardProps {
   character: Character;
@@ -26,40 +26,55 @@ export const MemberCard = ({
     );
   }, [character]);
 
-  const handleRemoveClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (onRemove) {
-      onRemove(character);
-    }
-  };
+  const handleRemoveClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (onRemove) {
+        onRemove(character);
+      }
+    },
+    [onRemove, character],
+  );
 
-  const handleOpenProfileClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (onOpenProfile) {
-      onOpenProfile(character);
-    }
-  };
+  const handleOpenProfileClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (onOpenProfile) {
+        onOpenProfile(character);
+      }
+    },
+    [onOpenProfile, character],
+  );
 
-  const handleMoveUpClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (onOrderChange) {
-      onOrderChange(character, 'up');
-    }
-  };
+  const handleMoveUpClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (onOrderChange) {
+        onOrderChange(character, 'up');
+      }
+    },
+    [onOrderChange, character],
+  );
 
-  const handleMoveDownClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (onOrderChange) {
-      onOrderChange(character, 'down');
-    }
-  };
+  const handleMoveDownClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (onOrderChange) {
+        onOrderChange(character, 'down');
+      }
+    },
+    [onOrderChange, character],
+  );
 
-  const handleGroupAddClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (onGroupAdd) {
-      onGroupAdd(character);
-    }
-  };
+  const handleGroupAddClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (onGroupAdd) {
+        onGroupAdd(character);
+      }
+    },
+    [onGroupAdd, character],
+  );
 
   const MemberButtons = useMemo(() => {
     return (

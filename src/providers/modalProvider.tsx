@@ -6,7 +6,7 @@ import {
   Suspense,
   useEffect,
   type ReactNode,
-  useContext,
+  use,
 } from 'react';
 import { createPortal } from 'react-dom';
 import ErrorBoundary from '../components/common/ErrorBoundary/ErrorBoundary';
@@ -157,7 +157,7 @@ export function ModalProvider({ children }: { children: ReactNode }) {
 
   return (
     <ErrorBoundary>
-      <ModalContext.Provider value={{ openModal, closeModal, closeAll }}>
+      <ModalContext value={{ openModal, closeModal, closeAll }}>
         {stack.length > 0 &&
           createPortal(
             stack.map(({ id, node }, idx) => (
@@ -179,7 +179,7 @@ export function ModalProvider({ children }: { children: ReactNode }) {
             container,
           )}
         {children}
-      </ModalContext.Provider>
+      </ModalContext>
     </ErrorBoundary>
   );
 }
@@ -187,7 +187,7 @@ export function ModalProvider({ children }: { children: ReactNode }) {
 export default ModalProvider;
 
 export const useModal = () => {
-  const context = useContext(ModalContext);
+  const context = use(ModalContext);
   if (!context) {
     throw new Error('useModal must be used within a ModalProvider');
   }

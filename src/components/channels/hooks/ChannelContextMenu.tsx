@@ -1,8 +1,8 @@
-import { useCallback, useContext, useMemo } from 'react';
-import { ContextMenuContext } from '../../../providers/contextMenuProvider';
+import { useCallback, useMemo } from 'react';
+import { useContextMenu } from '../../../providers/contextMenuProvider';
 import { DISCORDIA_EVENTS } from '../../../events/eventTypes';
 import type { ContextMenuItem } from '../../common/ContextMenuEntry/ContextMenuEntry';
-import { PopupContext } from '../../../providers/popupProvider';
+import { usePopup } from '../../../providers/popupProvider';
 
 const {
   deleteCharacterChatByName,
@@ -15,8 +15,8 @@ const { deleteGroupChatByName, openGroupChat } = await imports(
 );
 
 export const useChannelContextMenu = (chat: Chat) => {
-  const { showContextMenu } = useContext(ContextMenuContext);
-  const { openPopup } = useContext(PopupContext);
+  const { showContextMenu } = useContextMenu();
+  const { openPopup } = usePopup();
 
   const performDelete = useCallback(async () => {
     const { characters, characterId, groupId } = SillyTavern.getContext();
@@ -96,7 +96,7 @@ export const useChannelContextMenu = (chat: Chat) => {
         onClick: handleDelete,
       },
     ] as ContextMenuItem[];
-  }, [chat, handleDelete]);
+  }, [handleDelete, openChat]);
 
   const handleContextMenu = useCallback(
     (e: React.MouseEvent) => {

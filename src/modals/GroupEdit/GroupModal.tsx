@@ -1,7 +1,7 @@
-import { useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import Button, { ButtonLook } from '../../components/common/Button/Button';
 import Modal from '../../components/common/Modal/Modal';
-import { ModalContext } from '../../providers/modalProvider';
+import { useModal } from '../../providers/modalProvider';
 import Input from '../../components/common/Input/Input';
 import GroupAvatar from '../../components/groupAvatar/GroupAvatar';
 import Divider from '../../components/common/Divider/Divider';
@@ -34,11 +34,7 @@ const GroupEditModal = ({ entity }: GroupEditModalProps) => {
   const [hideMutedSpritesState, setHideMutedSpritesState] =
     useState<boolean>(hideMutedSprites);
 
-  const { closeModal, openModal } = useContext(ModalContext);
-
-  useEffect(() => {
-    setGroup(entity.item || null);
-  }, [entity]);
+  const { closeModal, openModal } = useModal();
 
   const handleClose = useCallback(() => {
     closeModal();
@@ -110,7 +106,7 @@ const GroupEditModal = ({ entity }: GroupEditModalProps) => {
     setGroup((prevGroup) =>
       prevGroup ? { ...prevGroup, fav: !prevGroup.fav } : prevGroup,
     );
-  }, [group?.fav]);
+  }, []);
 
   const orderOptions = [
     { label: 'Manual', value: 2 },
@@ -163,7 +159,7 @@ const GroupEditModal = ({ entity }: GroupEditModalProps) => {
         prevGroup ? { ...prevGroup, members: newMembers } : prevGroup,
       );
     },
-    [group?.members, setGroup, openModal],
+    [group?.members, setGroup],
   );
 
   const handleAddMember = useCallback(
@@ -176,7 +172,7 @@ const GroupEditModal = ({ entity }: GroupEditModalProps) => {
         prevGroup ? { ...prevGroup, members: newMembers } : prevGroup,
       );
     },
-    [group?.members, setGroup, openModal],
+    [group?.members, setGroup],
   );
 
   const members = useMemo(() => {

@@ -1,6 +1,5 @@
 import {
   useState,
-  useContext,
   useEffect,
   useCallback,
   type ComponentProps,
@@ -8,7 +7,7 @@ import {
   useRef,
   useMemo,
 } from 'react';
-import { ModalContext } from '../../providers/modalProvider';
+import { useModal } from '../../providers/modalProvider';
 import Button, { ButtonLook } from '../../components/common/Button/Button';
 import Input from '../../components/common/Input/Input';
 import Modal from '../../components/common/Modal/Modal';
@@ -77,11 +76,10 @@ const CharacterModal: React.FC<CharacterModalProps> = ({
   const [characterData, setCharacterData] = useState<Character | null>(null);
   const [avatar, setAvatar] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [charId, setCharId] = useState<number | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { closeModal } = useContext(ModalContext);
+  const { closeModal } = useModal();
 
   const isNewCharacter = type === 'create';
 
@@ -89,6 +87,36 @@ const CharacterModal: React.FC<CharacterModalProps> = ({
     () => getThumbnailUrl('avatar', 'default_Assistant.png'),
     [],
   );
+
+  const existingCharacter = useMemo(() => {
+    if (!avatarName) return null;
+    return getContext().characters.find(
+      (ent) => ent.avatar?.toString() === avatarName,
+    );
+  }, [avatarName]);
+
+  useEffect(() => {
+    if (existingCharacter) {
+      // eslint-disable-next-line @eslint-react/hooks-extra/no-direct-set-state-in-use-effect
+      setCharacterData((prev) => prev || existingCharacter);
+
+      // eslint-disable-next-line @eslint-react/hooks-extra/no-direct-set-state-in-use-effect
+      setPreviewUrl(
+        getThumbnailUrl('avatar', avatarName || 'default_Assistant.png'),
+      );
+    } else {
+      // eslint-disable-next-line @eslint-react/hooks-extra/no-direct-set-state-in-use-effect
+      setCharacterData({
+        name: '',
+        description: '',
+        scenario: 'A chat between {{user}} and {{char}}.',
+        first_mes: '',
+        personality: '',
+        creatorcomment: '',
+        data: {},
+      } as Character);
+    }
+  }, [avatarName, existingCharacter]);
 
   const setCharData = useCallback((data: Partial<Character>) => {
     setCharacterData((prev) => {
@@ -141,34 +169,6 @@ const CharacterModal: React.FC<CharacterModalProps> = ({
     [],
   );
 
-  useEffect(() => {
-    if (isNewCharacter) {
-      setCharacterData({
-        name: '',
-        description: '',
-        scenario: 'A chat between {{user}} and {{char}}.',
-        first_mes: '',
-        personality: '',
-        creatorcomment: '',
-        data: {},
-      } as Character);
-    } else {
-      const character = getContext().characters.find(
-        (ent) => ent.avatar?.toString() === avatarName,
-      );
-      if (character) {
-        setCharacterData(character);
-
-        const id = getContext().characters.indexOf(character);
-        if (id !== -1) setCharId(id);
-
-        setPreviewUrl(
-          getThumbnailUrl('avatar', avatarName || 'default_Assistant.png'),
-        );
-      }
-    }
-  }, [avatarName, isNewCharacter]);
-
   const handleSave = useCallback(async () => {
     if (!characterData) return;
 
@@ -200,7 +200,7 @@ const CharacterModal: React.FC<CharacterModalProps> = ({
     } finally {
       setLoading(false);
     }
-  }, [onSave, charId, closeModal, avatarName, characterData, type, avatar]);
+  }, [characterData, avatar, isNewCharacter, onSave, closeModal, avatarName]);
 
   const handleClose = useCallback(() => {
     if (onClose) {

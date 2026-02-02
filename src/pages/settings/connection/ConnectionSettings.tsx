@@ -1,4 +1,4 @@
-import { lazy, useCallback, useEffect, useMemo, useState } from 'react';
+import { lazy, useCallback, useMemo, useState } from 'react';
 import Select from '../../../components/common/Select/Select';
 import Divider from '../../../components/common/Divider/Divider';
 import {
@@ -41,13 +41,10 @@ const ConnectionSettings = () => {
     setSelectedProfile,
   } = useConnectionManager();
 
-  const [currentApi, setCurrentApiState] = useState<MainAPIValues>(() =>
-    getCurrentApi(),
-  );
+  const [localApiOverride, setLocalApiOverride] =
+    useState<MainAPIValues | null>(null);
 
-  useEffect(() => {
-    setCurrentApiState(getCurrentApi());
-  }, [selectedProfileId]);
+  const currentApiState = localApiOverride ?? getCurrentApi();
 
   const apiBuckets: ApiBuckets = useMemo(() => {
     const buckets: Partial<ApiBuckets> = {};
@@ -61,10 +58,10 @@ const ConnectionSettings = () => {
       buckets[type]!.push({ name, ...data });
     });
     return buckets as ApiBuckets;
-  }, [CONNECT_API_MAP]);
+  }, []);
 
   const renderConnectionInfo = useMemo(() => {
-    switch (currentApi) {
+    switch (currentApiState) {
       case 'kobold':
         return <div>Kobold API Connection Settings</div>;
       case 'openai':
@@ -75,7 +72,7 @@ const ConnectionSettings = () => {
         return (
           <TextGenerationSettings
             key={selectedProfileId}
-            entries={apiBuckets[currentApi]}
+            entries={apiBuckets[currentApiState]}
           />
         );
       case 'koboldhorde':
@@ -85,7 +82,7 @@ const ConnectionSettings = () => {
           <div>No connection settings available for the selected API.</div>
         );
     }
-  }, [currentApi, selectedProfileId, apiBuckets]);
+  }, [currentApiState, selectedProfileId, apiBuckets]);
 
   const makeProfileOptions = useCallback(() => {
     return profiles.map((profile) => ({
@@ -101,14 +98,14 @@ const ConnectionSettings = () => {
       ?.value as MainAPIValues;
     if (api) {
       setCurrentApi(api);
-      setCurrentApiState(api);
+      setLocalApiOverride(api);
     }
   };
 
   const handleApiChange = (value: string | number) => {
     const apiValue = value as MainAPIValues;
     setCurrentApi(apiValue);
-    setCurrentApiState(apiValue);
+    setLocalApiOverride(apiValue);
   };
 
   return (
@@ -130,7 +127,7 @@ const ConnectionSettings = () => {
         <h2>API</h2>
         <Select
           options={AIOptions}
-          value={currentApi}
+          value={currentApiState}
           onChange={handleApiChange}
         />
 

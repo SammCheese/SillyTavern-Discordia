@@ -1,9 +1,9 @@
-import { lazy, useCallback, useContext, useMemo } from 'react';
-import { ContextMenuContext } from '../../../providers/contextMenuProvider';
-import { ModalContext } from '../../../providers/modalProvider';
+import { lazy, useCallback, useMemo } from 'react';
+import { useContextMenu } from '../../../providers/contextMenuProvider';
+import { useModal } from '../../../providers/modalProvider';
 import type { ContextMenuItem } from '../../common/ContextMenuEntry/ContextMenuEntry';
 import { DISCORDIA_EVENTS } from '../../../events/eventTypes';
-import { PopupContext } from '../../../providers/popupProvider';
+import { usePopup } from '../../../providers/popupProvider';
 
 const CharacterModal = lazy(
   () => import('../../../modals/Character/CharacterModal'),
@@ -17,9 +17,9 @@ const { deleteCharacter, eventSource, closeCurrentChat } =
 const { deleteGroup } = await imports('@scripts/groupChats');
 
 export const useServerIconMenu = (entity: Entity) => {
-  const { showContextMenu } = useContext(ContextMenuContext);
-  const { openModal } = useContext(ModalContext);
-  const { openPopup } = useContext(PopupContext);
+  const { showContextMenu } = useContextMenu();
+  const { openModal } = useModal();
+  const { openPopup } = usePopup();
 
   const performDelete = useCallback(async () => {
     try {

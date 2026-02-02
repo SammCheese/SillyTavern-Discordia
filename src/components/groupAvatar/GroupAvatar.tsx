@@ -31,28 +31,42 @@ const GroupAvatar = ({
       }
     });
     return map;
-  }, [characters]);
+  }, []);
+
+  const roundedStyle = useMemo(
+    () =>
+      typeof rounded === 'number'
+        ? `${rounded}px`
+        : rounded
+          ? '50%'
+          : undefined,
+    [rounded],
+  );
+
+  const groupItemMemo = useMemo(() => {
+    if (groupItem) return groupItem;
+    if (groupId) {
+      return SillyTavern.getContext().groups.find(
+        (g) => g.id.toString() === groupId.toString(),
+      );
+    }
+    return undefined;
+  }, [groupItem, groupId]);
 
   const avatarElements = useMemo(() => {
     if (!groupItem && !groupId) return <img src={default_avatar} />;
 
-    if (!groupItem && groupId) {
-      groupItem = SillyTavern.getContext().groups.find(
-        (g) => g.id.toString() === groupId.toString(),
-      );
-    }
-
-    if (isValidUrl(groupItem?.avatar_url)) {
+    if (isValidUrl(groupItemMemo?.avatar_url)) {
       return (
-        <div className="avatar" title={`[Group] ${groupItem.name}`}>
-          <img loading="lazy" src={groupItem.avatar_url} />
+        <div className="avatar" title={`[Group] ${groupItemMemo?.name}`}>
+          <img loading="lazy" src={groupItemMemo?.avatar_url} />
         </div>
       );
     }
 
     const memberAvatars: string[] = [];
-    if (Array.isArray(groupItem?.members)) {
-      for (const member of groupItem.members) {
+    if (Array.isArray(groupItemMemo?.members)) {
+      for (const member of groupItemMemo?.members ?? []) {
         const thumb = characterThumbByAvatar.get(member);
         if (thumb) memberAvatars.push(thumb);
         if (memberAvatars.length > 4) break;
@@ -62,28 +76,29 @@ const GroupAvatar = ({
     const count = memberAvatars.length;
     if (count < 1) return <img src={default_avatar} />;
 
-    const roundedStyle = useMemo(
-      () =>
-        typeof rounded === 'number'
-          ? `${rounded}px`
-          : rounded
-            ? '50%'
-            : undefined,
-      [rounded],
-    );
-
     return (
       <div
         className={`collage_${count} flex flex-wrap ${rounded === 100 ? 'full' : ''}`}
-        title={`[Group] ${groupItem?.name}`}
+        title={`[Group] ${groupItemMemo?.name}`}
         style={{ width, height, borderRadius: roundedStyle }}
       >
         {memberAvatars.map((src, i) => (
-          <img key={i} className={`img_${i + 1} object-cover`} src={src} />
+          <img key={src} className={`img_${i + 1} object-cover`} src={src} />
         ))}
       </div>
     );
-  }, [groupItem, width, height, rounded, characterThumbByAvatar]);
+  }, [
+    groupItem,
+    groupId,
+    groupItemMemo?.avatar_url,
+    groupItemMemo?.members,
+    groupItemMemo?.name,
+    rounded,
+    width,
+    height,
+    roundedStyle,
+    characterThumbByAvatar,
+  ]);
 
   return <>{avatarElements}</>;
 };

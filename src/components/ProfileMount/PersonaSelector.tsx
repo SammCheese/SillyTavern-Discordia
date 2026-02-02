@@ -12,12 +12,6 @@ const PersonaSelector = ({ personas, onSelect }: PersonaSelectorProps) => {
     return [...personas].sort((a, b) => a.avatar.localeCompare(b.avatar));
   }, [personas]);
 
-  if (!sortedPersonas.length) {
-    return (
-      <div className="p-3 text-sm text-gray-300">No personas available</div>
-    );
-  }
-
   const handleSelect = useCallback(
     (persona: Persona) => {
       if (onSelect) {
@@ -26,6 +20,12 @@ const PersonaSelector = ({ personas, onSelect }: PersonaSelectorProps) => {
     },
     [onSelect],
   );
+
+  if (!sortedPersonas.length) {
+    return (
+      <div className="p-3 text-sm text-gray-300">No personas available</div>
+    );
+  }
 
   return (
     <div className="max-h-64 w-64 overflow-y-auto rounded-md border border-gray-700 bg-base-discordia shadow-lg">

@@ -101,8 +101,8 @@ export const BackHandlerProvider = ({ children }: { children: ReactNode }) => {
   }, [beforeUnloadHandler, detachBeforeUnload]);
 
   return (
-    <BackHandlerContext.Provider value={{ register, unregister }}>
+    <BackHandlerContext value={{ register, unregister }}>
       {children}
-    </BackHandlerContext.Provider>
+    </BackHandlerContext>
   );
 };

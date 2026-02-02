@@ -58,7 +58,7 @@ const sidebarReducer = (
   }
 };
 
-interface SidebarState {
+export interface SidebarState {
   open: boolean;
   entities: Entity[];
   chats: Chat[];

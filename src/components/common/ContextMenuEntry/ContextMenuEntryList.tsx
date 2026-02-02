@@ -35,7 +35,7 @@ const ContextMenuList = ({
 
         return (
           <div
-            key={groupIndex}
+            key={group[0]?.label || groupIndex}
             className={
               isMobile
                 ? 'mb-3 last:mb-0 shadow-sm'
@@ -44,7 +44,7 @@ const ContextMenuList = ({
           >
             {group.map((item, itemIndex) => (
               <ContextMenuEntry
-                key={`${groupIndex}-${itemIndex}`}
+                key={item.label || itemIndex}
                 isFirst={itemIndex === 0}
                 isLast={itemIndex === group.length - 1}
                 isMobile={isMobile}

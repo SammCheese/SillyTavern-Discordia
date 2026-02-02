@@ -4,7 +4,6 @@ const { groups } = await imports('@scripts/groupChats');
 const { sortMoments, timestampToMoment } = await imports('@scripts/utils');
 
 export async function getRecentChats(entities?: Entity[], amount = 20) {
-  dislog.log(entities, amount);
   const response = await fetch('/api/chats/recent', {
     method: 'POST',
     headers: getRequestHeaders(),

@@ -9,7 +9,7 @@
     "react-dom": "^19.2.3",
     "react-loading-skeleton": "^3.5.0",
     "react-window": "^2.2.5",
-    "tracekit": "^0.4.7"
+    "stacktrace-parser": "^0.1.11"
   },
   "browser": {
     "fs": false,
@@ -26,6 +26,7 @@
     "prepare": "husky"
   },
   "devDependencies": {
+    "@eslint-react/eslint-plugin": "^2.9.0",
     "@eslint/js": "^9.39.2",
     "@tailwindcss/postcss": "^4.1.18",
     "@testing-library/jest-dom": "^6.9.1",
@@ -45,7 +46,6 @@
     "eslint": "^9.39.2",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.5",
-    "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.0.1",
     "happy-dom": "^20.3.9",
     "https-browserify": "^1.0.0",

@@ -53,9 +53,7 @@ const initializePaths = async () => {
   };
 
   pathsInitialized = true;
-  dislog.important(
-    `[Discordia] Running as ${isLocal ? 'local' : 'global'} extension.`,
-  );
+  dislog.important(`Running as ${isLocal ? 'local' : 'global'} extension.`);
 };
 
 export const imports = async <T = any>(mod: string): Promise<T> => {

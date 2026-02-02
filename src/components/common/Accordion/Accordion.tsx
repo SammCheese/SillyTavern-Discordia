@@ -18,6 +18,7 @@ export const Accordion = ({
   const [open, setOpen] = useState(isOpen);
 
   useEffect(() => {
+    // eslint-disable-next-line @eslint-react/hooks-extra/no-direct-set-state-in-use-effect
     setOpen(isOpen);
   }, [isOpen]);
 

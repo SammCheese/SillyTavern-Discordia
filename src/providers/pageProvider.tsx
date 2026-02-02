@@ -5,7 +5,7 @@ import {
   useEffect,
   createContext,
   type ReactNode,
-  useContext,
+  use,
 } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -63,7 +63,7 @@ export function PageProvider({ children }: { children: ReactNode }) {
 
   return (
     <ErrorBoundary>
-      <PageContext.Provider value={{ openPage, closePage }}>
+      <PageContext value={{ openPage, closePage }}>
         {content &&
           createPortal(
             <div>
@@ -74,13 +74,13 @@ export function PageProvider({ children }: { children: ReactNode }) {
             rootContainer,
           )}
         {children}
-      </PageContext.Provider>
+      </PageContext>
     </ErrorBoundary>
   );
 }
 
 export const usePage = () => {
-  const context = useContext(PageContext);
+  const context = use(PageContext);
   if (!context) {
     throw new Error('usePage must be used within a PageProvider');
   }

@@ -28,10 +28,12 @@ const topBar = document.getElementById('top-bar');
 // Create sidebar container
 export const rootContainer = document.createElement('div');
 rootContainer.id = 'discordia-root';
-topBar?.parentNode?.insertBefore(rootContainer, topBar);
 
-// Unneeded. Remove for the sake of cleaner DOM
-topBar?.remove();
+if (topBar) {
+  topBar?.parentNode?.insertBefore(rootContainer, topBar);
+  // Unneeded. Remove for the sake of cleaner DOM
+  topBar.style.display = 'none';
+}
 
 performPatches();
 

@@ -1,5 +1,5 @@
-import { memo, type ReactNode, useCallback, useContext, useMemo } from 'react';
-import { ContextMenuContext } from '../../../providers/contextMenuProvider';
+import { memo, type ReactNode, useCallback, useMemo } from 'react';
+import { useContextMenu } from '../../../providers/contextMenuProvider';
 
 export interface ContextMenuItem {
   label: string;
@@ -24,7 +24,7 @@ const ContextMenuEntry = ({
   isLast,
   className,
 }: ContextMenuItem) => {
-  const { closeContextMenu } = useContext(ContextMenuContext);
+  const { closeContextMenu } = useContextMenu();
 
   const variantClasses = {
     default: 'text-white',
@@ -54,7 +54,7 @@ const ContextMenuEntry = ({
 
     // No rounding for middle items, but add a separator  ;)
     return 'border-t border-gray-500/50';
-  }, [isFirst, isLast]);
+  }, [isFirst, isLast, isMobile]);
 
   const handleClick = useCallback(() => {
     if (!disabled && onClick) {

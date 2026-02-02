@@ -182,9 +182,7 @@ function* extensionProcessorGenerator(
         probableOwner !== 'unknown' &&
         !knownNamesSet.has(probableOwner)
       ) {
-        console.debug(
-          `[Discordia] Skipping unknown extension: ${probableOwner}`,
-        );
+        dislog.debug(`Skipping unknown extension: ${probableOwner}`);
         return { elem: null, owner: probableOwner };
       }
 

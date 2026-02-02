@@ -1,14 +1,11 @@
 import { DISCORDIA_EVENTS } from '../events/eventTypes';
 import { runTaskInIdle } from '../utils/utils';
-import Tracekit from 'tracekit';
+import * as stackTraceParser from 'stacktrace-parser';
 
 const importPromise = imports('@script');
 
 // Track load time
 const timerStart = Date.now();
-
-Tracekit.remoteFetching = false;
-Tracekit.collectWindowErrors = false;
 
 const TARGET_CONTAINER_IDS = ['extensions_settings', 'extensions_settings2'];
 const FAST_FAIL_REGEX = /extensions\//;
@@ -60,12 +57,12 @@ const resolveStackToOwner = (error: Error): string | null => {
     return null;
   }
 
-  const stackFrames = Tracekit.computeStackTrace(error, 10).stack || [];
+  const stackFrames = stackTraceParser.parse(error.stack || '') || [];
   let foundOwner: string | null = null;
 
   for (const frame of stackFrames) {
-    if (frame.url) {
-      const match = EXTENSION_NAME_REGEX.exec(frame.url);
+    if (frame.file) {
+      const match = EXTENSION_NAME_REGEX.exec(frame.file);
       if (match?.[1] && !EXTENSION_NAME_NEGLECT_SET.has(match[1])) {
         foundOwner = match[1];
         break;
@@ -286,7 +283,7 @@ export const getOwner = (target: JQuery | Element | string): string | null => {
       return getOwnerFromJQuery(target as JQuery<HTMLElement>);
     if (target instanceof Element) return getElementOwner(target);
   } catch (e) {
-    dislog.error('[Discordia] getOwner error:', e);
+    dislog.error('getOwner error:', e);
   }
   return null;
 };
@@ -497,7 +494,7 @@ function* extensionCloningGenerator(
   );
 
   dislog.debug(
-    '[Discordia] Cloning',
+    'Cloning',
     allChildren.length,
     'direct children from containers',
   );
@@ -543,7 +540,7 @@ export const poolDOMExtensions = async () => {
       );
       if (isCoping) {
         dislog.warn(
-          '[Discordia] Some elements lost children, this may affect mobile rendering',
+          'Some elements lost children, this may affect mobile rendering',
         );
       }
 

@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useState } from 'react';
+import { memo, useCallback, useState } from 'react';
 
 interface StackPusherProps {
   inactiveEntries?: string[];
@@ -49,11 +49,6 @@ const StackPusher = ({
     [activeEntriesState, inactiveEntriesState, handleStackChange],
   );
 
-  useEffect(() => {
-    setActiveEntriesState(activeEntries || []);
-    setInactiveEntriesState(inactiveEntries || []);
-  }, [activeEntries, inactiveEntries]);
-
   return (
     <div className="flex flex-row w-full h-96 rounded overflow-hidden flex-nowrap border border-lighter">
       <div className="flex flex-col overflow-auto w-full h-full border-r border-lighter">
@@ -65,7 +60,7 @@ const StackPusher = ({
         <div className="flex flex-col overflow-auto w-full h-full">
           {activeEntriesState.map((entry, index) => (
             <div
-              key={index}
+              key={entry.toString() || index}
               className="p-2 flex hover:bg-base-discordia-lighter"
             >
               <div className="truncate content-center">{entry}</div>
@@ -90,7 +85,7 @@ const StackPusher = ({
         <div className="flex flex-col overflow-auto w-full h-full">
           {inactiveEntriesState.map((entry, index) => (
             <div
-              key={index}
+              key={entry.toString() || index}
               className="p-2 flex hover:bg-base-discordia-lighter"
             >
               <div className="truncate content-center">{entry}</div>

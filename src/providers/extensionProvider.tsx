@@ -1,7 +1,7 @@
 import {
   createContext,
   useCallback,
-  useContext,
+  use,
   useEffect,
   useMemo,
   useRef,
@@ -77,7 +77,7 @@ export const ExtensionProvider = ({
   const [disabledExtensions, setDisabledExtensions] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const isMounted = useRef(false);
+  const isMountedRef = useRef(false);
 
   useEffect(() => {
     const init = async () => {
@@ -88,33 +88,11 @@ export const ExtensionProvider = ({
   }, []);
 
   useEffect(() => {
-    if (isMounted.current) {
+    if (isMountedRef.current) {
       saveSettingsDebounced();
     }
-    isMounted.current = true;
+    isMountedRef.current = true;
   }, [disabledExtensions]);
-
-  const fetchBaseData = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const exts = await discoverExtensions();
-      const manifests = await getManifests(exts.map((ext) => ext.name));
-
-      const enriched = exts.map((ext) => ({
-        ...ext,
-        manifest: manifests?.[ext.name],
-        version: undefined,
-      }));
-
-      setExtensions(enriched);
-
-      fetchVersions(enriched);
-    } catch (err) {
-      dislog.error('Failed to load extensions', err);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
 
   const fetchVersions = useCallback(async (exts: ExtensionInfo[]) => {
     const needVersion = exts.filter((e) => e.type !== 'system');
@@ -145,6 +123,28 @@ export const ExtensionProvider = ({
       });
     });
   }, []);
+
+  const fetchBaseData = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const exts = await discoverExtensions();
+      const manifests = await getManifests(exts.map((ext) => ext.name));
+
+      const enriched = exts.map((ext) => ({
+        ...ext,
+        manifest: manifests?.[ext.name],
+        version: undefined,
+      }));
+
+      setExtensions(enriched);
+
+      fetchVersions(enriched);
+    } catch (err) {
+      dislog.error('Failed to load extensions', err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [fetchVersions]);
 
   useEffect(() => {
     fetchBaseData();
@@ -262,15 +262,11 @@ export const ExtensionProvider = ({
     ],
   );
 
-  return (
-    <ExtensionContext.Provider value={contextValue}>
-      {children}
-    </ExtensionContext.Provider>
-  );
+  return <ExtensionContext value={contextValue}>{children}</ExtensionContext>;
 };
 
 export const useExtensionState = (): ExtensionContextType => {
-  const context = useContext(ExtensionContext);
+  const context = use(ExtensionContext);
   if (!context) {
     throw new Error(
       'useExtensionState must be used within an ExtensionProvider',

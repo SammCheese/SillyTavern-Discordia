@@ -1,14 +1,7 @@
-import {
-  useCallback,
-  lazy,
-  useState,
-  useContext,
-  useEffect,
-  useMemo,
-  memo,
-} from 'react';
-import { PageContext } from '../../providers/pageProvider';
+import { useCallback, lazy, useState, useEffect, useMemo, memo } from 'react';
+import { usePage } from '../../providers/pageProvider';
 import ProfilePersona from './ProfilePersona';
+import ProfileIcon from './ProfileIcon';
 
 const UserSettings = lazy(
   () => import('../../pages/settings/user/UserSettings'),
@@ -28,7 +21,15 @@ interface ProfileMountProps {
 
 const ProfileMount = ({ icons = null }: ProfileMountProps) => {
   const [connStatus, setConnStatus] = useState<string>('no_connection');
-  const { openPage } = useContext(PageContext);
+  const { openPage } = usePage();
+
+  const handleConnectionChange = useCallback(() => {
+    if (SillyTavern.getContext().onlineStatus === 'no_connection') {
+      setConnStatus('no_connection');
+    } else {
+      setConnStatus('online');
+    }
+  }, []);
 
   useEffect(() => {
     eventSource.on(event_types.ONLINE_STATUS_CHANGED, handleConnectionChange);
@@ -39,32 +40,27 @@ const ProfileMount = ({ icons = null }: ProfileMountProps) => {
         handleConnectionChange,
       );
     };
-  }, []);
+  }, [handleConnectionChange]);
 
-  const handleConnectionChange = useCallback(() => {
-    if (SillyTavern.getContext().onlineStatus === 'no_connection') {
-      setConnStatus('no_connection');
-    } else {
-      setConnStatus('online');
-    }
-  }, []);
-
-  const handleIconClick = useCallback((icon: Icon) => {
-    const id = icon.id;
-    switch (id) {
-      case '#user-settings-button':
-        openPage(<UserSettings />);
-        break;
-      case '#ai-config-button':
-        openPage(<SamplerSettings />);
-        break;
-      case '#sys-settings-button':
-        openPage(<ConnectionSettings />);
-        break;
-      default:
-        console.log(`No action defined for icon with id: ${id}`);
-    }
-  }, []);
+  const handleIconClick = useCallback(
+    (icon: Icon) => {
+      const id = icon.id;
+      switch (id) {
+        case '#user-settings-button':
+          openPage(<UserSettings />);
+          break;
+        case '#ai-config-button':
+          openPage(<SamplerSettings />);
+          break;
+        case '#sys-settings-button':
+          openPage(<ConnectionSettings />);
+          break;
+        default:
+          console.log(`No action defined for icon with id: ${id}`);
+      }
+    },
+    [openPage],
+  );
 
   const isApiConnected = useMemo(() => {
     return connStatus !== 'no_connection';
@@ -82,78 +78,13 @@ const ProfileMount = ({ icons = null }: ProfileMountProps) => {
           <ProfileIcon
             apiConnected={isApiConnected}
             icon={icon}
-            key={index}
+            key={icon.id || index}
             onClick={handleIconClick}
           />
         ))}
       </div>
     </div>
   );
-};
-
-interface ProfileIconProps {
-  icon: Icon;
-  onClick: (icon: Icon) => void;
-  apiConnected?: boolean;
-  enabled?: boolean;
-}
-
-const ProfileIcon = ({
-  icon,
-  onClick,
-  apiConnected = false,
-  enabled = true,
-}: ProfileIconProps) => {
-  // connection thing is a special cookie
-  const isPlugIcon = useMemo(
-    () => icon.className.includes('fa-plug'),
-    [icon.className],
-  );
-  const connectedClasses = useMemo(
-    () =>
-      apiConnected
-        ? icon.className
-            .replace('redOverlayGlow', '')
-            .replace('fa-plug-circle-exclamation', 'fa-plug')
-        : `${icon.className}`,
-    [apiConnected, icon.className],
-  );
-
-  const overrides = [
-    {
-      id: '#user-settings-button',
-      className: 'drawer-icon fa-solid fa-gear fa interactable closedIcon',
-    },
-  ];
-
-  const overriddenClassName = useMemo(() => {
-    const override = overrides.find((o) => o.id === icon.id);
-    return override ? override.className : icon.className;
-  }, [icon.className, icon.id, overrides]);
-
-  const handleClick = useCallback(() => {
-    if (onClick && enabled) {
-      onClick(icon);
-    }
-  }, [onClick, enabled, icon]);
-
-  if (isPlugIcon) {
-    return (
-      <div
-        className={connectedClasses}
-        title={icon.title}
-        onClick={handleClick}
-      />
-    );
-  } else {
-    return (
-      <div
-        className={overriddenClassName}
-        title={icon.title}
-        onClick={handleClick}
-      />
-    );
-  }
 };
 
 export default memo(ProfileMount);

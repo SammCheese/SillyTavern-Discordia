@@ -1,11 +1,5 @@
 import type _ from 'lodash';
-import {
-  createContext,
-  useState,
-  useContext,
-  type ReactNode,
-  useMemo,
-} from 'react';
+import { createContext, useState, use, type ReactNode, useMemo } from 'react';
 
 interface SearchContextType {
   searchQuery: string;
@@ -24,16 +18,14 @@ export const SearchProvider = ({ children }: { children: ReactNode }) => {
   const debouncedSet = useMemo(() => lodash.debounce(setSearchQuery, 300), []);
 
   return (
-    <SearchContext.Provider
-      value={{ searchQuery, setSearchQuery: debouncedSet }}
-    >
+    <SearchContext value={{ searchQuery, setSearchQuery: debouncedSet }}>
       {children}
-    </SearchContext.Provider>
+    </SearchContext>
   );
 };
 
 export const useSearch = () => {
-  const context = useContext(SearchContext);
+  const context = use(SearchContext);
   if (!context) {
     throw new Error('useSearch cannot be used outside of SearchProvider');
   }

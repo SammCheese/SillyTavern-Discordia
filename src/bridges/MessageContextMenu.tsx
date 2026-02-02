@@ -1,10 +1,10 @@
-import { useContext, useEffect } from 'react';
-import { ContextMenuContext } from '../providers/contextMenuProvider';
+import { useEffect } from 'react';
+import { useContextMenu } from '../providers/contextMenuProvider';
 
 const { messageEdit, deleteMessage } = await imports('@script');
 
 const MessageContextMenu = () => {
-  const { showContextMenu } = useContext(ContextMenuContext);
+  const { showContextMenu } = useContextMenu();
 
   const handleCopyMessage = (el) => {
     const text = el.querySelector('.mes_text')?.innerText;

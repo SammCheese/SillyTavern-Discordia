@@ -1,4 +1,4 @@
-import { memo, useCallback } from 'react';
+import { memo, useCallback, useMemo } from 'react';
 import { useChannelContextMenu } from './hooks/ChannelContextMenu';
 import GroupAvatar from '../groupAvatar/GroupAvatar';
 
@@ -21,11 +21,14 @@ const ChannelEntry = ({
     onClick?.(chat);
   }, [onClick, chat]);
 
+  const name = useMemo(() => chat?.file_id ?? chat.file_name, [chat]);
+  const groupId = useMemo(() => chat?.group?.toString(), [chat]);
+
   return (
     <li
       className={`border-none list-none relative ms-1 select-none cursor-pointer rounded-lg hover:bg-lighter ${isSelected ? 'bg-lighter' : ''}`}
-      id={`recent-chat-${chat.file_id ?? chat.file_name}`}
-      title={chat.file_id ?? chat.file_name}
+      id={`recent-chat-${name}`}
+      title={name}
       onClick={handleClick}
       onContextMenu={handleContextMenu}
     >
@@ -46,7 +49,7 @@ const ChannelEntry = ({
                     height={36}
                     width={36}
                     rounded={100}
-                    groupId={chat?.group?.toString()}
+                    groupId={groupId}
                   />
                 </div>
               ) : (
@@ -58,9 +61,7 @@ const ChannelEntry = ({
                 />
               )}
 
-              <div className="truncate select-none">
-                {chat?.file_id ?? chat.file_name}
-              </div>
+              <div className="truncate select-none">{name}</div>
             </div>
           </div>
           <div className="items-center flex flex-row shrink-0 justify-end box-border ps-px-[16px]">

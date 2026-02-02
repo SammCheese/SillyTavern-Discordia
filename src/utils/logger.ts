@@ -17,7 +17,7 @@ function error(...args: any[]) {
 
 function important(...args: any[]) {
   console.log(
-    `%c${LoggerPrefix} %cIMPORTANT`,
+    `%c${LoggerPrefix}%c IMPORTANT`,
     StylePrefix,
     'color: #ffffff; font-weight: bold; background: #ff0000; padding: 2px 4px; border-radius: 6px; border: 1px solid #ccc;',
     ...args,

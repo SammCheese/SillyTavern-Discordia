@@ -1,18 +1,10 @@
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  lazy,
-  memo,
-  useState,
-  useContext,
-} from 'react';
+import { useCallback, useEffect, useMemo, lazy, memo, useState } from 'react';
 import { List, type RowComponentProps } from 'react-window';
 import { selectCharacter, selectGroup } from '../../utils/utils';
 import { useSearch } from '../../providers/searchProvider';
 import ErrorBoundary from '../common/ErrorBoundary/ErrorBoundary';
 import { DISCORDIA_EVENTS } from '../../events/eventTypes';
-import { ModalContext } from '../../providers/modalProvider';
+import { useModal } from '../../providers/modalProvider';
 import CharacterModal from '../../modals/Character/CharacterModal';
 import Skeleton, { SkeletonTheme } from 'react-loading-skeleton';
 
@@ -78,7 +70,7 @@ interface RowData {
 
 const Row = ({ index, style, data }: RowComponentProps<RowData>) => {
   const { entities, selectedIndex, handleItemClick } = data;
-  const { openModal } = useContext(ModalContext);
+  const { openModal } = useModal();
   const entity = entities[index];
 
   const handleClick = useCallback(() => {
@@ -121,7 +113,7 @@ interface ServerBarProps {
 const ServerBar = ({ entities, isInitialLoad = true }: ServerBarProps) => {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const { searchQuery } = useSearch();
-  const { openModal } = useContext(ModalContext);
+  const { openModal } = useModal();
 
   const onHomeClickHandler = useCallback(async () => {
     setSelectedIndex(null);
@@ -130,50 +122,17 @@ const ServerBar = ({ entities, isInitialLoad = true }: ServerBarProps) => {
     await eventSource.emit(DISCORDIA_EVENTS.HOME_BUTTON_CLICKED);
   }, []);
 
-  const handleItemClick = useCallback(async (entity: Entity, index: number) => {
-    try {
-      if (entity.type === 'group') {
-        const groupId = entity.id.toString();
-        const group = SillyTavern.getContext().groups.find(
-          (g) => g.id.toString() === groupId,
-        );
-
-        if (!group) return;
-
-        // Prevent sidebar from falling back to recents while IDs are cleared.
-        eventSource.emit(DISCORDIA_EVENTS.CHAT_SWITCH_PENDING);
-        await selectGroup({ group: entity });
-
-        setSelectedIndex(index);
-      } else {
-        const char_id = characters.findIndex(
-          (c) => c.avatar === entity?.item?.avatar,
-        );
-        if (char_id === -1) return;
-
-        eventSource.emit(DISCORDIA_EVENTS.CHAT_SWITCH_PENDING);
-        await selectCharacter(char_id);
-
-        setSelectedIndex(index);
-      }
-    } catch (error) {
-      console.error('Error selecting entity:', error);
-    }
-  }, []);
-
-  useEffect(() => {
-    refreshSelectedIndex();
-  }, [entities]);
-
-  const refreshSelectedIndex = useCallback(() => {
+  const getGlobalIndex = useCallback(() => {
     const { characterId, groupId } = SillyTavern.getContext();
 
     if (groupId !== null && typeof groupId !== 'undefined') {
       const idx = entities.findIndex(
         (e) => e.type === 'group' && e.id.toString() === groupId.toString(),
       );
-      setSelectedIndex(idx !== -1 ? idx : null);
-    } else if (
+      return idx !== -1 ? idx : null;
+    }
+
+    if (
       characterId !== null &&
       typeof characterId !== 'undefined' &&
       parseInt(characterId) >= 0
@@ -182,23 +141,56 @@ const ServerBar = ({ entities, isInitialLoad = true }: ServerBarProps) => {
         (e) =>
           e.type === 'character' && e.id.toString() === characterId.toString(),
       );
-      setSelectedIndex(idx !== -1 ? idx : null);
-    } else {
-      setSelectedIndex(null);
+      return idx !== -1 ? idx : null;
     }
+
+    return null;
   }, [entities]);
 
-  useEffect(() => {
-    // In case we miss an event e.g. context menu selection
-    eventSource.on(event_types.CHAT_CHANGED, refreshSelectedIndex);
+  const handleItemClick = useCallback(
+    async (entity: Entity, index: number) => {
+      try {
+        setSelectedIndex(index);
 
+        if (entity.type === 'group') {
+          const groupId = entity.id.toString();
+          const group = SillyTavern.getContext().groups.find(
+            (g) => g.id.toString() === groupId,
+          );
+
+          if (!group) return;
+
+          // Prevent sidebar from falling back to recents while IDs are cleared.
+          eventSource.emit(DISCORDIA_EVENTS.CHAT_SWITCH_PENDING);
+          await selectGroup({ group: entity });
+        } else {
+          const char_id = characters.findIndex(
+            (c) => c.avatar === entity?.item?.avatar,
+          );
+          if (char_id === -1) return;
+
+          eventSource.emit(DISCORDIA_EVENTS.CHAT_SWITCH_PENDING);
+          await selectCharacter(char_id);
+        }
+      } catch (error) {
+        dislog.error('Error selecting entity:', error);
+        getGlobalIndex();
+      }
+    },
+    [getGlobalIndex],
+  );
+
+  const syncIndex = useCallback(() => {
+    const correctIndex = getGlobalIndex();
+    setSelectedIndex((prev) => (prev !== correctIndex ? correctIndex : prev));
+  }, [getGlobalIndex]);
+
+  useEffect(() => {
+    eventSource.on(event_types.CHAT_CHANGED, syncIndex);
     return () => {
-      eventSource.removeListener(
-        event_types.CHAT_CHANGED,
-        refreshSelectedIndex,
-      );
+      eventSource.removeListener(event_types.CHAT_CHANGED, syncIndex);
     };
-  }, [refreshSelectedIndex]);
+  }, [entities, syncIndex]);
 
   const itemData = useMemo(
     () => ({ entities, selectedIndex, handleItemClick }),
@@ -216,7 +208,7 @@ const ServerBar = ({ entities, isInitialLoad = true }: ServerBarProps) => {
 
   const handleAddCharacterClick = useCallback(() => {
     openModal(<CharacterModal type="create" />);
-  }, []);
+  }, [openModal]);
 
   return (
     <ErrorBoundary>
@@ -262,7 +254,6 @@ const ServerBar = ({ entities, isInitialLoad = true }: ServerBarProps) => {
                   />
                 );
               })}
-
               <div id="characters-divider" className="divider" />
               <AddCharacterIcon onClick={handleAddCharacterClick} />
             </>
