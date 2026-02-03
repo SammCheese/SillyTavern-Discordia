@@ -1,10 +1,14 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useContextMenu } from '../../../providers/contextMenuProvider';
 import { logout } from '../../../utils/userUtils';
 import type { ContextMenuItem } from '../../common/ContextMenuEntry/ContextMenuEntry';
 
 export const useProfileContextMenu = () => {
   const { showContextMenu } = useContextMenu();
+
+  const [isFullscreen, setIsFullscreen] = useState(
+    !!document.fullscreenElement,
+  );
 
   const handleLogout = useCallback(() => {
     logout().catch((error) => {
@@ -28,10 +32,26 @@ export const useProfileContextMenu = () => {
     }
   }, []);
 
+  useEffect(() => {
+    const onFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener('fullscreenchange', onFullscreenChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', onFullscreenChange);
+    };
+  }, []);
+
+  const fullScreenLabel = useMemo(
+    () => (isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen'),
+    [isFullscreen],
+  );
+
   const menuOptions = useMemo(() => {
     return [
       {
-        label: `${document.fullscreenElement ? 'Exit' : 'Enter'} Fullscreen`,
+        label: fullScreenLabel,
         onClick: handleFullscreen,
       },
       {
@@ -40,7 +60,7 @@ export const useProfileContextMenu = () => {
         onClick: handleLogout,
       },
     ] as ContextMenuItem[];
-  }, [handleFullscreen, handleLogout]);
+  }, [handleFullscreen, handleLogout, fullScreenLabel]);
 
   const handleContextMenu = useCallback(
     (e: React.MouseEvent) => {

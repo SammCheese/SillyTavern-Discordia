@@ -17,9 +17,18 @@ function error(...args: any[]) {
 
 function important(...args: any[]) {
   console.log(
-    `%c${LoggerPrefix}%c IMPORTANT`,
+    `%c${LoggerPrefix}%c`,
     StylePrefix,
-    'color: #ffffff; font-weight: bold; background: #ff0000; padding: 2px 4px; border-radius: 6px; border: 1px solid #ccc;',
+    'color: #ffffff; font-weight: bold; background: #ff4444; padding: 2px 4px; border-radius: 6px; border: 1px solid #ccc;',
+    ...args,
+  );
+}
+
+function custom(heading: string, ...args: any[]) {
+  console.log(
+    `%c${LoggerPrefix}%c${heading}`,
+    StylePrefix,
+    'color: #ffffff; font-weight: bold; background: #00aaff; padding: 2px 4px; margin-left: 4px; border-radius: 6px; border: 1px solid #ccc;',
     ...args,
   );
 }
@@ -34,4 +43,5 @@ export const dislog = {
   error,
   important,
   debug,
+  custom,
 };

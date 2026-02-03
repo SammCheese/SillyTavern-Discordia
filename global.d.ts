@@ -15,6 +15,7 @@ type Dislog = {
   error: (...args: any[]) => void;
   debug: (...args: any[]) => void;
   important: (...args: any[]) => void;
+  custom: (heading: string, ...args: any[]) => void;
 };
 
 declare global {

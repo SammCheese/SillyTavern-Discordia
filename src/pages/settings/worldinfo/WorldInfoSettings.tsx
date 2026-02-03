@@ -1,5 +1,5 @@
-import { lazy, useCallback, useEffect, useState } from 'react';
-import { getAllWorldInfos, saveWorldInfo } from './service/worldinfo';
+import { lazy, useCallback, useMemo, useState } from 'react';
+import { saveWorldInfo } from './service/worldinfo';
 import StackPusher from '../../../components/common/StackPusher/StackPusher';
 import GlobalWorldInfoSettings from './Settings/GlobalWorldInfoSettings';
 
@@ -15,19 +15,13 @@ const { getWorldInfoSettings, world_names } =
   await imports('@scripts/worldInfo');
 
 const WorldInfoSettings = () => {
-  const [availableWorldInfos, setAvailableWorldInfos] = useState(world_names);
+  const worldInfoSettings = useMemo(() => getWorldInfoSettings(), []);
+  const availableWorldInfos = world_names;
+
   const [selectedWorldInfo, setSelectedWorldInfo] = useState(
-    () => getWorldInfoSettings().world_info.globalSelect,
+    worldInfoSettings.world_info.globalSelect,
   );
-  const [settings, setSettings] = useState(() => getWorldInfoSettings());
-
-  useEffect(() => {
-    const updateEntries = async () => {
-      setAvailableWorldInfos(await getAllWorldInfos());
-    };
-
-    updateEntries();
-  }, []);
+  const [settings, setSettings] = useState(worldInfoSettings);
 
   const handleSettingsChange = (
     key: string,
@@ -40,13 +34,16 @@ const WorldInfoSettings = () => {
     setSettings(updatedSettings);
   };
 
-  const handleStackChange = useCallback((active: string[]) => {
-    setSelectedWorldInfo(active);
-    setSettings((prevSettings) => ({
-      ...prevSettings,
-      world_info: { globalSelect: active },
-    }));
-  }, []);
+  const handleStackChange = useCallback(
+    (active: string[]) => {
+      setSelectedWorldInfo(active);
+      setSettings((prevSettings) => ({
+        ...prevSettings,
+        world_info: { globalSelect: active },
+      }));
+    },
+    [setSelectedWorldInfo, setSettings],
+  );
 
   const handleClose = useCallback(() => {
     saveWorldInfo(settings, selectedWorldInfo);
