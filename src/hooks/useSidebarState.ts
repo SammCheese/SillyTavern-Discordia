@@ -240,11 +240,8 @@ export const useSidebarState = () => {
       touchEndX = e.originalEvent?.touches[0]?.clientX ?? 0;
     };
 
-    const onPointerUp = (e) => {
+    const onPointerUp = () => {
       if (touchStartX === 0 || touchEndX === 0) return;
-
-      e.preventDefault();
-      e.stopPropagation();
 
       if (touchEndX > touchStartX + THRESHOLD) setOpen(true);
       else if (touchEndX < touchStartX - THRESHOLD) {
