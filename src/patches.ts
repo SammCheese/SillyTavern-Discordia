@@ -14,11 +14,12 @@ export const performPatches = async () => {
     { name: 'poolDOMExtensions', run: poolDOMExtensions },
   ];
 
-  try {
-    for (const patch of patches) {
+  for (const patch of patches) {
+    try {
+      dislog.custom('PATCHER', `Applying Patch: ${patch.name}`);
       patch.run();
+    } catch (error) {
+      dislog.error(`Failed to Apply Patch: ${patch.name}`, error);
     }
-  } catch (error) {
-    console.error('Failed to Perform Patches:', error);
   }
 };

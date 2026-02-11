@@ -1,15 +1,15 @@
-import { useContext, useEffect } from 'react';
-import { ContextMenuContext } from '../providers/contextMenuProvider';
+import { useEffect } from 'react';
+import { useContextMenu } from '../providers/contextMenuProvider';
 
 const { messageEdit, deleteMessage } = await imports('@script');
 
-export const ChatContextMenu = () => {
-  const { showContextMenu } = useContext(ContextMenuContext);
+const MessageContextMenu = () => {
+  const { showContextMenu } = useContextMenu();
 
   const handleCopyMessage = (el) => {
     const text = el.querySelector('.mes_text')?.innerText;
     navigator.clipboard.writeText(text).catch((err) => {
-      console.error('Failed to copy text: ', err);
+      dislog.error('Failed to copy text: ', err);
     });
   };
 
@@ -76,3 +76,5 @@ export const ChatContextMenu = () => {
 
   return null;
 };
+
+export default MessageContextMenu;

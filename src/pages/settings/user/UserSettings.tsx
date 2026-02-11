@@ -12,7 +12,7 @@ const UserSettings = () => {
       console.log('Power User Settings Unloaded, saving settings.');
       saveSettingsDebounced();
     };
-  }, [power_user]);
+  }, []);
 
   return (
     <SettingsFrame title="User Settings">

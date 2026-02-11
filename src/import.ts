@@ -50,12 +50,11 @@ const initializePaths = async () => {
     '@scripts/textGenSettings': getPath('textgen-settings.js', isLocal),
     '@scripts/presetManager': getPath('preset-manager.js', isLocal),
     '@scripts/secrets': getPath('secrets.js', isLocal),
+    '@scripts/samplerSelect': getPath('samplerSelect.js', isLocal),
   };
 
   pathsInitialized = true;
-  console.log(
-    `[Discordia] Running as ${isLocal ? 'local' : 'global'} extension.`,
-  );
+  dislog.important(`Running as ${isLocal ? 'local' : 'global'} extension.`);
 };
 
 export const imports = async <T = any>(mod: string): Promise<T> => {
@@ -68,7 +67,7 @@ export const imports = async <T = any>(mod: string): Promise<T> => {
     const res = await import(/* webpackIgnore: true */ resolvedPath);
     return res as T;
   } catch (error) {
-    console.error(`Error importing ${mod} (${PATH_MAP![mod]}):`, error);
+    dislog.error(`Error importing ${mod} (${PATH_MAP![mod]}):`, error);
     return {} as T;
   }
 };

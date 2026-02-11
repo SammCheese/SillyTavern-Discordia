@@ -1,11 +1,5 @@
-import React, {
-  lazy,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-} from 'react';
-import { PageContext } from '../../providers/pageProvider';
+import { lazy, memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { usePage } from '../../providers/pageProvider';
 import { makeAvatar } from '../../utils/utils';
 import type { RowComponentProps } from 'react-window';
 import { List } from 'react-window';
@@ -14,8 +8,9 @@ import ErrorBoundary from '../common/ErrorBoundary/ErrorBoundary';
 import { useOpenChat } from '../../hooks/useOpenChat';
 import Skeleton, { SkeletonTheme } from 'react-loading-skeleton';
 import NewChatButton from './NewChatButton';
+import ChannelHeaderEntry from './ChannelHeaderEntry';
 
-const Divider = React.lazy(() => import('../common/Divider/Divider'));
+const Divider = lazy(() => import('../common/Divider/Divider'));
 const ChannelEntry = lazy(() => import('./ChannelEntry'));
 const SearchBar = lazy(() => import('../common/search/search'));
 
@@ -57,8 +52,8 @@ const ChannelBar = ({
   isLoadingChats = false,
   isInitialLoad = true,
 }: ChannelBarProps) => {
-  const [context, setContext] = React.useState('recent');
-  const { openPage } = useContext(PageContext);
+  const [context, setContext] = useState('recent');
+  const { openPage } = usePage();
   const { setSearchQuery } = useSearch();
   const { openChat, isSelectedChat } = useOpenChat();
 
@@ -85,7 +80,7 @@ const ChannelBar = ({
           openPage(<CharacterSettings />);
           break;
         default:
-          console.log(`No action defined for icon with id: ${id}`);
+          dislog.log(`No action defined for icon with id: ${id}`);
       }
     },
     [openPage],
@@ -104,25 +99,10 @@ const ChannelBar = ({
     if (window.innerWidth <= 1000) setOpen(false);
   }, [setOpen]);
 
-  const iconsFiltered = React.useMemo(
+  const iconsFiltered = useMemo(
     () => icons?.filter((i) => !i.showInProfile),
     [icons],
   );
-
-  const Row = ({ index, style }: RowComponentProps) => {
-    const chat = chats[index]!;
-
-    return (
-      <div style={style}>
-        <ChannelEntry
-          chat={chat}
-          onClick={handleChannelClick}
-          isSelected={isSelectedChat(chat)}
-          avatar={makeAvatar({ chat })}
-        />
-      </div>
-    );
-  };
 
   const handleSearchInput = useCallback(
     (query: string) => {
@@ -151,6 +131,22 @@ const ChannelBar = ({
     };
   }, []);
 
+  // eslint-disable-next-line @eslint-react/no-nested-component-definitions
+  const Row = ({ index, style }: RowComponentProps) => {
+    const chat = chats[index]!;
+
+    return (
+      <div style={style}>
+        <ChannelEntry
+          chat={chat}
+          onClick={handleChannelClick}
+          isSelected={isSelectedChat(chat)}
+          avatar={makeAvatar({ chat })}
+        />
+      </div>
+    );
+  };
+
   const title = context === 'recent' ? 'Recent Chats' : 'Chats';
 
   return (
@@ -163,7 +159,7 @@ const ChannelBar = ({
             {iconsFiltered?.map((icon, index) => (
               <ChannelHeaderEntry
                 icon={icon}
-                key={index}
+                key={icon.id || index}
                 onClick={handleToolclick}
               />
             ))}
@@ -204,7 +200,7 @@ const ChannelBar = ({
               chatsMemo.map((chat, index) => (
                 <ChannelEntry
                   chat={chat}
-                  key={index}
+                  key={chat.file_id || index}
                   onClick={handleChannelClick}
                   isSelected={isSelectedChat(chat)}
                   avatar={makeAvatar({ chat })}
@@ -225,34 +221,4 @@ const ChannelBar = ({
   );
 };
 
-const ChannelHeaderEntry = React.memo(function ChannelHeaderEntry({
-  icon,
-  onClick,
-}: {
-  icon: Icon;
-  onClick?: (icon: Icon) => void;
-}) {
-  const handleClick = () => {
-    if (onClick) {
-      onClick(icon);
-    }
-  };
-
-  return (
-    <div
-      className="py-2 px-2.5 select-none cursor-pointer font-bold rounded-md mr-1 w-full flex items-center gap-2 group"
-      title={icon.title}
-      onClick={handleClick}
-    >
-      <div
-        style={{ fontSize: '28px' }}
-        className={`${icon.className} group-hover:opacity-100`}
-      />
-      <div className="group-hover:text-white truncate text-gray-500">
-        {icon.title}
-      </div>
-    </div>
-  );
-});
-
-export default React.memo(ChannelBar);
+export default memo(ChannelBar);

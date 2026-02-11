@@ -1,11 +1,9 @@
-import { useCallback, useContext, useMemo } from 'react';
-import { ContextMenuContext } from '../../../providers/contextMenuProvider';
-//import { ModalContext } from '../../../providers/modalProvider';
+import { useCallback, useMemo } from 'react';
+import { useContextMenu } from '../../../providers/contextMenuProvider';
 import type { ContextMenuItem } from '../../common/ContextMenuEntry/ContextMenuEntry';
 
 export const useHomeIconMenu = () => {
-  const { showContextMenu } = useContext(ContextMenuContext);
-  //const { openModal } = useContext(ModalContext);
+  const { showContextMenu } = useContextMenu();
 
   const menuOptions = useMemo(() => {
     return [

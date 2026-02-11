@@ -47,11 +47,11 @@ const TextGenerationSettings = ({ entries }: TextGenerationSettingsProps) => {
     [],
   );
 
-  const [autoConnect, setAutoConnectState] = useState(
-    getContext().extensionSettings.autoConnect,
+  const [autoConnectState, setAutoConnectState] = useState(
+    () => getContext().extensionSettings.autoConnect,
   );
-  const [deriveContext, setDeriveContextState] = useState(
-    getContext().powerUserSettings.context_size_derived,
+  const [deriveContextState, setDeriveContextState] = useState(
+    () => getContext().powerUserSettings.context_size_derived,
   );
   const [apiKeyInput, setApiKeyInput] = useState('');
 
@@ -139,7 +139,7 @@ const TextGenerationSettings = ({ entries }: TextGenerationSettingsProps) => {
       <div className="mt-4">
         <Checkbox
           label="Derive Contextsize from Backend"
-          checked={deriveContext}
+          checked={deriveContextState}
           onChange={handleDeriveContextClick}
         />
       </div>
@@ -148,7 +148,7 @@ const TextGenerationSettings = ({ entries }: TextGenerationSettingsProps) => {
         <Button label="Connect" onClick={handleConnectClick} />
         <Checkbox
           label="Auto Connect to last Server"
-          checked={autoConnect}
+          checked={autoConnectState}
           onChange={handleAutoConnectClick}
         />
       </div>

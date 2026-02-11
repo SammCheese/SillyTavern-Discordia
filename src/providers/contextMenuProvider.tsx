@@ -1,7 +1,7 @@
 import {
   createContext,
   useCallback,
-  useContext,
+  use,
   useEffect,
   useLayoutEffect,
   useMemo,
@@ -28,9 +28,10 @@ export function ContextMenuProvider({ children }: { children: ReactNode }) {
   const [isRendered, setIsRendered] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
 
-  const [position, setPosition] = useState<{ x: number; y: number } | null>(
-    null,
-  );
+  const [clickPosition, setClickPosition] = useState<{
+    x: number;
+    y: number;
+  } | null>(null);
   const [menuItems, setMenuItems] = useState<ContextMenuItem[] | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
 
@@ -55,9 +56,8 @@ export function ContextMenuProvider({ children }: { children: ReactNode }) {
       const clickX = e.clientX;
       const clickY = e.clientY;
 
-      setPosition({ x: clickX, y: clickY });
+      setClickPosition({ x: clickX, y: clickY });
       setMenuItems(items);
-
       setIsRendered(true);
 
       requestAnimationFrame(() =>
@@ -66,27 +66,28 @@ export function ContextMenuProvider({ children }: { children: ReactNode }) {
         }),
       );
     },
-    [menuItems],
+    [],
   );
 
   useLayoutEffect(() => {
-    if (isRendered && menuRef.current && !isMobile) {
-      const { offsetWidth: rootW, offsetHeight: rootH } = menuRef.current;
+    if (isRendered && menuRef.current && !isMobile && clickPosition) {
+      const el = menuRef.current;
+      const { offsetWidth: rootW, offsetHeight: rootH } = el;
       const screenW = window.innerWidth;
       const screenH = window.innerHeight;
-      const { x, y } = position || { x: 0, y: 0 };
+
+      const { x, y } = clickPosition;
 
       const rightOverflow = x + rootW > screenW;
       const bottomOverflow = y + rootH > screenH;
 
-      if (rightOverflow || bottomOverflow) {
-        setPosition({
-          x: rightOverflow ? x - rootW : x,
-          y: bottomOverflow ? y - rootH : y,
-        });
-      }
+      const finalX = rightOverflow ? x - rootW : x;
+      const finalY = bottomOverflow ? y - rootH : y;
+
+      el.style.left = `${finalX}px`;
+      el.style.top = `${finalY}px`;
     }
-  }, [isRendered, isMobile, position]);
+  }, [isRendered, isMobile, clickPosition, menuItems]);
 
   useEffect(() => {
     if (!isVisible) return;
@@ -148,10 +149,11 @@ export function ContextMenuProvider({ children }: { children: ReactNode }) {
 
   return (
     <ErrorBoundary>
-      <ContextMenuContext.Provider value={contextValue}>
+      <ContextMenuContext value={contextValue}>
         {isRendered &&
           createPortal(
             <div
+              id="context-menu-backdrop"
               className={`z-60 fixed top-0 left-0 w-dvw h-dvh
               ${isMobile ? (isVisible ? 'bg-black/60 backdrop-blur-[2px] opacity-100' : 'bg-black/0 opacity-0') : ''}`}
             >
@@ -161,13 +163,11 @@ export function ContextMenuProvider({ children }: { children: ReactNode }) {
                   isMobile
                     ? { bottom: 0, left: 0, width: '100%' }
                     : {
-                        top: position?.y,
-                        left: position?.x,
+                        position: 'fixed',
+                        opacity: isVisible ? 1 : 0,
                       }
                 }
-                className={
-                  isMobile ? styles.mobile.container : styles.desktop.container
-                }
+                className={`discordia-context-menu ${isMobile ? styles.mobile.container : styles.desktop.container} `}
                 onClick={handleClick}
                 onContextMenu={handleDefaultContextMenu}
               >
@@ -177,7 +177,7 @@ export function ContextMenuProvider({ children }: { children: ReactNode }) {
             document.body,
           )}
         {children}
-      </ContextMenuContext.Provider>
+      </ContextMenuContext>
     </ErrorBoundary>
   );
 }
@@ -185,7 +185,7 @@ export function ContextMenuProvider({ children }: { children: ReactNode }) {
 export default ContextMenuProvider;
 
 export const useContextMenu = () => {
-  const context = useContext(ContextMenuContext);
+  const context = use(ContextMenuContext);
   if (!context) {
     throw new Error('useContextMenu must be used within a ContextMenuProvider');
   }

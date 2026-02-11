@@ -1,6 +1,9 @@
 import { lazy, useEffect } from 'react';
 
 const SettingsFrame = lazy(() => import('../base/Base'));
+/*const TextCompletionSamplerSettings = lazy(
+  () => import('./kinds/TextCompletion'),
+);*/
 
 const { saveSettingsDebounced } = await imports('@script');
 

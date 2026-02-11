@@ -12,6 +12,7 @@ export const App = () => {
 
   const memoizedSidebarState = useMemo(
     () => sidebarState,
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [
       sidebarState.open,
       sidebarState.setOpen,

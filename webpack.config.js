@@ -9,7 +9,7 @@ const isProduction = process.env.NODE_ENV === 'production';
 module.exports = (env, argv) => {
   const config = {
     entry: path.join(__dirname, 'src/index.tsx'),
-    devtool: 'source-map',
+    devtool: isProduction ? false : 'source-map',
     output: {
       module: true,
       clean: true,
@@ -57,6 +57,7 @@ module.exports = (env, argv) => {
     plugins: [
       new webpack.ProvidePlugin({
         imports: [path.resolve(__dirname, 'src/import.ts'), 'imports'],
+        dislog: [path.resolve(__dirname, 'src/utils/logger.ts'), 'dislog'],
       }),
       ...(isProduction
         ? [new MiniCssExtractPlugin({ filename: '[name].css' })]

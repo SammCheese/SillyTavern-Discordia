@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useState } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 import MemberCard from './Members/MemberCard';
 import Search from '../../components/common/search/search';
 
@@ -47,7 +47,7 @@ const Row = ({
     if (entity) {
       onGroupAdd(entity);
     }
-  }, [entity, index]);
+  }, [entity, onGroupAdd]);
 
   if (!entity) {
     return (
@@ -73,36 +73,36 @@ interface AddMembersProps {
 }
 
 const AddMembers = ({ onAdd, existingMembers }: AddMembersProps) => {
-  const [selectableCharacters, setSelectableCharacters] = useState<Character[]>(
-    [],
-  );
   const characters = SillyTavern.getContext().characters;
+
+  const filterCharacters = useMemo(() => {
+    return characters.filter((char) => {
+      return !existingMembers.find((member) => member.avatar === char.avatar);
+    });
+  }, [characters, existingMembers]);
+
+  const [selectableCharacters, setSelectableCharacters] =
+    useState<Character[]>(filterCharacters);
 
   const handleAddClick = useCallback(
     (char: Character) => {
       onAdd(char);
     },
-    [onAdd, selectableCharacters],
+    [onAdd],
   );
-
-  useEffect(() => {
-    const filtered = characters.filter((char) => {
-      return !existingMembers.find((member) => member.avatar === char.avatar);
-    });
-    setSelectableCharacters(filtered);
-  }, [existingMembers]);
 
   const handleSearchInput = useCallback(
     (input: string) => {
-      const filtered = characters.filter((char) => {
+      const filtered = filterCharacters.filter((char) => {
+        const searchStr = input.toLowerCase();
         return (
-          !existingMembers.find((member) => member.avatar === char.avatar) &&
-          char.name.toLowerCase().includes(input.toLowerCase())
+          char.name.toLowerCase().includes(searchStr) ||
+          char.description.toLowerCase().includes(searchStr)
         );
       });
       setSelectableCharacters(filtered);
     },
-    [existingMembers],
+    [filterCharacters],
   );
 
   return (

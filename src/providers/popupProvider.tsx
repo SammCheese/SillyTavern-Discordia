@@ -1,7 +1,7 @@
 import {
   createContext,
   useCallback,
-  useContext,
+  use,
   useState,
   type ReactNode,
 } from 'react';
@@ -48,7 +48,7 @@ export const PopupProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <ErrorBoundary>
-      <PopupContext.Provider value={{ openPopup, closePopup }}>
+      <PopupContext value={{ openPopup, closePopup }}>
         {isVisible &&
           createPortal(
             <Popup {...popupOptions} onClose={handleClose}>
@@ -57,13 +57,13 @@ export const PopupProvider = ({ children }: { children: ReactNode }) => {
             document.body,
           )}
         {children}
-      </PopupContext.Provider>
+      </PopupContext>
     </ErrorBoundary>
   );
 };
 
 export const usePopup = () => {
-  const context = useContext(PopupContext);
+  const context = use(PopupContext);
   if (!context) {
     throw new Error('usePopup must be used within a PopupProvider');
   }

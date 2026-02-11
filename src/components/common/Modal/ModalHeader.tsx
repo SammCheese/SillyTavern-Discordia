@@ -1,5 +1,5 @@
-import { memo, useCallback, useContext } from 'react';
-import { ModalContext } from '../../../providers/modalProvider';
+import { memo, useCallback } from 'react';
+import { useModal } from '../../../providers/modalProvider';
 
 interface ModalHeaderProps {
   title?: string;
@@ -14,7 +14,7 @@ const ModalHeader = ({
   children,
   canClose = true,
 }: ModalHeaderProps) => {
-  const { closeModal } = useContext(ModalContext);
+  const { closeModal } = useModal();
 
   const handleClose = useCallback(() => {
     if (onClose) {

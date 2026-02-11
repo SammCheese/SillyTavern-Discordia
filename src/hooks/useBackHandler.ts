@@ -1,4 +1,4 @@
-import { useContext, useEffect, useId } from 'react';
+import { use, useEffect, useId } from 'react';
 import { BackHandlerContext } from '../providers/backHandlerProvider';
 
 export const useBackHandler = (
@@ -6,7 +6,7 @@ export const useBackHandler = (
   onBack: () => void,
   timeout?: number,
 ) => {
-  const { register, unregister } = useContext(BackHandlerContext);
+  const { register, unregister } = use(BackHandlerContext);
 
   const id = useId();
 

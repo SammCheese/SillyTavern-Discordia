@@ -31,7 +31,7 @@ export async function getManifests(
         })
         .catch((err) => {
           reject();
-          console.log('Could not load manifest.json for ' + name, err);
+          dislog.warn('Could not load manifest.json for ' + name, err);
         });
     });
 

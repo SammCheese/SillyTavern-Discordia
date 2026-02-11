@@ -24,7 +24,7 @@ const ExtensionTitle = ({
       event.stopPropagation();
       onUpdateClick?.();
     },
-    [onUpdateClick],
+    [isUpdating, onUpdateClick],
   );
 
   return (

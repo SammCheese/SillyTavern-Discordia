@@ -44,10 +44,12 @@ const { changeMainAPI, saveSettingsDebounced, eventSource, event_types } =
   await imports('@script');
 
 export const useConnectionManager = () => {
-  const [profiles, setProfilesState] = useState<ConnectionProfile[]>(() => {
-    return getContext().extensionSettings.connectionManager.profiles || [];
-  });
-  const [selectedProfileId, setSelectedProfileIdState] = useState<string>(
+  const [profilesState, setProfilesState] = useState<ConnectionProfile[]>(
+    () => {
+      return getContext().extensionSettings.connectionManager.profiles || [];
+    },
+  );
+  const [selectedProfileIdState, setSelectedProfileIdState] = useState<string>(
     () => {
       return (
         getContext().extensionSettings.connectionManager.selectedProfile || ''
@@ -56,7 +58,9 @@ export const useConnectionManager = () => {
   );
 
   const getSelectedProfile = (): ConnectionProfile | undefined => {
-    return profiles.find((profile) => profile.id === selectedProfileId);
+    return profilesState.find(
+      (profile) => profile.id === selectedProfileIdState,
+    );
   };
 
   const getCurrentApi = useCallback((): MainAPIValues => {
@@ -102,7 +106,7 @@ export const useConnectionManager = () => {
     if (!selectedProfile) return;
 
     const updatedProfile = Object.assign({}, selectedProfile, ...updates);
-    const updatedProfiles = profiles.map((p) =>
+    const updatedProfiles = profilesState.map((p) =>
       p.id === selectedProfile.id ? updatedProfile : p,
     );
     setProfiles(updatedProfiles);
@@ -113,8 +117,8 @@ export const useConnectionManager = () => {
   };
 
   return {
-    profiles,
-    selectedProfileId,
+    profiles: profilesState,
+    selectedProfileId: selectedProfileIdState,
     selectedProfile: getSelectedProfile(),
     updateCurrentProfile,
     getCurrentApi,

@@ -249,11 +249,11 @@ export async function _deleteCharacter(
   // Close chat BEFORE deletion if this is the current character
   if (isCurrentCharacter) {
     await closeCurrentChat();
-
-    await deleteCharacter(avatarUrl, options);
-
-    await refreshCharacterList();
   }
+
+  await deleteCharacter(avatarUrl, options);
+
+  await refreshCharacterList();
 }
 
 export async function refreshCharacterList(): Promise<void> {
@@ -286,7 +286,7 @@ export async function updateCharacter(
     try {
       return await renameCharacter(originalAvatarId, payload.ch_name.trim());
     } catch (error) {
-      console.error('Edit successful, but Rename failed:', error);
+      dislog.error('Edit successful, but Rename failed:', error);
       throw error;
     }
   }

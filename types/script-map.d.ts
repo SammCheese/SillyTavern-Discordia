@@ -13,3 +13,4 @@ export * as horde from '../../../../horde';
 export * as textGenSettings from '../../../../textgen-settings';
 export * as presetManager from '../../../../preset-manager';
 export * as secrets from '../../../../secrets';
+export * as samplerSelect from '../../../../samplerSelect';

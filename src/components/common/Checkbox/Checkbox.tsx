@@ -1,9 +1,9 @@
 import {
   useState,
   useCallback,
-  useEffect,
   type ChangeEvent,
   memo,
+  useEffect,
 } from 'react';
 
 interface CheckboxProps {
@@ -28,6 +28,7 @@ const Checkbox = ({ label, checked = false, onChange }: CheckboxProps) => {
   );
 
   useEffect(() => {
+    // eslint-disable-next-line @eslint-react/hooks-extra/no-direct-set-state-in-use-effect
     setCheckedState(checked);
   }, [checked]);
 

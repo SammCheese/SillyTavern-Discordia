@@ -9,42 +9,67 @@ const { isValidUrl } = await imports('@scripts/utils');
 
 interface GroupAvatarProps {
   /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-  groupItem: any;
+  groupItem?: any | undefined;
+  groupId?: string | number | undefined;
   width?: number;
   height?: number;
-  rounded?: boolean;
+  rounded?: boolean | number | undefined;
 }
 
 const GroupAvatar = ({
   groupItem,
+  groupId,
   width = 48,
   height = 48,
   rounded = false,
 }: GroupAvatarProps) => {
-  const avatarElements = useMemo(() => {
-    if (!groupItem) return <img src={default_avatar} />;
+  const characterThumbByAvatar = useMemo(() => {
+    const map = new Map<string, string>();
+    characters.forEach((c) => {
+      if (c.avatar && c.avatar !== 'none') {
+        map.set(c.avatar, getThumbnailUrl('avatar', c.avatar));
+      }
+    });
+    return map;
+  }, []);
 
-    if (isValidUrl(groupItem.avatar_url)) {
+  const roundedStyle = useMemo(
+    () =>
+      typeof rounded === 'number'
+        ? `${rounded}px`
+        : rounded
+          ? '50%'
+          : undefined,
+    [rounded],
+  );
+
+  const groupItemMemo = useMemo(() => {
+    if (groupItem) return groupItem;
+    if (groupId) {
+      return SillyTavern.getContext().groups.find(
+        (g) => g.id.toString() === groupId.toString(),
+      );
+    }
+    return undefined;
+  }, [groupItem, groupId]);
+
+  const avatarElements = useMemo(() => {
+    if (!groupItem && !groupId) return <img src={default_avatar} />;
+
+    if (isValidUrl(groupItemMemo?.avatar_url)) {
       return (
-        <div className="avatar" title={`[Group] ${groupItem.name}`}>
-          <img loading="lazy" src={groupItem.avatar_url} />
+        <div className="avatar" title={`[Group] ${groupItemMemo?.name}`}>
+          <img loading="lazy" src={groupItemMemo?.avatar_url} />
         </div>
       );
     }
 
     const memberAvatars: string[] = [];
-    if (Array.isArray(groupItem?.members)) {
-      for (const member of groupItem.members) {
-        const charIndex = characters.findIndex((x) => x.avatar === member);
-        if (charIndex !== -1 && characters[charIndex]?.avatar !== 'none') {
-          memberAvatars.push(
-            getThumbnailUrl(
-              'avatar',
-              characters[charIndex]?.avatar || default_avatar,
-            ),
-          );
-        }
-        if (memberAvatars.length === 4) break;
+    if (Array.isArray(groupItemMemo?.members)) {
+      for (const member of groupItemMemo?.members ?? []) {
+        const thumb = characterThumbByAvatar.get(member);
+        if (thumb) memberAvatars.push(thumb);
+        if (memberAvatars.length > 4) break;
       }
     }
 
@@ -53,17 +78,27 @@ const GroupAvatar = ({
 
     return (
       <div
-        id="group_avatars_template"
-        className={`collage_${count} flex flex-wrap `}
-        title={`[Group] ${groupItem.name}`}
-        style={{ width, height, borderRadius: rounded ? '50%' : undefined }}
+        className={`collage_${count} flex flex-wrap ${rounded === 100 ? 'full' : ''}`}
+        title={`[Group] ${groupItemMemo?.name}`}
+        style={{ width, height, borderRadius: roundedStyle }}
       >
         {memberAvatars.map((src, i) => (
-          <img key={i} className={`img_${i + 1} object-cover`} src={src} />
+          <img key={src} className={`img_${i + 1} object-cover`} src={src} />
         ))}
       </div>
     );
-  }, [groupItem, width, height, rounded]);
+  }, [
+    groupItem,
+    groupId,
+    groupItemMemo?.avatar_url,
+    groupItemMemo?.members,
+    groupItemMemo?.name,
+    rounded,
+    width,
+    height,
+    roundedStyle,
+    characterThumbByAvatar,
+  ]);
 
   return <>{avatarElements}</>;
 };

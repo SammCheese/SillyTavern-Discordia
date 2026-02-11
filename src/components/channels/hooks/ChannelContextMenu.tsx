@@ -1,16 +1,22 @@
-import { useCallback, useContext, useMemo } from 'react';
-import { ContextMenuContext } from '../../../providers/contextMenuProvider';
+import { useCallback, useMemo } from 'react';
+import { useContextMenu } from '../../../providers/contextMenuProvider';
 import { DISCORDIA_EVENTS } from '../../../events/eventTypes';
 import type { ContextMenuItem } from '../../common/ContextMenuEntry/ContextMenuEntry';
-import { PopupContext } from '../../../providers/popupProvider';
+import { usePopup } from '../../../providers/popupProvider';
 
-const { deleteCharacterChatByName, eventSource, closeCurrentChat } =
-  await imports('@script');
-const { deleteGroupChatByName } = await imports('@scripts/groupChats');
+const {
+  deleteCharacterChatByName,
+  eventSource,
+  closeCurrentChat,
+  openCharacterChat,
+} = await imports('@script');
+const { deleteGroupChatByName, openGroupChat } = await imports(
+  '@scripts/groupChats',
+);
 
 export const useChannelContextMenu = (chat: Chat) => {
-  const { showContextMenu } = useContext(ContextMenuContext);
-  const { openPopup } = useContext(PopupContext);
+  const { showContextMenu } = useContextMenu();
+  const { openPopup } = usePopup();
 
   const performDelete = useCallback(async () => {
     const { characters, characterId, groupId } = SillyTavern.getContext();
@@ -33,9 +39,25 @@ export const useChannelContextMenu = (chat: Chat) => {
         await deleteCharacterChatByName(charId.toString(), chat.file_id);
       }
     } catch (error) {
-      console.error('Error deleting chat:', error);
+      dislog.error('Error deleting chat:', error);
     } finally {
       eventSource.emit(DISCORDIA_EVENTS.HOME_BUTTON_CLICKED);
+    }
+  }, [chat]);
+
+  const openChat = useCallback(async () => {
+    if (!chat) return;
+
+    // Handle Recent Chats
+    if (chat?.char_id) {
+      await openCharacterChat(chat.char_id);
+    } else {
+      const { groupId, characterId } = SillyTavern.getContext();
+      if (groupId !== null && !characterId) {
+        await openGroupChat(groupId, chat?.file_name);
+      } else {
+        await openCharacterChat(chat?.file_id);
+      }
     }
   }, [chat]);
 
@@ -46,9 +68,6 @@ export const useChannelContextMenu = (chat: Chat) => {
       confirmVariant: 'danger',
       cancelText: 'Cancel',
       description: `Are you sure you want to delete the chat "${chat.file_name}"? This action cannot be undone.`,
-      onCancel: () => {
-        void 0;
-      },
       onConfirm: async () => {
         await performDelete();
       },
@@ -59,9 +78,7 @@ export const useChannelContextMenu = (chat: Chat) => {
     return [
       {
         label: 'Open',
-        onClick: () => {
-          console.log('Open channel:', chat.file_id);
-        },
+        onClick: openChat,
       },
       /*{
         label: 'Export',
@@ -79,7 +96,7 @@ export const useChannelContextMenu = (chat: Chat) => {
         onClick: handleDelete,
       },
     ] as ContextMenuItem[];
-  }, [chat, handleDelete]);
+  }, [handleDelete, openChat]);
 
   const handleContextMenu = useCallback(
     (e: React.MouseEvent) => {

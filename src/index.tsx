@@ -15,7 +15,7 @@ import 'react-loading-skeleton/dist/skeleton.css';
 
 import ContextMenuProvider from './providers/contextMenuProvider';
 import { BackHandlerProvider } from './providers/backHandlerProvider';
-import { ChatContextMenu } from './bridges/MessageContextMenu';
+import MessageContextMenu from './bridges/MessageContextMenu';
 import { PopupProvider } from './providers/popupProvider';
 import Compose from './utils/Compose';
 import { ExtensionProvider } from './providers/extensionProvider';
@@ -28,10 +28,12 @@ const topBar = document.getElementById('top-bar');
 // Create sidebar container
 export const rootContainer = document.createElement('div');
 rootContainer.id = 'discordia-root';
-topBar?.parentNode?.insertBefore(rootContainer, topBar);
 
-// Unneeded. Remove for the sake of cleaner DOM
-topBar?.remove();
+if (topBar) {
+  topBar?.parentNode?.insertBefore(rootContainer, topBar);
+  // Unneeded. Remove for the sake of cleaner DOM
+  topBar.style.display = 'none';
+}
 
 performPatches();
 
@@ -55,7 +57,7 @@ const root = createRoot(rootContainer);
 root.render(
   <StrictMode>
     <Compose components={providers}>
-      <ChatContextMenu />
+      <MessageContextMenu />
       <App />
     </Compose>
   </StrictMode>,

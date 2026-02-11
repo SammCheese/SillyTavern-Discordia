@@ -1,0 +1,1 @@
+export const __webpack_esm_id__=84;export const __webpack_esm_ids__=[84];export const __webpack_esm_modules__={2084(_,e,s){s.r(e),s.d(e,{default:()=>o});var a=s(2615);const o=(0,s(9471).memo)(({width:_="w-full",className:e=""})=>(0,a.jsx)(a.Fragment,{children:(0,a.jsx)("div",{style:{backgroundColor:"rgba(255, 255, 255, 0.1)"},className:`${_} h-px my-2 mx-auto ${e}`})}))}};

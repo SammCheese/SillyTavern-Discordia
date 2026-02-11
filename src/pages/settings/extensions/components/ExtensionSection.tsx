@@ -15,14 +15,14 @@ const ExtensionSection = ({
   onToggle,
   onDelete,
 }: ExtensionSectionProps) => {
-  if (extensions.length === 0) return null;
-
   const handleDelete = useCallback(
     (extension: ExtensionInfo) => {
       onDelete(extension);
     },
     [onDelete],
   );
+
+  if (extensions.length === 0) return null;
 
   return (
     <div>

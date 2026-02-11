@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 import SettingsHost from './SettingsHost';
 import ErrorBoundary from '../../../../components/common/ErrorBoundary/ErrorBoundary';
 import Accordion from '../../../../components/common/Accordion/Accordion';
@@ -33,14 +33,10 @@ const ExtensionAccordion = memo(function ExtensionAccordion({
   version,
   onDelete,
 }: ExtensionAccordionProps) {
-  const [versionState, setVersionState] = useState<Version | undefined>(
-    version,
-  );
+  const [updatedVersion, setUpdatedVersion] = useState<Version | undefined>();
   const [isUpdating, setIsUpdating] = useState(false);
 
-  useEffect(() => {
-    setVersionState(version);
-  }, [version]);
+  const currentVersion = updatedVersion ?? version;
 
   const isLoading = !manifest;
 
@@ -53,7 +49,7 @@ const ExtensionAccordion = memo(function ExtensionAccordion({
     updateExtension(extension.name)
       .then(() => {
         getExtensionVersion(extension.name).then((version) => {
-          setVersionState(version);
+          setUpdatedVersion(version);
         });
       })
       .catch((error) => {
@@ -62,7 +58,7 @@ const ExtensionAccordion = memo(function ExtensionAccordion({
       .finally(() => {
         setIsUpdating(false);
       });
-  }, [extension.name, version]);
+  }, [extension.name]);
 
   const title = useMemo(
     () => manifest?.display_name ?? extension.name,
@@ -88,7 +84,7 @@ const ExtensionAccordion = memo(function ExtensionAccordion({
           title={title}
           disabled={disabled}
           hasSettings={!!settings}
-          hasUpdates={versionState?.isUpToDate === false}
+          hasUpdates={currentVersion?.isUpToDate === false}
           onUpdateClick={handleUpdateClick}
           isUpdating={isUpdating}
         />
@@ -97,7 +93,7 @@ const ExtensionAccordion = memo(function ExtensionAccordion({
       <ErrorBoundary>
         <div className="p-4 flex flex-col gap-4">
           <div className="flex flex-col gap-2">
-            <ExtensionDetails manifest={manifest} version={versionState} />
+            <ExtensionDetails manifest={manifest} version={currentVersion} />
 
             <ExtensionOptions
               extension={extension}

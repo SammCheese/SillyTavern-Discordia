@@ -1,10 +1,10 @@
 import { memo, useCallback } from 'react';
 
 interface SliderProps {
-  min?: number;
-  max?: number;
-  step?: number;
-  value?: number;
+  min?: number | undefined;
+  max?: number | undefined;
+  step?: number | undefined;
+  value?: number | undefined;
   onChange?: (value: number) => void;
 }
 

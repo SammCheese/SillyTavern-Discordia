@@ -4,12 +4,7 @@ import type { Manifest } from '../../../services/extensionService';
 import { useExtensionState } from '../../../providers/extensionProvider';
 import { usePopup } from '../../../providers/popupProvider';
 import ExtensionSection from './components/ExtensionSection';
-import Card, {
-  CardBackground,
-  CardBorder,
-  CardColor,
-} from '../../../components/common/Card/Card';
-import Button from '../../../components/common/Button/Button';
+import PendingChangesBanner from './components/PendingChanges';
 
 const SettingsFrame = lazy(() => import('../base/Base'));
 
@@ -43,7 +38,9 @@ const ExtensionSettings = () => {
     useExtensionState();
   const { openPopup } = usePopup();
 
-  const initialDisabledState = useRef<Set<string>>(new Set(disabledExtensions));
+  const initialDisabledStateRef = useRef<Set<string>>(
+    new Set(disabledExtensions),
+  );
 
   const onToggle = useCallback(
     (extension: ExtensionInfo) => {
@@ -83,14 +80,16 @@ const ExtensionSettings = () => {
   );
 
   const hasPendingChanges = useMemo(() => {
-    if (disabledExtensions.length !== initialDisabledState.current.size)
+    // eslint-disable-next-line react-hooks/refs
+    if (disabledExtensions.length !== initialDisabledStateRef.current.size)
       return true;
 
     for (const ext of disabledExtensions) {
-      if (!initialDisabledState.current.has(ext)) return true;
+      // eslint-disable-next-line react-hooks/refs
+      if (!initialDisabledStateRef.current.has(ext)) return true;
     }
     return false;
-  }, [disabledExtensions]);
+  }, [disabledExtensions, initialDisabledStateRef]);
 
   const reloadWindow = useCallback(() => {
     window.location.reload();
@@ -128,30 +127,6 @@ const ExtensionSettings = () => {
         </SettingsFrame>
       </Suspense>
     </>
-  );
-};
-
-const PendingChangesBanner = ({ onReload }: { onReload: () => void }) => {
-  return (
-    <div className="mb-6 mt-6 w-full top-16 left-0 px-6 z-50 pointer-events-none">
-      <Card
-        color={CardColor.YELLOW}
-        border={CardBorder.DASHED}
-        background={CardBackground.YELLOW}
-        className="p-4 mb-4 flex flex-row justify-between items-center pointer-events-auto shadow-md"
-      >
-        <div className="font-medium">
-          <div>
-            <i className="fa-solid fa-exclamation-triangle mr-2 text-yellow-700" />
-            <span>
-              <strong>Note: </strong>
-              Some Changes may require a reload to take effect
-            </span>
-          </div>
-          <Button onClick={onReload}>Reload</Button>
-        </div>
-      </Card>
-    </div>
   );
 };
 
