@@ -18,7 +18,7 @@ const SettingsFrame = ({
   const { closePage } = usePage();
 
   const handleClose = useCallback(() => {
-    if (onClose) onClose();
+    onClose?.();
     closePage();
   }, [onClose, closePage]);
 

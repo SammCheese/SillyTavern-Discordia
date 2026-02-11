@@ -50,6 +50,7 @@ const initializePaths = async () => {
     '@scripts/textGenSettings': getPath('textgen-settings.js', isLocal),
     '@scripts/presetManager': getPath('preset-manager.js', isLocal),
     '@scripts/secrets': getPath('secrets.js', isLocal),
+    '@scripts/samplerSelect': getPath('samplerSelect.js', isLocal),
   };
 
   pathsInitialized = true;

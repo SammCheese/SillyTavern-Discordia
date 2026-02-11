@@ -1,6 +1,5 @@
 import { DISCORDIA_EVENTS } from '../events/eventTypes';
 import { runTaskInIdle } from '../utils/utils';
-import * as stackTraceParser from 'stacktrace-parser';
 
 const importPromise = imports('@script');
 
@@ -11,7 +10,21 @@ const TARGET_CONTAINER_IDS = ['extensions_settings', 'extensions_settings2'];
 const FAST_FAIL_REGEX = /extensions\//;
 const EXTENSION_NAME_REGEX =
   /extensions\/(?:third-party\/)?(?!(?:SillyTavern-Discordia|third-party)\/)([^/]+)\//;
-const EXTENSION_NAME_NEGLECT_SET = new Set(['SillyTavern-Discordia']);
+// Blacklist known extensions without settings
+const EXTENSION_NAME_NEGLECT_SET = new Set([
+  'SillyTavern-Discordia',
+  'SillyTavern-ChatPlus',
+  'SillyTavern-CssSnippets',
+  'SillyTavern-TopInfoBar',
+  'SillyTavern-ImageMetadataViewer',
+  'Extension-CodeRunner',
+  'gallery',
+  'quick-reply',
+  'attachments',
+  'connection-manager',
+  'token-counter',
+  'sorcery',
+]);
 const IGNORED_TAGS_SET = new Set([
   'BODY',
   'HTML',
@@ -19,8 +32,18 @@ const IGNORED_TAGS_SET = new Set([
   'SCRIPT',
   'HTMLDOCUMENT',
   'DOCUMENT',
+  'IFRAME',
+  'FRAME',
+  'OBJECT',
+  'EMBED',
+  'VIDEO',
+  'AUDIO',
+  'CANVAS',
+  'SVG',
 ]);
 const LATELOADER_LEEWAY_MS = 30000;
+// Limit performance impact by capping stack trace
+Error.stackTraceLimit = 1;
 
 // Caches
 const MAX_CACHE_SIZE = 500;
@@ -57,21 +80,14 @@ const resolveStackToOwner = (error: Error): string | null => {
     return null;
   }
 
-  const stackFrames = stackTraceParser.parse(error.stack || '') || [];
-  let foundOwner: string | null = null;
-
-  for (const frame of stackFrames) {
-    if (frame.file) {
-      const match = EXTENSION_NAME_REGEX.exec(frame.file);
-      if (match?.[1] && !EXTENSION_NAME_NEGLECT_SET.has(match[1])) {
-        foundOwner = match[1];
-        break;
-      }
-    }
+  const match = EXTENSION_NAME_REGEX.exec(stackString);
+  if (match?.[1] && !EXTENSION_NAME_NEGLECT_SET.has(match[1])) {
+    stackCache.set(stackString, match[1]);
+    return match[1];
   }
 
-  stackCache.set(stackString, foundOwner);
-  return foundOwner;
+  stackCache.set(stackString, null);
+  return null;
 };
 
 const OWNER_ATTR = 'data-discordia-settings-owner';
@@ -309,33 +325,7 @@ export const hijackJquery = () => {
     const originalAppend = $.fn.append;
     const originalAppendTo = $.fn.appendTo;
     const originalOn = $.fn.on;
-    // @ts-expect-error exists
-    const originalInit = $.fn.init;
     let cleanupTimer: number | null = null;
-
-    // @ts-expect-error exists
-    $.fn.init = function (selector, context) {
-      const result = originalInit.call(this, selector, context);
-
-      // Quick check for HTML string (60 is '<')
-      if (typeof selector === 'string' && selector.charCodeAt(0) === 60) {
-        if (result.length > 0) {
-          const ctx = captureCreationContext();
-
-          if (typeof ctx === 'string') {
-            result[OWNER_SYMBOL] = ctx;
-            for (let i = 0; i < result.length; i++) {
-              elementOwnerMap.set(result[i], ctx);
-            }
-          } else if (ctx instanceof Error) {
-            for (let i = 0; i < result.length; i++) {
-              pendingStackMap.set(result[i], ctx);
-            }
-          }
-        }
-      }
-      return result;
-    };
 
     // @ts-expect-error exists
     $.fn.init.prototype = $.fn;
@@ -358,13 +348,17 @@ export const hijackJquery = () => {
         owner = getOwnerFromJQuery(content as JQuery<HTMLElement>);
       }
 
-      if (!owner) {
-        owner = getOwnerFromJQuery(this);
-      }
+      const parent = this[0] as HTMLElement;
 
       if (!owner) {
-        ctx = captureCreationContext();
-        owner = typeof ctx === 'string' ? ctx : null;
+        if (elementOwnerMap.has(parent)) {
+          owner = elementOwnerMap.get(parent)!;
+        } else if (pendingStackMap.has(parent)) {
+          ctx = pendingStackMap.get(parent)!;
+        } else {
+          ctx = captureCreationContext();
+          owner = typeof ctx === 'string' ? ctx : null;
+        }
       }
 
       if (typeof content === 'string') {
@@ -397,9 +391,16 @@ export const hijackJquery = () => {
       let owner = isTarget ? getOwnerFromJQuery(this) : null;
       let ctx: string | Error | null = null;
 
+      const parent = destination[0] as HTMLElement;
       if (!owner) {
-        ctx = captureCreationContext();
-        owner = typeof ctx === 'string' ? ctx : null;
+        if (elementOwnerMap.has(parent)) {
+          owner = elementOwnerMap.get(parent)!;
+        } else if (pendingStackMap.has(parent)) {
+          ctx = pendingStackMap.get(parent)!;
+        } else {
+          ctx = captureCreationContext();
+          owner = typeof ctx === 'string' ? ctx : null;
+        }
       }
 
       const result = originalAppendTo.apply(this, args);
@@ -445,8 +446,6 @@ export const hijackJquery = () => {
 
     const restoreOriginals = async () => {
       $.fn.on = originalOn;
-      // @ts-expect-error exists
-      $.fn.init = originalInit;
       $.fn.append = originalAppend;
       $.fn.appendTo = originalAppendTo;
 
@@ -594,6 +593,10 @@ export const poolDOMExtensions = async () => {
 
   const idleCapture = () => {
     dislog.log('Completed Load in ' + (Date.now() - timerStart) + 'ms');
+    // We are out of the critical loading phase
+    // Bounce back tracelimit to not interfere with other extensions debugging
+    Error.stackTraceLimit = 10;
+
     if (typeof requestIdleCallback !== 'undefined') {
       requestIdleCallback(
         () => {

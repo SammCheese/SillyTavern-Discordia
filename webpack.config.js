@@ -9,7 +9,7 @@ const isProduction = process.env.NODE_ENV === 'production';
 module.exports = (env, argv) => {
   const config = {
     entry: path.join(__dirname, 'src/index.tsx'),
-    devtool: 'source-map',
+    devtool: isProduction ? false : 'source-map',
     output: {
       module: true,
       clean: true,
