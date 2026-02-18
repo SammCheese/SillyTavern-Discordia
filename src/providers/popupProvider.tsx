@@ -69,3 +69,5 @@ export const usePopup = () => {
   }
   return context;
 };
+
+export default PopupProvider;

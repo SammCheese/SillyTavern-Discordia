@@ -274,3 +274,5 @@ export const useExtensionState = (): ExtensionContextType => {
   }
   return context;
 };
+
+export default ExtensionProvider;

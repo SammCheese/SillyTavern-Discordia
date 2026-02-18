@@ -22,9 +22,9 @@ const SettingsFrame = ({
     closePage();
   }, [onClose, closePage]);
 
-  const handleClick = (e: React.MouseEvent) => {
+  const handleClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
-  };
+  }, []);
 
   const isSmallScreen = useMemo(() => window.innerWidth < 1000, []);
 

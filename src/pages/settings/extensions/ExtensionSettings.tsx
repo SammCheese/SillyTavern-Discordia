@@ -97,7 +97,7 @@ const ExtensionSettings = () => {
 
   return (
     <>
-      <Suspense fallback={null}>
+      <Suspense>
         <SettingsFrame
           title="Extension Settings"
           onClose={handleClose}

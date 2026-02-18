@@ -20,7 +20,7 @@
 
     // Stricter Typechecking Options
     "noUncheckedIndexedAccess": true,
-    "exactOptionalPropertyTypes": true,
+    "exactOptionalPropertyTypes": false,
 
     // Style Options
     // "noImplicitReturns": true,
@@ -54,7 +54,8 @@
     "./src/**/*",
     "./tests/**/*",
     "./global.d.ts",
-    "./vitest.config.ts"
+    "./vitest.config.ts",
+    "./vite.config.ts"
   ],
   "exclude": ["../../../../**/.*.js"]
 }

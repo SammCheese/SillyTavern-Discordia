@@ -14,12 +14,12 @@ type BackHandlerEntry = {
   timeout: number;
 };
 
-interface BackHandlerProvider {
+interface BackHandlerProviderType {
   register: (id: string, callback: BackCallback, timeout?: number) => void;
   unregister: (id: string) => void;
 }
 
-export const BackHandlerContext = createContext<BackHandlerProvider>({
+export const BackHandlerContext = createContext<BackHandlerProviderType>({
   register: () => {},
   unregister: () => {},
 });
@@ -106,3 +106,5 @@ export const BackHandlerProvider = ({ children }: { children: ReactNode }) => {
     </BackHandlerContext>
   );
 };
+
+export default BackHandlerProvider;
