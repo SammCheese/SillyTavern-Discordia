@@ -62,7 +62,7 @@ export async function getExtensionVersion(extensionName, signal?) {
   }
 }
 
-export async function updateExtension(extensionName) {
+export async function updateExtensionByName(extensionName) {
   try {
     const response = await fetch('/api/extensions/update', {
       method: 'POST',

@@ -17,7 +17,7 @@ const OpenPage = lazy(() => import('../pages/OpenPage'));
 
 export const PageContext = createContext<{
   openPage: (page: ReactNode) => void;
-  closePage: () => void;
+  closePage: (onClose?: () => void) => void;
 }>({
   openPage: () => {},
   closePage: () => {},
@@ -42,7 +42,8 @@ export function PageProvider({ children }: { children: ReactNode }) {
     }
   }, [content]);
 
-  const closePage = useCallback(() => {
+  const closePage = useCallback((onClose?: () => void) => {
+    onClose?.();
     setIsVisible(false);
     setTimeout(() => {
       setContent(null);

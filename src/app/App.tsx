@@ -1,4 +1,4 @@
-import { lazy, Suspense, useMemo } from 'react';
+import { lazy, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useSidebarState } from '../hooks/useSidebarState';
 import { SearchProvider } from '../providers/searchProvider';
@@ -26,9 +26,7 @@ export const App = () => {
 
   return createPortal(
     <SearchProvider>
-      <Suspense>
-        <SideBar {...memoizedSidebarState} />
-      </Suspense>
+      <SideBar {...memoizedSidebarState} />
     </SearchProvider>,
     rootContainer,
   );

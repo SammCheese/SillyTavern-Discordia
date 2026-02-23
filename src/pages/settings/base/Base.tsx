@@ -18,8 +18,7 @@ const SettingsFrame = ({
   const { closePage } = usePage();
 
   const handleClose = useCallback(() => {
-    onClose?.();
-    closePage();
+    closePage(onClose);
   }, [onClose, closePage]);
 
   const handleClick = useCallback((e: React.MouseEvent) => {

@@ -1,4 +1,4 @@
-import { StrictMode, Suspense, lazy } from 'react';
+import { StrictMode, lazy } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 
 import { performPatches } from './patches';
@@ -75,9 +75,7 @@ const startApp = () => {
       <StrictMode>
         <Compose components={providers}>
           <MessageContextMenu />
-          <Suspense>
-            <App />
-          </Suspense>
+          <App />
         </Compose>
       </StrictMode>,
     );
