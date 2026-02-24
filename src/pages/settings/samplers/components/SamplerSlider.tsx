@@ -5,7 +5,7 @@ interface SamplerSliderProps {
   label: string;
   value: number;
   min?: number;
-  max?: number;
+  max?: number | null;
   step?: number;
   onChange: (value: number) => void;
 }
@@ -19,12 +19,12 @@ const SamplerSlider = ({
   onChange,
 }: SamplerSliderProps) => {
   return (
-    <div className="flex flex-col mb-4 w-1/2 ">
+    <div className="flex flex-col mb-4 w-fit ">
       <label className="mb-2 text-sm font-medium text-center">{label}</label>
       <Slider
         value={value}
         min={min}
-        max={max}
+        max={max ?? undefined}
         step={step}
         onChange={onChange}
       />

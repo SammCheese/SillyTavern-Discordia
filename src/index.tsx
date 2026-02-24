@@ -1,4 +1,4 @@
-import { StrictMode, lazy } from 'react';
+import { StrictMode } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 
 import { performPatches } from './patches';
@@ -19,7 +19,7 @@ import BackHandlerProvider from './providers/backHandlerProvider';
 import Compose from './app/Compose';
 import ErrorBoundary from './components/common/ErrorBoundary/ErrorBoundary';
 
-const App = lazy(() => import('./app/App'));
+import App from './app/App';
 
 window.discordia = window.discordia || {};
 
@@ -95,3 +95,5 @@ const startApp = () => {
 };
 
 startApp();
+
+export default startApp;

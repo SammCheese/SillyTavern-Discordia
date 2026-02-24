@@ -570,6 +570,7 @@ export const poolDOMExtensions = async () => {
       window.discordia.extensionTemplates = cloned;
 
       // Mobile has this wonderful issue where off-spec elements nuke their children
+      // We'll try to use prevObject to try to restore them.
       const isCoping = cloned.some(
         (c) => c.length > 0 && c[0]?.childNodes.length === 0 && c[0]?.innerHTML,
       );
