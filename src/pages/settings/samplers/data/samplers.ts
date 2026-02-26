@@ -1,4 +1,13 @@
-export const textgen_settings_schema = {
+export type SamplerConfig = {
+  id: string;
+  name: string;
+  type: 'range' | 'boolean' | 'number';
+  min?: number;
+  max?: number | null;
+  step?: number;
+};
+
+export const textgen_settings_schema = (unlocked: boolean) => ({
   Common: {
     Generation: [
       {
@@ -14,41 +23,25 @@ export const textgen_settings_schema = {
         name: 'Context (tokens)',
         type: 'range',
         min: 512,
-        max: 8192,
+        max: unlocked ? 512 * 1024 : 8192,
         step: 64,
       },
-    ],
+      {
+        id: 'streaming',
+        name: 'Streaming',
+        type: 'boolean',
+      },
+      {
+        id: 'max_context_unlocked',
+        name: 'Unlock Max Context',
+        type: 'boolean',
+      },
+    ] as SamplerConfig[],
   },
   TextGenWebUI: {
-    Generation: [
-      {
-        id: 'n_textgenerationwebui',
-        name: 'Multiple swipes per generation',
-        type: 'number',
-        min: 1,
-        max: null,
-        step: 1,
-      },
-      {
-        id: 'min_length_textgenerationwebui',
-        name: 'Min Length',
-        type: 'range',
-        min: 0,
-        max: 2000,
-        step: 1,
-      },
-      {
-        id: 'max_tokens_second_textgenerationwebui',
-        name: 'Maximum tokens/second',
-        type: 'range',
-        min: 0,
-        max: 20,
-        step: 1,
-      },
-    ],
     Core: [
       {
-        id: 'temp_textgenerationwebui',
+        id: 'temp',
         name: 'Temperature',
         type: 'range',
         min: 0.0,
@@ -56,7 +49,7 @@ export const textgen_settings_schema = {
         step: 0.01,
       },
       {
-        id: 'top_k_textgenerationwebui',
+        id: 'top_k',
         name: 'Top K',
         type: 'range',
         min: -1,
@@ -64,7 +57,7 @@ export const textgen_settings_schema = {
         step: 1,
       },
       {
-        id: 'top_p_textgenerationwebui',
+        id: 'top_p',
         name: 'Top P',
         type: 'range',
         min: 0,
@@ -72,7 +65,7 @@ export const textgen_settings_schema = {
         step: 0.01,
       },
       {
-        id: 'typical_p_textgenerationwebui',
+        id: 'typical_p',
         name: 'Typical P',
         type: 'range',
         min: 0,
@@ -80,7 +73,7 @@ export const textgen_settings_schema = {
         step: 0.01,
       },
       {
-        id: 'min_p_textgenerationwebui',
+        id: 'min_p',
         name: 'Min P',
         type: 'range',
         min: 0,
@@ -88,7 +81,7 @@ export const textgen_settings_schema = {
         step: 0.001,
       },
       {
-        id: 'top_a_textgenerationwebui',
+        id: 'top_a',
         name: 'Top A',
         type: 'range',
         min: 0,
@@ -96,7 +89,7 @@ export const textgen_settings_schema = {
         step: 0.01,
       },
       {
-        id: 'tfs_textgenerationwebui',
+        id: 'tfs',
         name: 'TFS',
         type: 'range',
         min: 0,
@@ -104,7 +97,7 @@ export const textgen_settings_schema = {
         step: 0.001,
       },
       {
-        id: 'epsilon_cutoff_textgenerationwebui',
+        id: 'epsilon_cutoff',
         name: 'Epsilon Cutoff',
         type: 'range',
         min: 0,
@@ -112,17 +105,17 @@ export const textgen_settings_schema = {
         step: 0.01,
       },
       {
-        id: 'eta_cutoff_textgenerationwebui',
+        id: 'eta_cutoff',
         name: 'Eta Cutoff',
         type: 'range',
         min: 0,
         max: 20,
         step: 0.01,
       },
-    ],
+    ] as SamplerConfig[],
     Penalties: [
       {
-        id: 'rep_pen_textgenerationwebui',
+        id: 'rep_pen',
         name: 'Repetition Penalty',
         type: 'range',
         min: 1,
@@ -130,7 +123,7 @@ export const textgen_settings_schema = {
         step: 0.01,
       },
       {
-        id: 'rep_pen_range_textgenerationwebui',
+        id: 'rep_pen_range',
         name: 'Rep Pen Range',
         type: 'range',
         min: -1,
@@ -138,7 +131,7 @@ export const textgen_settings_schema = {
         step: 1,
       },
       {
-        id: 'rep_pen_slope_textgenerationwebui',
+        id: 'rep_pen_slope',
         name: 'Rep Pen Slope',
         type: 'range',
         min: 0,
@@ -146,7 +139,7 @@ export const textgen_settings_schema = {
         step: 0.01,
       },
       {
-        id: 'rep_pen_decay_textgenerationwebui',
+        id: 'rep_pen_decay',
         name: 'Rep Pen Decay',
         type: 'range',
         min: -1,
@@ -154,7 +147,7 @@ export const textgen_settings_schema = {
         step: 1,
       },
       {
-        id: 'encoder_rep_pen_textgenerationwebui',
+        id: 'encoder_rep_pen',
         name: 'Encoder Penalty',
         type: 'range',
         min: 0.8,
@@ -162,7 +155,7 @@ export const textgen_settings_schema = {
         step: 0.01,
       },
       {
-        id: 'freq_pen_textgenerationwebui',
+        id: 'freq_pen',
         name: 'Frequency Penalty',
         type: 'range',
         min: -2,
@@ -170,7 +163,7 @@ export const textgen_settings_schema = {
         step: 0.01,
       },
       {
-        id: 'presence_pen_textgenerationwebui',
+        id: 'presence_pen',
         name: 'Presence Penalty',
         type: 'range',
         min: -2,
@@ -178,7 +171,7 @@ export const textgen_settings_schema = {
         step: 0.01,
       },
       {
-        id: 'no_repeat_ngram_size_textgenerationwebui',
+        id: 'no_repeat_ngram_size',
         name: 'No Repeat Ngram Size',
         type: 'range',
         min: 0,
@@ -186,7 +179,7 @@ export const textgen_settings_schema = {
         step: 1,
       },
       {
-        id: 'length_penalty_textgenerationwebui',
+        id: 'length_penalty',
         name: 'Length Penalty',
         type: 'range',
         min: -5,
@@ -194,17 +187,22 @@ export const textgen_settings_schema = {
         step: 0.1,
       },
       {
-        id: 'penalty_alpha_textgenerationwebui',
+        id: 'penalty_alpha',
         name: 'Penalty Alpha',
         type: 'range',
         min: 0,
         max: 5,
         step: 0.05,
       },
-    ],
-    DynamicTemperature: [
+    ] as SamplerConfig[],
+    'Dynamic Temperature': [
       {
-        id: 'min_temp_textgenerationwebui',
+        id: 'dynatemp',
+        name: 'Enabled',
+        type: 'boolean',
+      },
+      {
+        id: 'min_temp',
         name: 'Minimum Temp',
         type: 'range',
         min: 0,
@@ -212,17 +210,25 @@ export const textgen_settings_schema = {
         step: 0.01,
       },
       {
-        id: 'max_temp_textgenerationwebui',
+        id: 'max_temp',
         name: 'Maximum Temp',
         type: 'range',
         min: 0,
         max: 5,
         step: 0.01,
       },
-    ],
-    DRY: [
       {
-        id: 'dry_multiplier_textgenerationwebui',
+        id: 'dynatemp_exponent',
+        name: 'Dynatemp Exponent',
+        type: 'range',
+        min: 0.001,
+        max: 10,
+        step: 0.001,
+      },
+    ] as SamplerConfig[],
+    'DRY Repetition Penalty': [
+      {
+        id: 'dry_multiplier',
         name: 'DRY Multiplier',
         type: 'range',
         min: 0,
@@ -230,7 +236,7 @@ export const textgen_settings_schema = {
         step: 0.01,
       },
       {
-        id: 'dry_base_textgenerationwebui',
+        id: 'dry_base',
         name: 'DRY Base',
         type: 'range',
         min: 1,
@@ -238,7 +244,7 @@ export const textgen_settings_schema = {
         step: 0.01,
       },
       {
-        id: 'dry_allowed_length_textgenerationwebui',
+        id: 'dry_allowed_length',
         name: 'DRY Allowed Length',
         type: 'range',
         min: 1,
@@ -246,17 +252,17 @@ export const textgen_settings_schema = {
         step: 1,
       },
       {
-        id: 'dry_penalty_last_n_textgenerationwebui',
+        id: 'dry_penalty_last_n',
         name: 'DRY Penalty Range',
         type: 'range',
         min: 0,
         max: 8192,
         step: 1,
       },
-    ],
-    XTC: [
+    ] as SamplerConfig[],
+    'Exclude Top Choices (XTC)': [
       {
-        id: 'xtc_threshold_textgenerationwebui',
+        id: 'xtc_threshold',
         name: 'XTC Threshold',
         type: 'range',
         min: 0,
@@ -264,17 +270,17 @@ export const textgen_settings_schema = {
         step: 0.01,
       },
       {
-        id: 'xtc_probability_textgenerationwebui',
+        id: 'xtc_probability',
         name: 'XTC Probability',
         type: 'range',
         min: 0,
         max: 1,
         step: 0.01,
       },
-    ],
+    ] as SamplerConfig[],
     Mirostat: [
       {
-        id: 'mirostat_mode_textgenerationwebui',
+        id: 'mirostat_mode',
         name: 'Mirostat Mode',
         type: 'range',
         min: 0,
@@ -282,7 +288,7 @@ export const textgen_settings_schema = {
         step: 1,
       },
       {
-        id: 'mirostat_tau_textgenerationwebui',
+        id: 'mirostat_tau',
         name: 'Mirostat Tau',
         type: 'range',
         min: 0,
@@ -290,57 +296,17 @@ export const textgen_settings_schema = {
         step: 0.01,
       },
       {
-        id: 'mirostat_eta_textgenerationwebui',
+        id: 'mirostat_eta',
         name: 'Mirostat Eta',
         type: 'range',
         min: 0,
         max: 1,
         step: 0.01,
       },
-    ],
-    Advanced: [
+    ] as SamplerConfig[],
+    'Adaptive P': [
       {
-        id: 'smoothing_factor_textgenerationwebui',
-        name: 'Smoothing Factor',
-        type: 'range',
-        min: 0,
-        max: 10,
-        step: 0.01,
-      },
-      {
-        id: 'smoothing_curve_textgenerationwebui',
-        name: 'Smoothing Curve',
-        type: 'range',
-        min: 1,
-        max: 10,
-        step: 0.01,
-      },
-      {
-        id: 'dynatemp_exponent_textgenerationwebui',
-        name: 'Dynatemp Exponent',
-        type: 'range',
-        min: 0.001,
-        max: 10,
-        step: 0.001,
-      },
-      {
-        id: 'nsigma_textgenerationwebui',
-        name: 'Top nsigma',
-        type: 'range',
-        min: 0,
-        max: 5,
-        step: 0.01,
-      },
-      {
-        id: 'min_keep_textgenerationwebui',
-        name: 'Min Keep',
-        type: 'range',
-        min: 0,
-        max: 50,
-        step: 1,
-      },
-      {
-        id: 'adaptive_target_textgenerationwebui',
+        id: 'adaptive_target',
         name: 'Adaptive-P Target',
         type: 'range',
         min: -0.01,
@@ -348,15 +314,77 @@ export const textgen_settings_schema = {
         step: 0.01,
       },
       {
-        id: 'adaptive_decay_textgenerationwebui',
+        id: 'adaptive_decay',
         name: 'Adaptive-P Decay',
         type: 'range',
         min: 0,
         max: 0.99,
         step: 0.01,
       },
+    ] as SamplerConfig[],
+    'Smooth Sampling': [
       {
-        id: 'num_beams_textgenerationwebui',
+        id: 'smoothing_factor',
+        name: 'Smoothing Factor',
+        type: 'range',
+        min: 0,
+        max: 10,
+        step: 0.01,
+      },
+      {
+        id: 'smoothing_curve',
+        name: 'Smoothing Curve',
+        type: 'range',
+        min: 1,
+        max: 10,
+        step: 0.01,
+      },
+    ] as SamplerConfig[],
+    Generation: [
+      {
+        id: 'n',
+        name: 'Multiple swipes per generation',
+        type: 'number',
+        min: 1,
+        max: null,
+        step: 1,
+      },
+      {
+        id: 'min_length',
+        name: 'Min Length',
+        type: 'range',
+        min: 0,
+        max: 2000,
+        step: 1,
+      },
+      {
+        id: 'max_tokens_second',
+        name: 'Maximum tokens/second',
+        type: 'range',
+        min: 0,
+        max: 20,
+        step: 1,
+      },
+    ] as SamplerConfig[],
+    Advanced: [
+      {
+        id: 'nsigma',
+        name: 'Top nsigma',
+        type: 'range',
+        min: 0,
+        max: 5,
+        step: 0.01,
+      },
+      {
+        id: 'min_keep',
+        name: 'Min Keep',
+        type: 'range',
+        min: 0,
+        max: 50,
+        step: 1,
+      },
+      {
+        id: 'num_beams',
         name: '# of Beams',
         type: 'range',
         min: 1,
@@ -364,7 +392,7 @@ export const textgen_settings_schema = {
         step: 1,
       },
       {
-        id: 'skew_textgenerationwebui',
+        id: 'skew',
         name: 'Skew',
         type: 'range',
         min: -5,
@@ -372,7 +400,7 @@ export const textgen_settings_schema = {
         step: 0.01,
       },
       {
-        id: 'guidance_scale_textgenerationwebui',
+        id: 'guidance_scale',
         name: 'CFG Scale',
         type: 'range',
         min: 0.1,
@@ -380,14 +408,14 @@ export const textgen_settings_schema = {
         step: 0.05,
       },
       {
-        id: 'seed_textgenerationwebui',
+        id: 'seed',
         name: 'Seed',
         type: 'number',
         min: -1,
         max: null,
         step: 1,
       },
-    ],
+    ] as SamplerConfig[],
   },
   NovelAI: {
     Core: [
@@ -447,7 +475,7 @@ export const textgen_settings_schema = {
         max: 1,
         step: 0.001,
       },
-    ],
+    ] as SamplerConfig[],
     Penalties: [
       {
         id: 'rep_pen_novel',
@@ -489,7 +517,7 @@ export const textgen_settings_schema = {
         max: 1,
         step: 0.001,
       },
-    ],
+    ] as SamplerConfig[],
     Mirostat: [
       {
         id: 'mirostat_tau_novel',
@@ -507,7 +535,7 @@ export const textgen_settings_schema = {
         max: 1,
         step: 0.01,
       },
-    ],
+    ] as SamplerConfig[],
     Advanced: [
       {
         id: 'math1_temp_novel',
@@ -533,7 +561,7 @@ export const textgen_settings_schema = {
         max: 0.4,
         step: 0.01,
       },
-    ],
+    ] as SamplerConfig[],
     Generation: [
       {
         id: 'min_length_novel',
@@ -571,7 +599,7 @@ export const textgen_settings_schema = {
         max: null,
         step: 1,
       },
-    ],
+    ] as SamplerConfig[],
     Core: [
       {
         id: 'temp_openai',
@@ -613,7 +641,7 @@ export const textgen_settings_schema = {
         max: 1,
         step: 0.001,
       },
-    ],
+    ] as SamplerConfig[],
     Penalties: [
       {
         id: 'freq_pen_openai',
@@ -639,7 +667,7 @@ export const textgen_settings_schema = {
         max: 2,
         step: 0.01,
       },
-    ],
+    ] as SamplerConfig[],
     Advanced: [
       {
         id: 'seed_openai',
@@ -649,7 +677,7 @@ export const textgen_settings_schema = {
         max: 2147483647,
         step: 1,
       },
-    ],
+    ] as SamplerConfig[],
   },
   Kobold: {
     Core: [
@@ -688,7 +716,7 @@ export const textgen_settings_schema = {
         step: 0.001,
       },
       { id: 'tfs', name: 'TFS', type: 'range', min: 0, max: 1, step: 0.001 },
-    ],
+    ] as SamplerConfig[],
     Penalties: [
       {
         id: 'rep_pen',
@@ -714,7 +742,7 @@ export const textgen_settings_schema = {
         max: 10,
         step: 0.01,
       },
-    ],
+    ] as SamplerConfig[],
     Mirostat: [
       {
         id: 'mirostat_mode_kobold',
@@ -740,7 +768,7 @@ export const textgen_settings_schema = {
         max: 1,
         step: 0.01,
       },
-    ],
+    ] as SamplerConfig[],
     Advanced: [
       {
         id: 'seed_kobold',
@@ -750,6 +778,6 @@ export const textgen_settings_schema = {
         max: 18446744073709552000,
         step: 1,
       },
-    ],
+    ] as SamplerConfig[],
   },
-};
+});
