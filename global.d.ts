@@ -33,6 +33,12 @@ declare global {
       extensionTemplates?: JQuery<Element>[];
     };
   }
+  const toastr: {
+    success: (message: string, title?: string, options?: any) => void;
+    error: (message: string, title?: string, options?: any) => void;
+    warning: (message: string, title?: string, options?: any) => void;
+    info: (message: string, title?: string, options?: any) => void;
+  };
 }
 
 declare module '*.webm' {

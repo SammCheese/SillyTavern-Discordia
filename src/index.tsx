@@ -21,6 +21,8 @@ import ErrorBoundary from './components/common/ErrorBoundary/ErrorBoundary';
 
 import App from './app/App';
 
+let failedStart = false;
+
 window.discordia = window.discordia || {};
 
 export let rootContainer = document.getElementById(
@@ -37,7 +39,7 @@ if (rootContainer) {
 rootContainer = document.createElement('div');
 rootContainer.id = 'discordia-root';
 
-const startApp = () => {
+const startApp = (safeStart: boolean = false) => {
   let root: Root | null = null;
 
   try {
@@ -50,7 +52,7 @@ const startApp = () => {
       topBar.style.display = 'none';
     }
 
-    if (!isRemounting) {
+    if (!safeStart && !isRemounting) {
       performPatches();
     }
 
@@ -80,16 +82,30 @@ const startApp = () => {
       </StrictMode>,
     );
   } catch (error) {
+    failedStart = true;
     console.error('Error starting Discordia:', error);
-    // @ts-expect-error toastr is a global variable
-    toastr.error(
-      'Failed to start Discordia. Please check the console for details.',
-      {
-        timeOut: 5000,
-      },
-    );
+
     if (root) {
       root.unmount();
+    }
+
+    if (failedStart && !safeStart) {
+      toastr.warning(
+        'Failed to start Discordia. Retrying in safe mode...',
+        'Discordia Startup',
+        {
+          timeOut: 5000,
+        },
+      );
+      startApp(true);
+    } else {
+      toastr.error(
+        'Failed to start Discordia. Please check the console for details.',
+        'Discordia Startup',
+        {
+          timeOut: 5000,
+        },
+      );
     }
   }
 };
