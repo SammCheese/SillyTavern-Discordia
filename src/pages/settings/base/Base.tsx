@@ -18,13 +18,12 @@ const SettingsFrame = ({
   const { closePage } = usePage();
 
   const handleClose = useCallback(() => {
-    onClose?.();
-    closePage();
+    closePage(onClose);
   }, [onClose, closePage]);
 
-  const handleClick = (e: React.MouseEvent) => {
+  const handleClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
-  };
+  }, []);
 
   const isSmallScreen = useMemo(() => window.innerWidth < 1000, []);
 

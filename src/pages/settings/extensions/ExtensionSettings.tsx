@@ -34,8 +34,12 @@ export interface ExtensionList {
 }
 
 const ExtensionSettings = () => {
-  const { toggleExtension, categorizedExtensions, disabledExtensions } =
-    useExtensionState();
+  const {
+    toggleExtension,
+    categorizedExtensions,
+    disabledExtensions,
+    updatedExtensions,
+  } = useExtensionState();
   const { openPopup } = usePopup();
 
   const initialDisabledStateRef = useRef<Set<string>>(
@@ -88,8 +92,11 @@ const ExtensionSettings = () => {
       // eslint-disable-next-line react-hooks/refs
       if (!initialDisabledStateRef.current.has(ext)) return true;
     }
+
+    if (updatedExtensions && updatedExtensions.length > 0) return true;
+
     return false;
-  }, [disabledExtensions, initialDisabledStateRef]);
+  }, [disabledExtensions, initialDisabledStateRef, updatedExtensions]);
 
   const reloadWindow = useCallback(() => {
     window.location.reload();
@@ -97,7 +104,7 @@ const ExtensionSettings = () => {
 
   return (
     <>
-      <Suspense fallback={null}>
+      <Suspense>
         <SettingsFrame
           title="Extension Settings"
           onClose={handleClose}

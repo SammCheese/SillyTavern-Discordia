@@ -1,32 +1,91 @@
-import { memo } from 'react';
-import SamplerSlider from '../components/SamplerSlider';
-//import useSamplerSettings from '../hooks/useSamplerSettings';
+import { memo, useCallback, useMemo, useState } from 'react';
 import Divider from '../../../../components/common/Divider/Divider';
+import { textgen_settings_schema } from '../data/samplers';
+import SettingsRow from '../components/SettingsRow';
+
+const context = SillyTavern.getContext();
+
+const { amount_gen, max_context } = await imports('@script');
+const SCRIPT_SETTING_IDS = [
+  'max_context',
+  'amount_gen',
+  'max_context_unlocked',
+] as const;
 
 const TextCompletionSamplerSettings = () => {
-  /*const { samplers, samplerOptions } = useSamplerSettings({
-    samplerKind: 'text_completion',
-  });*/
+  const [settings, setSettings] = useState<Record<string, unknown>>(() => ({
+    ...context.textCompletionSettings,
+    amount_gen,
+    max_context,
+    max_context_unlocked: context.powerUserSettings.max_context_unlocked,
+  }));
+
+  const onChange = useCallback(
+    (id: string, value: number | boolean | string) => {
+      setSettings((previousSettings) => ({ ...previousSettings, [id]: value }));
+
+      if (
+        SCRIPT_SETTING_IDS.includes(id as (typeof SCRIPT_SETTING_IDS)[number])
+      ) {
+        if (id === 'max_context_unlocked') {
+          $('#max_context_unlocked')
+            .prop('checked', value as boolean)
+            .trigger('change');
+        } else {
+          $(`#${id}`).val(Number(value)).trigger('input');
+        }
+        context.saveSettingsDebounced();
+        return;
+      }
+
+      if (Object.keys(context.textCompletionSettings).includes(id)) {
+        context.textCompletionSettings[id] = value;
+        context.saveSettingsDebounced();
+      }
+    },
+    [],
+  );
+
+  const renderedSettings = useMemo(() => {
+    const unlocked = Boolean(settings.max_context_unlocked);
+    return Object.entries(textgen_settings_schema(unlocked).TextGenWebUI).map(
+      ([key]) => (
+        <div key={key} className="w-full text-center">
+          <h3 className="text-xl font-semibold mb-2">{key}</h3>
+          <SettingsRow
+            key={key}
+            settings={textgen_settings_schema(unlocked).TextGenWebUI[key]!}
+            values={settings}
+            onChange={onChange}
+          />
+          <Divider key={`${key}-divider`} />
+        </div>
+      ),
+    );
+  }, [onChange, settings]);
+
   return (
     <>
       <div>
-        <h2 className="text-2xl font-bold mb-4">Text Completion </h2>
+        <h2 className="text-2xl font-bold mb-4 text-center">
+          Text Completion{' '}
+        </h2>
       </div>
 
-      <div className="flex">
-        <SamplerSlider
-          label="Response Length (tokens)"
-          value={1000}
-          onChange={(v) => console.log('Response Length', v)}
-        />
-        <SamplerSlider
-          label="Context (tokens)"
-          value={32768}
-          onChange={(v) => console.log('Context', v)}
+      <div>
+        <SettingsRow
+          settings={
+            textgen_settings_schema(Boolean(settings.max_context_unlocked))
+              .Common.Generation
+          }
+          values={settings}
+          onChange={onChange}
         />
       </div>
 
       <Divider />
+
+      <div>{renderedSettings}</div>
     </>
   );
 };

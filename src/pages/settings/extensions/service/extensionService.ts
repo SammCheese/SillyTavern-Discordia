@@ -62,7 +62,7 @@ export async function getExtensionVersion(extensionName, signal?) {
   }
 }
 
-export async function updateExtension(extensionName) {
+export async function updateExtensionByName(extensionName) {
   try {
     const response = await fetch('/api/extensions/update', {
       method: 'POST',
@@ -75,7 +75,6 @@ export async function updateExtension(extensionName) {
 
     if (!response.ok) {
       const text = await response.text();
-      // @ts-expect-error exists
       toastr.error(text || response.statusText, 'Extension update failed', {
         timeOut: 5000,
       });
@@ -89,7 +88,6 @@ export async function updateExtension(extensionName) {
     }
 
     const data = await response.json();
-    // @ts-expect-error exists
     toastr.success(
       `Extension ${extensionName} updated to ${data.shortCommitHash}`,
       'Extension updated',

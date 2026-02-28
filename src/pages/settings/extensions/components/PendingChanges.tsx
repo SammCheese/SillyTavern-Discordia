@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useCallback } from 'react';
 import Card, {
   CardBackground,
   CardBorder,
@@ -11,6 +11,10 @@ interface PendingChangesBannerProps {
 }
 
 const PendingChangesBanner = ({ onReload }: PendingChangesBannerProps) => {
+  const handleReload = useCallback(() => {
+    onReload();
+  }, [onReload]);
+
   return (
     <div className="mb-6 mt-6 w-full top-16 left-0 px-6 z-50 pointer-events-none">
       <Card
@@ -27,7 +31,7 @@ const PendingChangesBanner = ({ onReload }: PendingChangesBannerProps) => {
               Some Changes may require a reload to take effect
             </span>
           </div>
-          <Button onClick={onReload}>Reload</Button>
+          <Button onClick={handleReload}>Reload</Button>
         </div>
       </Card>
     </div>

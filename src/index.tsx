@@ -1,64 +1,117 @@
-import { StrictMode, lazy } from 'react';
-import { createRoot } from 'react-dom/client';
+import { StrictMode } from 'react';
+import { createRoot, type Root } from 'react-dom/client';
 
-import { PageProvider } from './providers/pageProvider';
-import ModalProvider from './providers/modalProvider';
 import { performPatches } from './patches';
-import ErrorBoundary from './components/common/ErrorBoundary/ErrorBoundary';
-
-const App = lazy(() => import('./App'));
 
 // @ts-expect-error Styles Import
 import './styles.css';
 // @ts-expect-error Skeleton Styles Import
 import 'react-loading-skeleton/dist/skeleton.css';
 
-import ContextMenuProvider from './providers/contextMenuProvider';
-import { BackHandlerProvider } from './providers/backHandlerProvider';
+import PageProvider from './providers/pageProvider';
+import ModalProvider from './providers/modalProvider';
+import PopupProvider from './providers/popupProvider';
+import ExtensionProvider from './providers/extensionProvider';
 import MessageContextMenu from './bridges/MessageContextMenu';
-import { PopupProvider } from './providers/popupProvider';
-import Compose from './utils/Compose';
-import { ExtensionProvider } from './providers/extensionProvider';
+import ContextMenuProvider from './providers/contextMenuProvider';
+import BackHandlerProvider from './providers/backHandlerProvider';
+import SearchProvider from './providers/searchProvider';
+
+import Compose from './app/Compose';
+import ErrorBoundary from './components/common/ErrorBoundary/ErrorBoundary';
+
+import App from './app/App';
+
+let failedStart = false;
 
 window.discordia = window.discordia || {};
 
-// Insert sidebar before top bar
-const topBar = document.getElementById('top-bar');
+export let rootContainer = document.getElementById(
+  'discordia-root',
+) as HTMLDivElement;
+let isRemounting = false;
 
-// Create sidebar container
-export const rootContainer = document.createElement('div');
-rootContainer.id = 'discordia-root';
-
-if (topBar) {
-  topBar?.parentNode?.insertBefore(rootContainer, topBar);
-  // Unneeded. Remove for the sake of cleaner DOM
-  topBar.style.display = 'none';
+if (rootContainer) {
+  rootContainer.remove();
+  // The root container is already there, that can only happen if we're doing a hotreload
+  isRemounting = true;
 }
 
-performPatches();
+rootContainer = document.createElement('div');
+rootContainer.id = 'discordia-root';
 
-// Compose all providers
-const providers = [
-  // Necessary Evil
-  ErrorBoundary,
-  // Functionality Provider
-  BackHandlerProvider,
-  // Data Providers
-  ExtensionProvider,
-  // UI Providers
-  PopupProvider,
-  PageProvider,
-  ModalProvider,
-  ContextMenuProvider,
-];
+const startApp = (safeStart: boolean = false) => {
+  let root: Root | null = null;
 
-// Create React root
-const root = createRoot(rootContainer);
-root.render(
-  <StrictMode>
-    <Compose components={providers}>
-      <MessageContextMenu />
-      <App />
-    </Compose>
-  </StrictMode>,
-);
+  try {
+    // Insert sidebar before top bar
+    const topBar = document.getElementById('top-bar');
+
+    if (topBar) {
+      topBar?.parentNode?.insertBefore(rootContainer, topBar);
+      // Unneeded. Remove for the sake of cleaner DOM
+      topBar.style.display = 'none';
+    }
+
+    if (!safeStart && !isRemounting) {
+      performPatches();
+    }
+
+    // Compose all providers
+    const providers = [
+      // Necessary Evil
+      ErrorBoundary,
+      // Functionality Provider
+      BackHandlerProvider,
+      // Data Providers
+      ExtensionProvider,
+      // UI Providers
+      PopupProvider,
+      PageProvider,
+      ModalProvider,
+      ContextMenuProvider,
+      SearchProvider,
+    ];
+
+    // Create React root
+    root = createRoot(rootContainer);
+    root.render(
+      <StrictMode>
+        <Compose components={providers}>
+          <MessageContextMenu />
+          <App />
+        </Compose>
+      </StrictMode>,
+    );
+  } catch (error) {
+    failedStart = true;
+    console.error('Error starting Discordia:', error);
+
+    if (root) {
+      root.unmount();
+    }
+
+    if (failedStart && !safeStart) {
+      toastr.warning(
+        'Failed to start Discordia. Retrying in safe mode...',
+        'Discordia Startup',
+        {
+          timeOut: 5000,
+        },
+      );
+      startApp(true);
+    } else {
+      toastr.error(
+        'Failed to start Discordia. Please check the console for details.',
+        'Discordia Startup',
+        {
+          timeOut: 5000,
+        },
+      );
+    }
+  }
+};
+
+startApp();
+
+export default startApp;

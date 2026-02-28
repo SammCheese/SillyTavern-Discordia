@@ -7,6 +7,6 @@ export async function saveGroup(group, reload = true) {
     body: JSON.stringify(group),
   });
   if (reload) {
-    await getCharacters();
+    getCharacters();
   }
 }

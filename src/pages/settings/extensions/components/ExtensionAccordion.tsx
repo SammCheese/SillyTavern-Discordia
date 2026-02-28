@@ -6,13 +6,11 @@ import Skeleton from 'react-loading-skeleton';
 import { type Manifest } from '../../../../services/extensionService';
 import type { ExtensionInfo, Version } from '../ExtensionSettings';
 import Divider from '../../../../components/common/Divider/Divider';
-import {
-  getExtensionVersion,
-  updateExtension,
-} from '../service/extensionService';
+import { getExtensionVersion } from '../service/extensionService';
 import ExtensionTitle from './ExtensionAccordion/ExtensionTitle';
 import ExtensionDetails from './ExtensionAccordion/ExtensionDetails';
 import ExtensionOptions from './ExtensionAccordion/ExtensionOptions';
+import { useExtensionState } from '../../../../providers/extensionProvider';
 
 interface ExtensionAccordionProps {
   extension: ExtensionInfo;
@@ -33,6 +31,7 @@ const ExtensionAccordion = memo(function ExtensionAccordion({
   version,
   onDelete,
 }: ExtensionAccordionProps) {
+  const { updateExtension } = useExtensionState();
   const [updatedVersion, setUpdatedVersion] = useState<Version | undefined>();
   const [isUpdating, setIsUpdating] = useState(false);
 
@@ -58,7 +57,7 @@ const ExtensionAccordion = memo(function ExtensionAccordion({
       .finally(() => {
         setIsUpdating(false);
       });
-  }, [extension.name]);
+  }, [extension.name, updateExtension]);
 
   const title = useMemo(
     () => manifest?.display_name ?? extension.name,

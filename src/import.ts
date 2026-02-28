@@ -10,11 +10,11 @@ const getPath = (mod: string, isLocal: boolean): string => {
   if (isLocal) {
     // Special cast for e.g. ../script.js
     if (mod.startsWith('../')) {
-      return `../../../../../public/${mod.slice(3)}`;
+      return `../../../../../../public/${mod.slice(3)}`;
     }
-    return `../../../../../public/scripts/${mod}`;
+    return `../../../../../../public/scripts/${mod}`;
   }
-  return `../../../../${mod}`;
+  return `../../../../../${mod}`;
 };
 
 const initializePaths = async () => {
@@ -23,8 +23,8 @@ const initializePaths = async () => {
   let isLocal = false;
 
   try {
-    const testPath = `../../../../../script.js`;
-    const testImport = await import(/* webpackIgnore: true */ testPath);
+    const testPath = `../../../../../../script.js`;
+    const testImport = await import(/* @vite-ignore */ testPath);
 
     if (!testImport && !Object.keys(testImport).length) {
       isLocal = true;
@@ -64,10 +64,12 @@ export const imports = async <T = any>(mod: string): Promise<T> => {
 
   try {
     const resolvedPath = PATH_MAP![mod] || mod;
-    const res = await import(/* webpackIgnore: true */ resolvedPath);
+    const res = await import(/* @vite-ignore */ resolvedPath);
     return res as T;
   } catch (error) {
     dislog.error(`Error importing ${mod} (${PATH_MAP![mod]}):`, error);
     return {} as T;
   }
 };
+
+export default imports;

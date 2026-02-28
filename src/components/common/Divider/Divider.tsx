@@ -1,12 +1,11 @@
 import { memo } from 'react';
 
-const Divider = ({
-  width = 'w-full',
-  className = '',
-}: {
+interface DividerProps {
   width?: string;
   className?: string;
-}) => {
+}
+
+const Divider = ({ width = 'w-full', className = '' }: DividerProps) => {
   return (
     <>
       <div

@@ -13,6 +13,7 @@ import {
   discoverExtensions,
   getExtensionVersion,
   processExtensionHTMLs,
+  updateExtensionByName,
 } from '../pages/settings/extensions/service/extensionService';
 import { DISCORDIA_EVENTS } from '../events/eventTypes';
 
@@ -48,6 +49,8 @@ interface ExtensionContextType {
   toggleExtension: (ext: ExtensionInfo) => void;
   isLoading: boolean;
   refreshExtensions: () => void;
+  updatedExtensions: string[] | null;
+  updateExtension: (extensionName: string) => Promise<void>;
 }
 
 const normalizeExtensionName = (name: string): string =>
@@ -76,6 +79,9 @@ export const ExtensionProvider = ({
   const [extensions, setExtensions] = useState<ExtensionInfo[]>([]);
   const [disabledExtensions, setDisabledExtensions] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [updatedExtensions, setUpdatedExtensions] = useState<string[] | null>(
+    null,
+  );
 
   const isMountedRef = useRef(false);
 
@@ -179,6 +185,16 @@ export const ExtensionProvider = ({
     };
   }, []);
 
+  const updateExtension = useCallback(async (extensionName: string) => {
+    updateExtensionByName(extensionName)
+      .then(() => {
+        setUpdatedExtensions((prev) => [...(prev || []), extensionName]);
+      })
+      .catch((error) => {
+        console.error(`Failed to update extension ${extensionName}:`, error);
+      });
+  }, []);
+
   const settingsMap = useMemo(() => {
     if (!settingsRecord) return null;
     const map = new Map<
@@ -250,6 +266,8 @@ export const ExtensionProvider = ({
       toggleExtension,
       isLoading,
       refreshExtensions,
+      updatedExtensions,
+      updateExtension,
     }),
     [
       extensions,
@@ -259,6 +277,8 @@ export const ExtensionProvider = ({
       toggleExtension,
       isLoading,
       refreshExtensions,
+      updatedExtensions,
+      updateExtension,
     ],
   );
 
@@ -274,3 +294,5 @@ export const useExtensionState = (): ExtensionContextType => {
   }
   return context;
 };
+
+export default ExtensionProvider;

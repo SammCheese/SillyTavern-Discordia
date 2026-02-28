@@ -5,6 +5,7 @@ export interface MockImportsOptions {
   '@script'?: Record<string, any>;
   '@scripts/utils'?: Record<string, any>;
   '@scripts/chats'?: Record<string, any>;
+  '@scripts/extensions'?: Record<string, any>;
   [key: string]: Record<string, any> | undefined;
 }
 export const mockModules: Record<string, Record<string, any>> = {
@@ -22,23 +23,16 @@ export const mockModules: Record<string, Record<string, any>> = {
   '@scripts/chats': {
     save: vi.fn(),
   },
-};
-
-export const resetMockImports = () => {
-  mockModules['@script'] = {
-    messageEdit: vi.fn(),
-    deleteMessage: vi.fn(),
-    selectedGroup: null,
-    characters: [],
-    you: { name: 'User' },
-  };
-  mockModules['@scripts/utils'] = {
-    escapeHtml: vi.fn((str: string) => str),
-    getCharacterFolder: vi.fn(),
-  };
-  mockModules['@scripts/chats'] = {
-    save: vi.fn(),
-  };
+  '@scripts/extensions': {
+    extensionTypes: {
+      'third-party/ExampleExtension': 'global',
+    },
+    extension_settings: {
+      disabledExtensions: [],
+    },
+    enableExtension: vi.fn(),
+    disableExtension: vi.fn(),
+  },
 };
 
 export const createMockImports = () => {
@@ -53,7 +47,34 @@ export const createMockImports = () => {
 };
 
 export const setupGlobalImports = () => {
-  resetMockImports();
   (globalThis as any).imports = createMockImports();
+  (globalThis as any)._ = {
+    debounce: (fn: (...args: unknown[]) => void) => fn,
+  };
+  (globalThis as any).SillyTavern = {
+    getContext: () => ({
+      imports: (globalThis as any).imports,
+      saveSettingsDebounced: vi.fn(),
+    }),
+    libs: {
+      jquery: {
+        default: vi.fn(() => ({
+          on: vi.fn(),
+          off: vi.fn(),
+          append: vi.fn(),
+          find: vi.fn().mockReturnThis(),
+          each: vi.fn().mockReturnThis(),
+          css: vi.fn().mockReturnThis(),
+        })),
+      },
+      lodash: {
+        default: {
+          debounce: (fn: any) => fn,
+        },
+      },
+    },
+  };
   return (globalThis as any).imports;
 };
+
+export default setupGlobalImports;

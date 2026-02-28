@@ -45,3 +45,5 @@ export const dislog = {
   debug,
   custom,
 };
+
+export default dislog;

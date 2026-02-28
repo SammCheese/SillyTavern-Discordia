@@ -184,8 +184,6 @@ export function ModalProvider({ children }: { children: ReactNode }) {
   );
 }
 
-export default ModalProvider;
-
 export const useModal = () => {
   const context = use(ModalContext);
   if (!context) {
@@ -193,3 +191,5 @@ export const useModal = () => {
   }
   return context;
 };
+
+export default ModalProvider;

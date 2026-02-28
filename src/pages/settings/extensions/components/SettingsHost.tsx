@@ -13,7 +13,7 @@ const SettingsHost = ({ settings, disabled }: SettingsHostProps) => {
     if (!host) return;
 
     if (!settings || settings.length === 0 || disabled) {
-      host.innerHTML = '';
+      host.replaceChildren();
       return;
     }
 

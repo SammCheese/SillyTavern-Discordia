@@ -325,6 +325,8 @@ export const hijackJquery = () => {
     const originalAppend = $.fn.append;
     const originalAppendTo = $.fn.appendTo;
     const originalOn = $.fn.on;
+    // @ts-expect-error exists
+    const originalInit = $.fn.init.prototype;
     let cleanupTimer: number | null = null;
 
     // @ts-expect-error exists
@@ -448,6 +450,8 @@ export const hijackJquery = () => {
       $.fn.on = originalOn;
       $.fn.append = originalAppend;
       $.fn.appendTo = originalAppendTo;
+      // @ts-expect-error exists
+      $.fn.init.prototype = originalInit;
 
       const { eventSource } = await importPromise;
 
@@ -504,6 +508,38 @@ function* extensionCloningGenerator(
       getOwner(original);
       const clone = original.clone(true, true);
 
+      const interactiveSelector = 'input, select, textarea, button, a';
+
+      const nodeMap = new Map<Element, Element>();
+
+      const originalInputs = original.find(interactiveSelector).toArray();
+      const cloneInputs = clone.find(interactiveSelector).toArray();
+
+      for (let i = 0; i < cloneInputs.length; i++) {
+        if (originalInputs[i] && cloneInputs[i]) {
+          nodeMap.set(cloneInputs[i] as Element, originalInputs[i] as Element);
+        }
+      }
+
+      clone.on('input change', interactiveSelector, function (e) {
+        const targetOriginal = nodeMap.get(this);
+
+        if (targetOriginal) {
+          if (this.type === 'checkbox' || this.type === 'radio') {
+            (targetOriginal as HTMLInputElement).checked = (
+              this as HTMLInputElement
+            ).checked;
+          } else {
+            (targetOriginal as HTMLInputElement).value = (
+              this as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+            ).value;
+          }
+
+          targetOriginal.dispatchEvent(new Event(e.type, { bubbles: true }));
+          $(targetOriginal).trigger(e.type);
+        }
+      });
+
       // Force visibility
       clone.find('.inline-drawer-content').css('display', 'block');
 
@@ -534,6 +570,7 @@ export const poolDOMExtensions = async () => {
       window.discordia.extensionTemplates = cloned;
 
       // Mobile has this wonderful issue where off-spec elements nuke their children
+      // We'll try to use prevObject to try to restore them.
       const isCoping = cloned.some(
         (c) => c.length > 0 && c[0]?.childNodes.length === 0 && c[0]?.innerHTML,
       );

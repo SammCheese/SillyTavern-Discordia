@@ -16,11 +16,9 @@ A WIP Discord Theme for SillyTavern.
 
 <img width="1729" height="988" alt="image" src="https://github.com/user-attachments/assets/851e8f1c-8c72-489c-84c9-86e8861cd5e6" />
 
-
 **Mobile View**
 
 <img width="467" height="915" alt="image" src="https://github.com/user-attachments/assets/79346558-9398-41e0-a8d4-8b1e940bdbf4" />
-
 
 ## How to use
 
@@ -41,7 +39,7 @@ On smaller displays, you can swipe right to open the Sidebar.
 - [x] Responsive Layout
 - [] Bug squashing
 - [] Resizable Sidebar
-- [] Settings Pages
+- [-] Settings Pages (ongoing)
 - [] Tooltips
 - [x] Context Menus
 - [] ???

@@ -1,0 +1,1 @@
+import{r as a,j as s}from"./index.js";const e=a.memo(({width:a="w-full",className:e=""})=>s.jsx(s.Fragment,{children:s.jsx("div",{style:{backgroundColor:"rgba(255, 255, 255, 0.1)"},className:`${a} h-px my-2 mx-auto ${e}`})}));export{e as default};

@@ -182,8 +182,6 @@ export function ContextMenuProvider({ children }: { children: ReactNode }) {
   );
 }
 
-export default ContextMenuProvider;
-
 export const useContextMenu = () => {
   const context = use(ContextMenuContext);
   if (!context) {
@@ -191,3 +189,5 @@ export const useContextMenu = () => {
   }
   return context;
 };
+
+export default ContextMenuProvider;
