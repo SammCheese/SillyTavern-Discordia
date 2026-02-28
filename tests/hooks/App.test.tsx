@@ -2,10 +2,12 @@
 import { Suspense } from 'react';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { cleanup, render, screen } from '@testing-library/react';
+import setupGlobalImports from '../utils/mockImports';
 
 describe('App', () => {
   beforeEach(() => {
     vi.resetModules();
+    setupGlobalImports();
     document.body.innerHTML = '';
   });
 
@@ -40,12 +42,6 @@ describe('App', () => {
       useSidebarState: () => sidebarState,
     }));
 
-    vi.doMock('../../src/providers/searchProvider', () => ({
-      SearchProvider: ({ children }: { children: React.ReactNode }) => (
-        <div data-testid="search-provider">{children}</div>
-      ),
-    }));
-
     vi.doMock('../../src/components/sidebar/SideBar', () => ({
       default: ({ open }: { open: boolean }) => (
         <div data-testid="sidebar">open:{String(open)}</div>
@@ -62,9 +58,6 @@ describe('App', () => {
 
     const sidebar = await screen.findByTestId('sidebar');
     expect(sidebar.textContent).toContain('open:true');
-    expect(
-      rootContainer.querySelector('[data-testid="search-provider"]'),
-    ).toBeTruthy();
   });
 
   it('passes setOpen callback from sidebar state', async () => {

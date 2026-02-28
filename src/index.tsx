@@ -15,6 +15,7 @@ import ExtensionProvider from './providers/extensionProvider';
 import MessageContextMenu from './bridges/MessageContextMenu';
 import ContextMenuProvider from './providers/contextMenuProvider';
 import BackHandlerProvider from './providers/backHandlerProvider';
+import SearchProvider from './providers/searchProvider';
 
 import Compose from './app/Compose';
 import ErrorBoundary from './components/common/ErrorBoundary/ErrorBoundary';
@@ -69,6 +70,7 @@ const startApp = (safeStart: boolean = false) => {
       PageProvider,
       ModalProvider,
       ContextMenuProvider,
+      SearchProvider,
     ];
 
     // Create React root

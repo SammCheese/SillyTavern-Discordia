@@ -1,9 +1,11 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import setupGlobalImports from '../utils/mockImports';
 
 describe('index entry', () => {
   beforeEach(() => {
     vi.resetModules();
     vi.clearAllMocks();
+    setupGlobalImports();
     document.body.innerHTML = '';
     window.discordia = {};
   });

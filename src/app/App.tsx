@@ -1,8 +1,6 @@
 import { lazy, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useSidebarState } from '../hooks/useSidebarState';
-import { SearchProvider } from '../providers/searchProvider';
-
 import { rootContainer } from '../index';
 
 const SideBar = lazy(() => import('../components/sidebar/SideBar'));
@@ -25,9 +23,9 @@ export const App = () => {
   );
 
   return createPortal(
-    <SearchProvider>
+    <>
       <SideBar {...memoizedSidebarState} />
-    </SearchProvider>,
+    </>,
     rootContainer,
   );
 };
