@@ -11,8 +11,7 @@ const TextGenerationSettings = lazy(
   () => import('./apis/TextCompletion/TextCompletion'),
 );
 
-const script = await imports('@script');
-const { CONNECT_API_MAP } = script;
+const { CONNECT_API_MAP } = await imports('@script');
 
 export type ApiBucket = {
   name: string;

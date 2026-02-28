@@ -1,14 +1,17 @@
-import { memo } from 'react';
-import { useHomeIconMenu } from './hooks/HomeIconMenu';
+import { memo, useCallback } from 'react';
+import { useHomeIconMenu } from '../hooks/HomeIconMenu';
 
-const HomeIcon = ({ onClick }: { onClick?: (() => void) | undefined }) => {
+interface HomeIconProps {
+  onClick?: () => void;
+}
+
+const HomeIcon = ({ onClick }: HomeIconProps) => {
   const { handleContextMenu } = useHomeIconMenu();
 
-  const handleClick = () => {
-    if (onClick) {
-      onClick();
-    }
-  };
+  const handleClick = useCallback(() => {
+    onClick?.();
+  }, [onClick]);
+
   return (
     <div
       className="discord-entity-item avatar home-button"

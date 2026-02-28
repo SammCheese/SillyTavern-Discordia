@@ -1,6 +1,6 @@
 import { memo, useCallback, useMemo } from 'react';
-import GroupAvatar from '../groupAvatar/GroupAvatar';
-import { useServerIconMenu } from './hooks/ServerIconMenu';
+import GroupAvatar from '../../groupAvatar/GroupAvatar';
+import { useServerIconMenu } from '../hooks/ServerIconMenu';
 
 const { getThumbnailUrl } = await imports('@script');
 

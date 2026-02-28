@@ -1,14 +1,12 @@
 import { memo, useCallback } from 'react';
 
-const AddCharacterIcon = ({
-  onClick,
-}: {
-  onClick: (() => void) | undefined;
-}) => {
+interface AddCharacterIconProps {
+  onClick?: () => void;
+}
+
+const AddCharacterIcon = ({ onClick }: AddCharacterIconProps) => {
   const handleClick = useCallback(() => {
-    if (onClick) {
-      onClick();
-    }
+    onClick?.();
   }, [onClick]);
 
   return (

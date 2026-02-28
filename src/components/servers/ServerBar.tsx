@@ -8,9 +8,9 @@ import { useModal } from '../../providers/modalProvider';
 import CharacterModal from '../../modals/Character/CharacterModal';
 import Skeleton, { SkeletonTheme } from 'react-loading-skeleton';
 
-const ServerIcon = lazy(() => import('./ServerIcon'));
-const AddCharacterIcon = lazy(() => import('./AddCharacterIcon'));
-const HomeIcon = lazy(() => import('./HomeIcon'));
+const ServerIcon = lazy(() => import('./Icons/ServerIcon'));
+const AddCharacterIcon = lazy(() => import('./Icons/AddCharacterIcon'));
+const HomeIcon = lazy(() => import('./Icons/HomeIcon'));
 
 const { characters, closeCurrentChat, eventSource, event_types } =
   await imports('@script');
@@ -114,6 +114,7 @@ const ServerBar = ({ entities, isInitialLoad = true }: ServerBarProps) => {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const { searchQuery } = useSearch();
   const { openModal } = useModal();
+  //const { extensions } = useExtensionState();
 
   const onHomeClickHandler = useCallback(async () => {
     setSelectedIndex(null);
@@ -209,6 +210,12 @@ const ServerBar = ({ entities, isInitialLoad = true }: ServerBarProps) => {
   const handleAddCharacterClick = useCallback(() => {
     openModal(<CharacterModal type="create" />);
   }, [openModal]);
+
+  /*const hasBotBrowser = useMemo(() => {
+    return extensions.some(
+      (ext) => ext?.manifest?.display_name === 'Bot Browser',
+    );
+  }, [extensions]);*/
 
   return (
     <ErrorBoundary>

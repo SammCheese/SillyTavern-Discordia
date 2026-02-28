@@ -1,4 +1,5 @@
-import { lazy } from 'react';
+import { lazy, useMemo } from 'react';
+import type { MainAPIValues } from '../connection/services/connectionManager';
 
 const SettingsFrame = lazy(() => import('../base/Base'));
 const TextCompletionSamplerSettings = lazy(
@@ -6,10 +7,23 @@ const TextCompletionSamplerSettings = lazy(
 );
 
 const SamplerSettings = () => {
+  const isTextCompletion = useMemo(() => {
+    return (
+      (SillyTavern.getContext().mainApi as MainAPIValues) ===
+      'textgenerationwebui'
+    );
+  }, []);
+
   return (
     <SettingsFrame title="Sampler Settings">
       <div className="settings-section">
-        <TextCompletionSamplerSettings />
+        {isTextCompletion ? (
+          <TextCompletionSamplerSettings />
+        ) : (
+          <div className="text-muted">
+            No sampler settings available for the current API...
+          </div>
+        )}
       </div>
     </SettingsFrame>
   );
