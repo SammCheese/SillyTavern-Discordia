@@ -31,7 +31,7 @@ const Slider = ({ min, max, step, value, onChange }: SliderProps) => {
       <div className="flex flex-col items-center gap-1">
         <input
           type="range"
-          className="w-full h-2.5 bg-base-discordia-lighter rounded-lg appearance-none cursor-pointer range-thumb:hover:scale-120  transition-all"
+          className="discordia-slider w-full h-2.5 bg-base-discordia-lighter rounded-lg appearance-none cursor-pointer range-thumb:hover:scale-120  transition-all"
           min={min}
           max={max}
           step={step}

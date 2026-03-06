@@ -74,6 +74,59 @@
   }
 }
 
+input[type='range'].discordia-slider {
+  &::-webkit-slider-runnable-track {
+    background: var(--color-base-discordia-lighter) !important;
+    border-radius: 9999px !important;
+  }
+
+  &::-webkit-slider-thumb {
+    appearance: none !important;
+    width: 16px !important;
+    height: 16px !important;
+    background: var(--color-blurple) !important;
+    border-radius: 50% !important;
+    transition: transform 0.2s ease-in-out !important;
+  }
+
+  &::-moz-range-thumb {
+    width: 16px !important;
+    height: 16px !important;
+    border-radius: 50% !important;
+    transition: transform 0.2s ease-in-out !important;
+  }
+
+  &::-moz-range-progress {
+    background: var(--color-blurple) !important;
+    height: 5px !important;
+    border-radius: 9999px !important;
+  }
+
+  &::-ms-track {
+    background: transparent !important;
+    border-color: transparent !important;
+    color: transparent !important;
+  }
+
+  &::-ms-thumb {
+    width: 16px !important;
+    height: 16px !important;
+    background: var(--color-blurple) !important;
+    border-radius: 50% !important;
+    transition: transform 0.2s ease-in-out !important;
+  }
+
+  &::-ms-fill-lower {
+    background: var(--color-blurple) !important;
+    border-radius: 9999px !important;
+  }
+
+  &::-ms-fill-upper {
+    background: var(--color-base-discordia-lighter) !important;
+    border-radius: 9999px !important;
+  }
+}
+
 :root {
   --profile-container-height: 68px;
   --sidebar-width-mobile: 80px;

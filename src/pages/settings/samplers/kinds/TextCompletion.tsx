@@ -50,8 +50,8 @@ const TextCompletionSamplerSettings = () => {
     const unlocked = Boolean(settings.max_context_unlocked);
     return Object.entries(textgen_settings_schema(unlocked).TextGenWebUI).map(
       ([key]) => (
-        <div key={key} className="w-full text-center">
-          <h3 className="text-xl font-semibold mb-2">{key}</h3>
+        <div key={key} className="w-full">
+          <h3 className="text-xl font-semibold mb-2 ml-4">{key}</h3>
           <SettingsRow
             key={key}
             settings={textgen_settings_schema(unlocked).TextGenWebUI[key]!}

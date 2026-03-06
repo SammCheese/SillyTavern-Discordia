@@ -7,9 +7,7 @@ interface ChannelHeaderEntryProps {
 
 const ChannelHeaderEntry = ({ icon, onClick }: ChannelHeaderEntryProps) => {
   const handleClick = useCallback(() => {
-    if (onClick) {
-      onClick(icon);
-    }
+    onClick?.(icon);
   }, [onClick, icon]);
 
   return (
@@ -20,7 +18,7 @@ const ChannelHeaderEntry = ({ icon, onClick }: ChannelHeaderEntryProps) => {
     >
       <div
         style={{ fontSize: '28px' }}
-        className={`${icon.className} group-hover:opacity-100`}
+        className={`${icon.className} group-hover:opacity-100! `}
       />
       <div className="group-hover:text-white truncate text-gray-500">
         {icon.title}

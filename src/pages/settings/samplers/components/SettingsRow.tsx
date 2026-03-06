@@ -19,21 +19,27 @@ const SettingsRow = ({ settings, values, onChange }: SettingsRowProps) => {
     [onChange],
   );
 
+  const boolSettings = settings.filter((s) => s.type === 'boolean');
+  const otherSettings = settings.filter((s) => s.type !== 'boolean');
+
   return (
-    <div className="flex flex-row flex-wrap justify-center gap-4 w-full">
-      {settings.map((setting) =>
-        setting.type === 'boolean' ? (
+    <>
+      <div className="flex flex-row gap-4 justify-center w-full">
+        {boolSettings.map((s) => (
           <div
-            key={setting.id}
+            key={s.id}
             className="items-center gap-2 mb-4 w-fit flex-row flex"
           >
             <Checkbox
-              checked={Boolean(values?.[setting.id])}
-              label={setting.name}
-              onChange={(v) => onChangeWrapper(setting.id, v)}
+              checked={Boolean(values?.[s.id])}
+              label={s.name}
+              onChange={(v) => onChangeWrapper(s.id, v)}
             />
           </div>
-        ) : (
+        ))}
+      </div>
+      <div className="flex flex-row flex-wrap justify-center gap-4 w-full">
+        {otherSettings.map((setting) => (
           <SamplerSlider
             key={`${setting.id}-${String(values?.[setting.id] ?? setting.min ?? 0)}`}
             label={setting.name}
@@ -43,9 +49,9 @@ const SettingsRow = ({ settings, values, onChange }: SettingsRowProps) => {
             step={setting.step}
             onChange={(v) => onChangeWrapper(setting.id, v)}
           />
-        ),
-      )}
-    </div>
+        ))}
+      </div>
+    </>
   );
 };
 
