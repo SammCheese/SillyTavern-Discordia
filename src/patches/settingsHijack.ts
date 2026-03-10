@@ -43,7 +43,7 @@ const IGNORED_TAGS_SET = new Set([
 ]);
 const LATELOADER_LEEWAY_MS = 30000;
 // Limit performance impact by capping stack trace
-Error.stackTraceLimit = 1;
+Error.stackTraceLimit = 3;
 
 // Caches
 const MAX_CACHE_SIZE = 500;
@@ -510,8 +510,7 @@ function* extensionCloningGenerator(
 
       const interactiveSelector = 'input, select, textarea, button, a';
 
-      const nodeMap = new Map<Element, Element>();
-
+      const nodeMap = new WeakMap<Element, Element>();
       const originalInputs = original.find(interactiveSelector).toArray();
       const cloneInputs = clone.find(interactiveSelector).toArray();
 
@@ -535,7 +534,6 @@ function* extensionCloningGenerator(
             ).value;
           }
 
-          targetOriginal.dispatchEvent(new Event(e.type, { bubbles: true }));
           $(targetOriginal).trigger(e.type);
         }
       });
