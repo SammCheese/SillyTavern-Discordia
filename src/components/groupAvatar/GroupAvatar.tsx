@@ -80,7 +80,11 @@ const GroupAvatar = ({
       <div
         className={`collage_${count} flex flex-wrap ${rounded === 100 ? 'full' : ''}`}
         title={`[Group] ${groupItemMemo?.name}`}
-        style={{ width, height, borderRadius: roundedStyle }}
+        style={{
+          width,
+          height,
+          borderRadius: roundedStyle,
+        }}
       >
         {memberAvatars.map((src, i) => (
           <img key={src} className={`img_${i + 1} object-cover`} src={src} />

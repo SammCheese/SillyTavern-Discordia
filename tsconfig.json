@@ -54,8 +54,8 @@
     "./src/**/*",
     "./tests/**/*",
     "./global.d.ts",
-    "./vitest.config.ts",
-    "./vite.config.ts"
+    "./*.config.ts",
+    "./*.config.mjs"
   ],
   "exclude": ["../../../../**/.*.js"]
 }

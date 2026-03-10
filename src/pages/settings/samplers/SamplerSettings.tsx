@@ -7,18 +7,21 @@ const TextCompletionSamplerSettings = lazy(
 );
 
 const SamplerSettings = () => {
-  const isTextCompletion = useMemo(() => {
-    return (
-      (SillyTavern.getContext().mainApi as MainAPIValues) ===
-      'textgenerationwebui'
-    );
+  const SamplerSettings = useMemo(() => {
+    const type = SillyTavern.getContext().mainApi as MainAPIValues;
+    switch (type) {
+      case 'textgenerationwebui':
+        return TextCompletionSamplerSettings;
+      default:
+        return null;
+    }
   }, []);
 
   return (
     <SettingsFrame title="Sampler Settings">
       <div className="settings-section">
-        {isTextCompletion ? (
-          <TextCompletionSamplerSettings />
+        {SamplerSettings ? (
+          <SamplerSettings />
         ) : (
           <div className="text-muted">
             No sampler settings available for the current API...

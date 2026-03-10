@@ -24,9 +24,7 @@ export const Accordion = ({
 
   const handleToggle = useCallback(() => {
     setOpen((prevOpen) => !prevOpen);
-    if (onToggle) {
-      onToggle();
-    }
+    onToggle?.();
   }, [onToggle]);
 
   return (

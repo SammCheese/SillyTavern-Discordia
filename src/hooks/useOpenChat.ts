@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 
 import { selectCharacter, selectGroup } from '../utils/utils';
 
-const { openCharacterChat } = await imports('@script');
+const { openCharacterChat, isGenerating } = await imports('@script');
 const { openGroupChat } = await imports('@scripts/groupChats');
 
 export function useOpenChat() {
@@ -14,6 +14,10 @@ export function useOpenChat() {
     } catch {
       return false;
     }
+  }, []);
+
+  const isCurrentlyGenerating = useCallback((): boolean => {
+    return isGenerating();
   }, []);
 
   const isEntityOpen = useCallback((id?: string | number): boolean => {
@@ -36,6 +40,14 @@ export function useOpenChat() {
   const openChat = useCallback(
     async (chat: Chat): Promise<void> => {
       if (!chat) return;
+
+      // Safety, opening a chat may corrupt chat otherwise.
+      if (isCurrentlyGenerating()) {
+        toastr.warning(
+          'Please wait or abort the current generation before switching chats.',
+        );
+        return;
+      }
 
       if (isSelectedChat(chat)) return;
 
@@ -68,7 +80,7 @@ export function useOpenChat() {
         return;
       }
     },
-    [isSelectedChat, isEntityOpen],
+    [isCurrentlyGenerating, isSelectedChat, isEntityOpen],
   );
 
   return { openChat, isSelectedChat } as const;

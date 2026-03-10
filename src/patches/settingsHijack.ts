@@ -43,7 +43,7 @@ const IGNORED_TAGS_SET = new Set([
 ]);
 const LATELOADER_LEEWAY_MS = 30000;
 // Limit performance impact by capping stack trace
-Error.stackTraceLimit = 1;
+Error.stackTraceLimit = 3;
 
 // Caches
 const MAX_CACHE_SIZE = 500;
@@ -452,14 +452,18 @@ export const hijackJquery = () => {
       $.fn.appendTo = originalAppendTo;
       // @ts-expect-error exists
       $.fn.init.prototype = originalInit;
-
-      const { eventSource } = await importPromise;
-
-      eventSource.removeListener(
-        DISCORDIA_EVENTS.EXTENSION_HTML_POPULATED,
-        scheduleCleanup,
-      );
       stackCache.clear();
+
+      try {
+        const { eventSource } = await importPromise;
+
+        eventSource.removeListener(
+          DISCORDIA_EVENTS.EXTENSION_HTML_POPULATED,
+          scheduleCleanup,
+        );
+      } catch (error) {
+        dislog.error('Failed to Restore Original jQuery Methods:', error);
+      }
     };
 
     scheduleCleanup();
@@ -510,8 +514,7 @@ function* extensionCloningGenerator(
 
       const interactiveSelector = 'input, select, textarea, button, a';
 
-      const nodeMap = new Map<Element, Element>();
-
+      const nodeMap = new WeakMap<Element, Element>();
       const originalInputs = original.find(interactiveSelector).toArray();
       const cloneInputs = clone.find(interactiveSelector).toArray();
 
@@ -521,10 +524,14 @@ function* extensionCloningGenerator(
         }
       }
 
-      clone.on('input change', interactiveSelector, function (e) {
+      clone.on('input change click', interactiveSelector, function (e) {
         const targetOriginal = nodeMap.get(this);
 
         if (targetOriginal) {
+          if (e.type === 'click') {
+            $(targetOriginal).trigger('click');
+            return;
+          }
           if (this.type === 'checkbox' || this.type === 'radio') {
             (targetOriginal as HTMLInputElement).checked = (
               this as HTMLInputElement
@@ -535,7 +542,6 @@ function* extensionCloningGenerator(
             ).value;
           }
 
-          targetOriginal.dispatchEvent(new Event(e.type, { bubbles: true }));
           $(targetOriginal).trigger(e.type);
         }
       });

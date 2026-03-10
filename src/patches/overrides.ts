@@ -14,6 +14,9 @@ const splashTexts = [
 export const overrideSpinner = () => {
   try {
     const loadSpinner = $('#load-spinner');
+    // Backup for unpatch
+    window.discordia.backups.originalLoadSpinner = loadSpinner.clone();
+
     if (loadSpinner) {
       loadSpinner.remove();
       const randomIndex = Math.floor(Math.random() * splashTexts.length);

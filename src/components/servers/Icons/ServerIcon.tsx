@@ -27,13 +27,17 @@ const ServerIcon = ({
     return getThumbnailUrl('avatar', entity.item?.avatar || entity.id);
   }, [entity]);
 
+  const isFavorite = useMemo(() => {
+    return entity.item?.fav || false;
+  }, [entity.item?.fav]);
+
   return (
     <div
       className="flex m-0 relative w-full h-fit select-none group"
       onContextMenu={contextMenuHandler}
       onClick={handleClick}
     >
-      <div className="absolute start-0 top-0 w-2 justify-start items-center flex h-full">
+      <div className="absolute insert-s-0 top-0 w-2 justify-start items-center flex h-full">
         <span
           className={`w-2 absolute block transition-all ease-in-out duration-200 -ms-1 bg-white rounded-r ${
             isSelected ? 'h-8' : 'h-0 group-hover:h-6'
@@ -41,7 +45,10 @@ const ServerIcon = ({
         />
       </div>
 
-      <div className="cursor-pointer w-full h-fit flex justify-center items-center">
+      <div
+        className="cursor-pointer w-full h-fit flex justify-center items-center"
+        title={entity.item?.name || 'Character'}
+      >
         {entity.type === 'group' ? (
           <GroupAvatar groupItem={entity.item} rounded={true} />
         ) : (
@@ -53,6 +60,11 @@ const ServerIcon = ({
                 ? 'outline-1 outline-white'
                 : 'group-hover:outline-1 group-hover:outline-white'
             }`}
+            style={{
+              outlineColor: isFavorite ? 'yellow' : 'transparent',
+              outlineWidth: isFavorite ? '2px' : '0px',
+              outlineStyle: 'solid',
+            }}
             src={memoizedSrc}
           />
         )}

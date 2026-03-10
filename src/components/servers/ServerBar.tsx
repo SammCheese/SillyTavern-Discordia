@@ -12,7 +12,7 @@ const ServerIcon = lazy(() => import('./Icons/ServerIcon'));
 const AddCharacterIcon = lazy(() => import('./Icons/AddCharacterIcon'));
 const HomeIcon = lazy(() => import('./Icons/HomeIcon'));
 
-const { characters, closeCurrentChat, eventSource, event_types } =
+const { characters, closeCurrentChat, eventSource, event_types, isGenerating } =
   await imports('@script');
 
 interface ServerRowProps {
@@ -150,6 +150,13 @@ const ServerBar = ({ entities, isInitialLoad = true }: ServerBarProps) => {
 
   const handleItemClick = useCallback(
     async (entity: Entity, index: number) => {
+      if (isGenerating()) {
+        toastr.warning(
+          'Please wait or abort the current generation before switching chats.',
+        );
+        return;
+      }
+
       try {
         setSelectedIndex(index);
 

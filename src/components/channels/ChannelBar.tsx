@@ -99,10 +99,7 @@ const ChannelBar = ({
     if (window.innerWidth <= 1000) setOpen(false);
   }, [setOpen]);
 
-  const iconsFiltered = useMemo(
-    () => icons?.filter((i) => !i.showInProfile),
-    [icons],
-  );
+  const iconsFiltered = icons?.filter((i) => !i.showInProfile);
 
   const handleSearchInput = useCallback(
     (query: string) => {
