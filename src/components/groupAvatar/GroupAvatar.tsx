@@ -14,7 +14,6 @@ interface GroupAvatarProps {
   width?: number;
   height?: number;
   rounded?: boolean | number | undefined;
-  isFavorite?: boolean | undefined;
 }
 
 const GroupAvatar = ({
@@ -23,7 +22,6 @@ const GroupAvatar = ({
   width = 48,
   height = 48,
   rounded = false,
-  isFavorite = false,
 }: GroupAvatarProps) => {
   const characterThumbByAvatar = useMemo(() => {
     const map = new Map<string, string>();
@@ -86,9 +84,6 @@ const GroupAvatar = ({
           width,
           height,
           borderRadius: roundedStyle,
-          outlineColor: isFavorite ? 'yellow' : 'transparent',
-          outlineWidth: isFavorite ? '2px' : '0px',
-          outlineStyle: 'solid',
         }}
       >
         {memberAvatars.map((src, i) => (
@@ -106,7 +101,6 @@ const GroupAvatar = ({
     width,
     height,
     roundedStyle,
-    isFavorite,
     characterThumbByAvatar,
   ]);
 
