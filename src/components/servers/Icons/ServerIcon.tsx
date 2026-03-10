@@ -50,11 +50,7 @@ const ServerIcon = ({
         title={entity.item?.name || 'Character'}
       >
         {entity.type === 'group' ? (
-          <GroupAvatar
-            groupItem={entity.item}
-            rounded={true}
-            isFavorite={isFavorite}
-          />
+          <GroupAvatar groupItem={entity.item} rounded={true} />
         ) : (
           <img
             loading="lazy"
