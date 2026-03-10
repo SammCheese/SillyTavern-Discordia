@@ -452,14 +452,18 @@ export const hijackJquery = () => {
       $.fn.appendTo = originalAppendTo;
       // @ts-expect-error exists
       $.fn.init.prototype = originalInit;
-
-      const { eventSource } = await importPromise;
-
-      eventSource.removeListener(
-        DISCORDIA_EVENTS.EXTENSION_HTML_POPULATED,
-        scheduleCleanup,
-      );
       stackCache.clear();
+
+      try {
+        const { eventSource } = await importPromise;
+
+        eventSource.removeListener(
+          DISCORDIA_EVENTS.EXTENSION_HTML_POPULATED,
+          scheduleCleanup,
+        );
+      } catch (error) {
+        dislog.error('Failed to Restore Original jQuery Methods:', error);
+      }
     };
 
     scheduleCleanup();
@@ -520,10 +524,14 @@ function* extensionCloningGenerator(
         }
       }
 
-      clone.on('input change', interactiveSelector, function (e) {
+      clone.on('input change click', interactiveSelector, function (e) {
         const targetOriginal = nodeMap.get(this);
 
         if (targetOriginal) {
+          if (e.type === 'click') {
+            $(targetOriginal).trigger('click');
+            return;
+          }
           if (this.type === 'checkbox' || this.type === 'radio') {
             (targetOriginal as HTMLInputElement).checked = (
               this as HTMLInputElement
