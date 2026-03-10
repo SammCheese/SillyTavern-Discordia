@@ -1,7 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 
-import { performPatches } from './patches';
+import { performPatches, unpatchAll } from './patches';
 
 // @ts-expect-error Styles Import
 import './styles.css';
@@ -24,7 +24,10 @@ import App from './app/App';
 
 let failedStart = false;
 
-window.discordia = window.discordia || {};
+window.discordia = window.discordia || {
+  extensionTemplates: [],
+  backups: {},
+};
 
 export let rootContainer = document.getElementById(
   'discordia-root',
@@ -99,6 +102,7 @@ const startApp = (safeStart: boolean = false) => {
           timeOut: 5000,
         },
       );
+      unpatchAll();
       startApp(true);
     } else {
       toastr.error(

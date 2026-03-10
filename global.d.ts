@@ -31,6 +31,9 @@ declare global {
   interface Window {
     discordia: {
       extensionTemplates?: JQuery<Element>[];
+      backups: {
+        originalLoadSpinner?: JQuery<HTMLElement>;
+      };
     };
   }
   const toastr: {
