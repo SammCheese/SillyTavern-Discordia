@@ -4,6 +4,7 @@ import {
   use,
   useState,
   type ReactNode,
+  useMemo,
 } from 'react';
 import { createPortal } from 'react-dom';
 import { useBackHandler } from '../hooks/useBackHandler';
@@ -46,9 +47,14 @@ export const PopupProvider = ({ children }: { children: ReactNode }) => {
 
   useBackHandler(isVisible, handleClose);
 
+  const contextValue = useMemo(
+    () => ({ openPopup, closePopup }),
+    [openPopup, closePopup],
+  );
+
   return (
     <ErrorBoundary>
-      <PopupContext value={{ openPopup, closePopup }}>
+      <PopupContext value={contextValue}>
         {isVisible &&
           createPortal(
             <Popup {...popupOptions} onClose={handleClose}>

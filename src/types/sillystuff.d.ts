@@ -53,6 +53,7 @@ type Character = {
 type Persona = {
   name: string;
   avatar: string;
+  avatarURL: string;
 };
 
 type GroupItem = {

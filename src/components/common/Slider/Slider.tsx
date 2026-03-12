@@ -1,4 +1,4 @@
-import { memo, useCallback, useState } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 
 interface SliderProps {
   min?: number | undefined;
@@ -13,6 +13,14 @@ const _ = window._;
 const Slider = ({ min, max, step, value, onChange }: SliderProps) => {
   const [val, setVal] = useState<number>(value || 0);
 
+  const debouncedOnChange = useMemo(
+    () =>
+      _.debounce((value: number) => {
+        onChange?.(value);
+      }, 300),
+    [onChange],
+  );
+
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       if (isNaN(Number(e.target.value))) return;
@@ -21,9 +29,9 @@ const Slider = ({ min, max, step, value, onChange }: SliderProps) => {
       if (min !== undefined && Number(e.target.value) < min) newValue = min;
       if (max !== undefined && Number(e.target.value) > max) newValue = max;
       setVal(newValue);
-      _.debounce(() => onChange?.(newValue), 200)();
+      debouncedOnChange(newValue);
     },
-    [max, min, onChange],
+    [debouncedOnChange, max, min],
   );
 
   return (

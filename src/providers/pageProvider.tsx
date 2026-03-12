@@ -6,6 +6,7 @@ import {
   createContext,
   type ReactNode,
   use,
+  useMemo,
 } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -62,9 +63,14 @@ export function PageProvider({ children }: { children: ReactNode }) {
 
   useBackHandler(isVisible, closePage);
 
+  const contextValue = useMemo(
+    () => ({ openPage, closePage }),
+    [openPage, closePage],
+  );
+
   return (
     <ErrorBoundary>
-      <PageContext value={{ openPage, closePage }}>
+      <PageContext value={contextValue}>
         {content &&
           createPortal(
             <div>

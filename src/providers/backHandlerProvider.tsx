@@ -2,6 +2,7 @@ import {
   createContext,
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   type ReactNode,
 } from 'react';
@@ -100,10 +101,13 @@ export const BackHandlerProvider = ({ children }: { children: ReactNode }) => {
     };
   }, [beforeUnloadHandler, detachBeforeUnload]);
 
+  const contextValue = useMemo(
+    () => ({ register, unregister }),
+    [register, unregister],
+  );
+
   return (
-    <BackHandlerContext value={{ register, unregister }}>
-      {children}
-    </BackHandlerContext>
+    <BackHandlerContext value={contextValue}>{children}</BackHandlerContext>
   );
 };
 

@@ -43,7 +43,7 @@ const IGNORED_TAGS_SET = new Set([
 ]);
 const LATELOADER_LEEWAY_MS = 40000;
 // Limit performance impact by capping stack trace
-Error.stackTraceLimit = 3;
+Error.stackTraceLimit = 1;
 
 // Caches
 const MAX_CACHE_SIZE = 500;

@@ -7,15 +7,15 @@ import {
   useRef,
   useState,
 } from 'react';
-import type { Version } from '../pages/settings/extensions/ExtensionSettings';
-import { getManifests, type Manifest } from '../services/extensionService';
+import type { Version } from '../../pages/settings/extensions/ExtensionSettings';
+import { getManifests, type Manifest } from '../../services/extensionService';
 import {
   discoverExtensions,
   getExtensionVersion,
   processExtensionHTMLs,
   updateExtensionByName,
-} from '../pages/settings/extensions/service/extensionService';
-import { DISCORDIA_EVENTS } from '../events/eventTypes';
+} from '../../pages/settings/extensions/service/extensionService';
+import { DISCORDIA_EVENTS } from '../../events/eventTypes';
 
 const { enableExtension, disableExtension } = await imports(
   '@scripts/extensions',

@@ -1,4 +1,4 @@
-import { lazy, useCallback, useMemo } from 'react';
+import { lazy, memo, useCallback } from 'react';
 import ErrorBoundary from '../common/ErrorBoundary/ErrorBoundary';
 import { useBackHandler } from '../../hooks/useBackHandler';
 
@@ -8,70 +8,50 @@ const ServerBar = lazy(() => import('../servers/ServerBar'));
 
 interface SideBarProps {
   open: boolean;
-  setOpen: (open: boolean) => void;
+  setOpen: (value: boolean) => void;
   entities: Entity[];
   chats: Chat[];
   recentChats: Chat[];
   icons: Icon[] | null;
-  isLoadingChats: boolean;
-  isInitialLoad: boolean;
+  isLoadingChats?: boolean;
+  isInitialLoad?: boolean;
 }
 
-const SideBar = ({
-  open,
-  setOpen,
-  entities,
-  chats,
-  recentChats,
-  icons,
-  isLoadingChats,
-  isInitialLoad,
-}: SideBarProps) => {
-  const memoizedEntities = useMemo(() => entities, [entities]);
-  const memoizedChats = useMemo(() => chats, [chats]);
-  const memoizedRecentChats = useMemo(() => recentChats, [recentChats]);
-  const memoizedIcons = useMemo(() => icons, [icons]);
-  const memoizedIsLoadingChats = useMemo(
-    () => isLoadingChats,
-    [isLoadingChats],
-  );
-  const memoizedIsInitialLoad = useMemo(() => isInitialLoad, [isInitialLoad]);
-  const memoizedSetOpen = useMemo(() => setOpen, [setOpen]);
-
+const SideBar = ({ ...state }: SideBarProps) => {
   const handleBack = useCallback(() => {
-    setOpen(false);
-  }, [setOpen]);
+    state.setOpen(false);
+  }, [state]);
 
-  useBackHandler(open, handleBack, 200);
+  useBackHandler(state.open, handleBack, 200);
 
   return (
     <ErrorBoundary>
       <div
         id="sidebar-container"
         className={`fixed top-0 left-0 h-full z-50 transition-transform duration-150 ease-in-out ${
-          open ? 'translate-x-0' : '-translate-x-full'
+          state.open ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
         <div id="server-container">
           <ServerBar
-            entities={memoizedEntities}
-            isInitialLoad={memoizedIsInitialLoad}
+            entities={state.entities}
+            isInitialLoad={state.isInitialLoad}
           />
           <ChannelBar
-            recentChats={memoizedRecentChats}
-            icons={memoizedIcons}
-            chats={memoizedChats}
-            setOpen={memoizedSetOpen}
-            isLoadingChats={memoizedIsLoadingChats}
-            isInitialLoad={memoizedIsInitialLoad}
+            recentChats={state.recentChats}
+            icons={state.icons}
+            chats={state.chats}
+            setOpen={state.setOpen}
+            isLoadingChats={state.isLoadingChats}
+            isInitialLoad={state.isInitialLoad}
           />
         </div>
         <div id="user-container">
-          <ProfileMount icons={memoizedIcons} />
+          <ProfileMount icons={state.icons} />
         </div>
       </div>
     </ErrorBoundary>
   );
 };
 
-export default SideBar;
+export default memo(SideBar);

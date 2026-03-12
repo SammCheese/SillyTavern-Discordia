@@ -44,6 +44,39 @@ interface ChannelBarProps {
 
 const { doNewChat, eventSource, event_types } = await imports('@script');
 
+const ChannelRow = ({
+  index,
+  style,
+  chats,
+  onClick,
+  isSelectedChat,
+  makeAvatar,
+}: RowComponentProps & {
+  chats: Chat[];
+  onClick: (chat: Chat) => void;
+  isSelectedChat: (chat: Chat) => boolean;
+  makeAvatar: (props: { chat: Chat }) => string;
+}) => {
+  const chat = chats[index]!;
+
+  const isSelected = useMemo(
+    () => isSelectedChat(chat),
+    [chat, isSelectedChat],
+  );
+  const avatar = useMemo(() => makeAvatar({ chat }), [chat, makeAvatar]);
+
+  return (
+    <div style={style}>
+      <ChannelEntry
+        chat={chat}
+        onClick={onClick}
+        isSelected={isSelected}
+        avatar={avatar}
+      />
+    </div>
+  );
+};
+
 const ChannelBar = ({
   icons,
   chats,
@@ -128,22 +161,6 @@ const ChannelBar = ({
     };
   }, []);
 
-  // eslint-disable-next-line @eslint-react/no-nested-component-definitions
-  const Row = ({ index, style }: RowComponentProps) => {
-    const chat = chats[index]!;
-
-    return (
-      <div style={style}>
-        <ChannelEntry
-          chat={chat}
-          onClick={handleChannelClick}
-          isSelected={isSelectedChat(chat)}
-          avatar={makeAvatar({ chat })}
-        />
-      </div>
-    );
-  };
-
   const title = context === 'recent' ? 'Recent Chats' : 'Chats';
 
   return (
@@ -186,10 +203,15 @@ const ChannelBar = ({
 
             {chatsMemo.length > 50 ? (
               <List
-                rowComponent={Row}
+                rowComponent={ChannelRow}
                 rowCount={chatsMemo.length}
                 rowHeight={48}
-                rowProps={{}}
+                rowProps={{
+                  onClick: handleChannelClick,
+                  isSelectedChat,
+                  makeAvatar,
+                  chats,
+                }}
                 overscanCount={5}
                 style={{ width: '100%' }}
               />

@@ -7,6 +7,7 @@ import {
   useEffect,
   type ReactNode,
   use,
+  useMemo,
 } from 'react';
 import { createPortal } from 'react-dom';
 import ErrorBoundary from '../components/common/ErrorBoundary/ErrorBoundary';
@@ -155,9 +156,14 @@ export function ModalProvider({ children }: { children: ReactNode }) {
     [closeModal],
   );
 
+  const contextValue = useMemo(
+    () => ({ openModal, closeModal, closeAll }),
+    [openModal, closeModal, closeAll],
+  );
+
   return (
     <ErrorBoundary>
-      <ModalContext value={{ openModal, closeModal, closeAll }}>
+      <ModalContext value={contextValue}>
         {stack.length > 0 &&
           createPortal(
             stack.map(({ id, node }, idx) => (
