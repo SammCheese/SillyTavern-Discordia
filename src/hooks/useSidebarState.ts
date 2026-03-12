@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useReducer, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useReducer, useRef } from 'react';
 import { getRecentChats } from '../services/chatService';
 import { DISCORDIA_EVENTS } from '../events/eventTypes';
 
@@ -306,8 +306,10 @@ export const useSidebarState = () => {
     showRecentChats,
   ]);
 
+  const memoizedState = useMemo(() => state, [state]);
+
   return {
-    ...state,
+    ...memoizedState,
     setOpen,
   };
 };

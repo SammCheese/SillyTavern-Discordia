@@ -10,7 +10,7 @@ import { getExtensionVersion } from '../service/extensionService';
 import ExtensionTitle from './ExtensionAccordion/ExtensionTitle';
 import ExtensionDetails from './ExtensionAccordion/ExtensionDetails';
 import ExtensionOptions from './ExtensionAccordion/ExtensionOptions';
-import { useExtensionState } from '../../../../providers/extensionProvider';
+import { useExtensionState } from '../../../../providers/contentProviders/extensionProvider';
 
 interface ExtensionAccordionProps {
   extension: ExtensionInfo;

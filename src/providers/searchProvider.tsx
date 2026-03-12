@@ -17,11 +17,12 @@ export const SearchProvider = ({ children }: { children: ReactNode }) => {
 
   const debouncedSet = useMemo(() => lodash.debounce(setSearchQuery, 300), []);
 
-  return (
-    <SearchContext value={{ searchQuery, setSearchQuery: debouncedSet }}>
-      {children}
-    </SearchContext>
+  const contextValue = useMemo(
+    () => ({ searchQuery, setSearchQuery: debouncedSet }),
+    [searchQuery, debouncedSet],
   );
+
+  return <SearchContext value={contextValue}>{children}</SearchContext>;
 };
 
 export const useSearch = () => {

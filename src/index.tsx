@@ -11,7 +11,7 @@ import 'react-loading-skeleton/dist/skeleton.css';
 import PageProvider from './providers/pageProvider';
 import ModalProvider from './providers/modalProvider';
 import PopupProvider from './providers/popupProvider';
-import ExtensionProvider from './providers/extensionProvider';
+import ExtensionProvider from './providers/contentProviders/extensionProvider';
 import MessageContextMenu from './bridges/MessageContextMenu';
 import ContextMenuProvider from './providers/contextMenuProvider';
 import BackHandlerProvider from './providers/backHandlerProvider';
@@ -21,6 +21,7 @@ import Compose from './app/Compose';
 import ErrorBoundary from './components/common/ErrorBoundary/ErrorBoundary';
 
 import App from './app/App';
+import { PersonaProvider } from './providers/contentProviders/personaProvider';
 
 let failedStart = false;
 
@@ -68,6 +69,7 @@ const startApp = (safeStart: boolean = false) => {
       BackHandlerProvider,
       // Data Providers
       ExtensionProvider,
+      PersonaProvider,
       // UI Providers
       PopupProvider,
       PageProvider,

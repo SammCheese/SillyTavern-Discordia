@@ -116,14 +116,6 @@ export function ContextMenuProvider({ children }: { children: ReactNode }) {
     };
   }, [isVisible, closeContextMenu]);
 
-  const contextValue = useMemo(
-    () => ({
-      showContextMenu: handleContextMenu,
-      closeContextMenu,
-    }),
-    [handleContextMenu, closeContextMenu],
-  );
-
   const styles = {
     mobile: {
       container: `absolute h-fit z-70 bg-base-discordia border-t border-darker rounded-t-xl shadow-2xl p-4 pb-8
@@ -146,6 +138,14 @@ export function ContextMenuProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useBackHandler(isVisible, closeContextMenu);
+
+  const contextValue = useMemo(
+    () => ({
+      showContextMenu: handleContextMenu,
+      closeContextMenu,
+    }),
+    [handleContextMenu, closeContextMenu],
+  );
 
   return (
     <ErrorBoundary>

@@ -7,9 +7,9 @@ const importPromise = imports('@script');
 const timerStart = Date.now();
 
 const TARGET_CONTAINER_IDS = ['extensions_settings', 'extensions_settings2'];
-const FAST_FAIL_REGEX = /extensions\//;
+const FAST_FAIL_REGEX = /extensions\//i;
 const EXTENSION_NAME_REGEX =
-  /extensions\/(?:third-party\/)?(?!(?:SillyTavern-Discordia|third-party)\/)([^/]+)\//;
+  /extensions\/(?:third-party\/)?(?!(?:SillyTavern-Discordia|third-party)\/)([^/]+)\//i;
 // Blacklist known extensions without settings
 const EXTENSION_NAME_NEGLECT_SET = new Set([
   'SillyTavern-Discordia',
@@ -41,9 +41,9 @@ const IGNORED_TAGS_SET = new Set([
   'CANVAS',
   'SVG',
 ]);
-const LATELOADER_LEEWAY_MS = 30000;
+const LATELOADER_LEEWAY_MS = 40000;
 // Limit performance impact by capping stack trace
-Error.stackTraceLimit = 3;
+Error.stackTraceLimit = 1;
 
 // Caches
 const MAX_CACHE_SIZE = 500;

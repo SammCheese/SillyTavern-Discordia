@@ -51,9 +51,7 @@ const Persona = memo(function Persona({ persona, onClick }: PersonaProps) {
   }, [persona]);
 
   const handleClick = useCallback(() => {
-    if (onClick) {
-      onClick(persona);
-    }
+    onClick?.(persona);
   }, [onClick, persona]);
 
   return (

@@ -1,7 +1,7 @@
 import { useCallback, lazy, useMemo, useRef, Suspense } from 'react';
 
 import type { Manifest } from '../../../services/extensionService';
-import { useExtensionState } from '../../../providers/extensionProvider';
+import { useExtensionState } from '../../../providers/contentProviders/extensionProvider';
 import { usePopup } from '../../../providers/popupProvider';
 import ExtensionSection from './components/ExtensionSection';
 import PendingChangesBanner from './components/PendingChanges';
