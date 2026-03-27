@@ -1,1 +1,0 @@
-import{i as a,n as s,t as m}from"./jsx-runtime.js";var r=a(s()),t=m(),e=(0,r.memo)(({width:a="w-full",className:s=""})=>(0,t.jsx)(t.Fragment,{children:(0,t.jsx)("div",{style:{backgroundColor:"rgba(255, 255, 255, 0.1)"},className:`${a} h-px my-2 mx-auto ${s}`})}));export{e as t};
