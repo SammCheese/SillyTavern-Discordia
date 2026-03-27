@@ -187,7 +187,8 @@ export const ExtensionProvider = ({
 
   const updateExtension = useCallback(async (extensionName: string) => {
     updateExtensionByName(extensionName)
-      .then(() => {
+      .then((updated) => {
+        if (!updated) return;
         setUpdatedExtensions((prev) => [...(prev || []), extensionName]);
       })
       .catch((error) => {

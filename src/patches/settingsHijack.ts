@@ -42,6 +42,7 @@ const IGNORED_TAGS_SET = new Set([
   'SVG',
 ]);
 const LATELOADER_LEEWAY_MS = 40000;
+const DEBOUNCE_DELAY_MS = 300;
 // Limit performance impact by capping stack trace
 Error.stackTraceLimit = 1;
 
@@ -98,12 +99,6 @@ const setOwnerOnDescendants = (root: Element, owner: string) => {
   elementOwnerMap.set(root, owner);
   root.setAttribute(OWNER_ATTR, owner);
   pendingStackMap.delete(root);
-
-  const descendants = root.querySelectorAll(`:not([${OWNER_ATTR}])`);
-  for (let i = 0; i < descendants.length; i++) {
-    descendants[i]?.setAttribute(OWNER_ATTR, owner);
-    elementOwnerMap.set(descendants[i]!, owner);
-  }
 };
 
 const applyOwnership = (
@@ -115,7 +110,7 @@ const applyOwnership = (
       // @ts-expect-error exists
       for (let i = 0; i < element.length; i++) {
         const el = element[i];
-        if (elementOwnerMap.get(el) === owner) return;
+        if (elementOwnerMap.get(el) === owner) continue;
 
         elementOwnerMap.set(el, owner);
         el.setAttribute?.(OWNER_ATTR, owner);
@@ -510,9 +505,10 @@ function* extensionCloningGenerator(
     try {
       const original = $(elem) as JQuery<HTMLElement>;
       getOwner(original);
-      const clone = original.clone(true, true);
+      const clone = original.clone(true, true) as JQuery<HTMLElement>;
 
-      const interactiveSelector = 'input, select, textarea, button, a';
+      const interactiveSelector =
+        'input, select, textarea, button, a, label, [contenteditable="true"]';
 
       const nodeMap = new WeakMap<Element, Element>();
       const originalInputs = original.find(interactiveSelector).toArray();
@@ -561,12 +557,16 @@ export const poolDOMExtensions = async () => {
   const { eventSource, event_types } = await importPromise;
   let observer: MutationObserver | null = null;
   let debounceTimer: number | null = null;
+  let hasObservedNewNodes = false;
+  let hasCapturedOnce = false;
   window.discordia.extensionTemplates = [];
 
-  const captureExtensions = async () => {
+  const captureExtensions = async (force = false) => {
     try {
       const containers = getContainers();
       if (containers.length === 0) return;
+
+      if (!force && hasCapturedOnce && !hasObservedNewNodes) return;
 
       resolveAllOwnership(containers);
 
@@ -586,6 +586,9 @@ export const poolDOMExtensions = async () => {
         );
       }
 
+      hasCapturedOnce = true;
+      hasObservedNewNodes = false;
+
       eventSource.emit(DISCORDIA_EVENTS.EXTENSION_HTML_POPULATED);
     } catch (error) {
       dislog.error('Failed to Capture Extension Settings:', error);
@@ -597,7 +600,7 @@ export const poolDOMExtensions = async () => {
     debounceTimer = window.setTimeout(() => {
       captureExtensions();
       debounceTimer = null;
-    }, 100);
+    }, DEBOUNCE_DELAY_MS);
   };
 
   const startObserving = () => {
@@ -608,6 +611,7 @@ export const poolDOMExtensions = async () => {
 
     observer = new MutationObserver((mutations) => {
       if (mutations.some((m) => m.addedNodes.length > 0)) {
+        hasObservedNewNodes = true;
         debouncedCapture();
       }
     });
@@ -632,7 +636,7 @@ export const poolDOMExtensions = async () => {
     }, LATELOADER_LEEWAY_MS);
   };
 
-  captureExtensions();
+  captureExtensions(true);
 
   const idleCapture = () => {
     dislog.log('Completed Load in ' + (Date.now() - timerStart) + 'ms');

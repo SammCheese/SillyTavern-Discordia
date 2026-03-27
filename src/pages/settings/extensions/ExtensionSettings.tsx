@@ -1,4 +1,4 @@
-import { useCallback, lazy, useMemo, useRef, Suspense } from 'react';
+import { useCallback, lazy, useMemo, useRef, Suspense, memo } from 'react';
 
 import type { Manifest } from '../../../services/extensionService';
 import { useExtensionState } from '../../../providers/contentProviders/extensionProvider';
@@ -69,6 +69,7 @@ const ExtensionSettings = () => {
         onConfirm: () => {
           return deleteExtension(extensionName);
         },
+        onCancel: () => void 0,
       });
     },
     [openPopup],
@@ -137,4 +138,4 @@ const ExtensionSettings = () => {
   );
 };
 
-export default ExtensionSettings;
+export default memo(ExtensionSettings);
