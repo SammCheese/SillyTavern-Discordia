@@ -44,7 +44,7 @@ const SettingsFrame = ({
           <CloseButton />
         </button>
       </div>
-      <div>{header}</div>
+      {header && <div className="px-4 w-full">{header}</div>}
 
       <div
         className="settings-content w-full flex-1 overflow-auto overflow-x-hidden min-h-0"

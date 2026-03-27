@@ -41,8 +41,7 @@ export default defineConfig({
     },
     rollupOptions: {
       input: resolve(__dirname, 'src/index.tsx'),
-      jsx: 'preserve',
-      treeshake: 'smallest',
+      treeshake: isProduction,
       output: {
         assetFileNames: (assetInfo) => {
           if (assetInfo.names.includes('style.css')) {

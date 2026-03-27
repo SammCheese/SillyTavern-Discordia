@@ -21,8 +21,7 @@ const SettingsHost = ({ settings, disabled }: SettingsHostProps) => {
     if (!node) return;
 
     if (node.parentElement !== host) {
-      host.innerHTML = '';
-      host.appendChild(node);
+      host.replaceChildren(node);
     }
 
     return () => {
