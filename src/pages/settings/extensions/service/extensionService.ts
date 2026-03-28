@@ -4,8 +4,6 @@ import type { ExtensionInfo } from '../ExtensionSettings';
 
 const { getRequestHeaders } = await imports('@script');
 
-let extensionTypesCache: Record<string, string> | null = null;
-
 export async function discoverExtensions(): Promise<ExtensionInfo[]> {
   try {
     const response = await fetch('/api/extensions/discover');
@@ -26,22 +24,19 @@ export async function discoverExtensions(): Promise<ExtensionInfo[]> {
  * @param {string} externalId External ID of the extension (excluding or including the leading 'third-party/')
  * @returns {string} Type of the extension (global, local, system, or empty string if not found)
  */
-async function getExtensionType(externalId) {
-  if (!extensionTypesCache) {
-    const { extensionTypes } = await imports('@scripts/extensions');
-    extensionTypesCache = extensionTypes;
+async function getExtensionType(externalId: string): Promise<string> {
+  const { extensionTypes } = await imports('@scripts/extensions');
+
+  if (extensionTypes[externalId]) {
+    return extensionTypes[externalId];
   }
 
-  if (extensionTypesCache[externalId]) {
-    return extensionTypesCache[externalId];
-  }
-
-  const id = Object.keys(extensionTypesCache).find(
+  const id = Object.keys(extensionTypes).find(
     (id) =>
       id === externalId ||
       (id.startsWith('third-party') && id.endsWith(externalId)),
   );
-  return id ? extensionTypesCache[id] : '';
+  return id ? extensionTypes[id]! : '';
 }
 
 export async function getExtensionVersion(extensionName, signal?) {
@@ -88,11 +83,15 @@ export async function updateExtensionByName(extensionName) {
     }
 
     const data = await response.json();
-    toastr.success(
-      `Extension ${extensionName} updated to ${data.shortCommitHash}`,
-      'Extension updated',
-      { timeOut: 3000 },
-    );
+
+    if (!data.isUpToDate) {
+      toastr.success(
+        `Extension ${extensionName} updated to ${data.shortCommitHash}`,
+        'Extension updated',
+        { timeOut: 3000 },
+      );
+    }
+
     return data;
   } catch (error) {
     console.error('Extension update error:', error);

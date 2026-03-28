@@ -186,14 +186,13 @@ export const ExtensionProvider = ({
   }, []);
 
   const updateExtension = useCallback(async (extensionName: string) => {
-    updateExtensionByName(extensionName)
-      .then((updated) => {
-        if (!updated) return;
-        setUpdatedExtensions((prev) => [...(prev || []), extensionName]);
-      })
-      .catch((error) => {
-        console.error(`Failed to update extension ${extensionName}:`, error);
-      });
+    try {
+      const updated = await updateExtensionByName(extensionName);
+      if (!updated || updated.isUpToDate) return;
+      setUpdatedExtensions((prev) => [...(prev || []), extensionName]);
+    } catch (error) {
+      console.error(`Failed to update extension ${extensionName}:`, error);
+    }
   }, []);
 
   const settingsMap = useMemo(() => {
