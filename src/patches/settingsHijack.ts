@@ -127,7 +127,11 @@ const patchRuntimeContext = () => {
   const originalRaf = window.requestAnimationFrame?.bind(window);
   const originalRic = window.requestIdleCallback?.bind(window);
 
-  window.setTimeout = ((handler: TimerHandler, timeout?: number, ...args) => {
+  window.setTimeout = ((
+    handler: TimerHandler,
+    timeout?: number,
+    ...args: unknown[]
+  ) => {
     const owner = getRuntimeOwnerHint(false);
 
     if (typeof handler !== 'function') {
@@ -464,7 +468,7 @@ export const hijackJquery = () => {
         return originalAppendTo.apply(this, args);
       }
 
-      const parent = destination[0] as HTMLElement;
+      const parent = (destination as JQuery<HTMLElement>)[0] as HTMLElement;
       const owner = guessOwnerForInsert(parent, this as JQuery);
 
       const result = runWithOwner(owner, () =>
@@ -487,7 +491,7 @@ export const hijackJquery = () => {
         return originalPrependTo.apply(this, args);
       }
 
-      const parent = destination[0] as HTMLElement;
+      const parent = (destination as JQuery<HTMLElement>)[0] as HTMLElement;
       const owner = guessOwnerForInsert(parent, this as JQuery);
 
       const result = runWithOwner(owner, () =>

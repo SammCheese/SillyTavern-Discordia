@@ -51,6 +51,12 @@ export const setupGlobalImports = () => {
   (globalThis as any)._ = {
     debounce: (fn: (...args: unknown[]) => void) => fn,
   };
+  (globalThis as any).toastr = {
+    success: vi.fn(),
+    error: vi.fn(),
+    warning: vi.fn(),
+    info: vi.fn(),
+  };
   (globalThis as any).SillyTavern = {
     getContext: () => ({
       imports: (globalThis as any).imports,

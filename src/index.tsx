@@ -1,27 +1,24 @@
 import { StrictMode } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-
 import { performPatches, unpatchAll } from './patches';
 
-// @ts-expect-error Styles Import
 import './styles.css';
-// @ts-expect-error Skeleton Styles Import
 import 'react-loading-skeleton/dist/skeleton.css';
 
 import PageProvider from './providers/pageProvider';
 import ModalProvider from './providers/modalProvider';
 import PopupProvider from './providers/popupProvider';
-import ExtensionProvider from './providers/contentProviders/extensionProvider';
 import MessageContextMenu from './bridges/MessageContextMenu';
 import ContextMenuProvider from './providers/contextMenuProvider';
 import BackHandlerProvider from './providers/backHandlerProvider';
 import SearchProvider from './providers/searchProvider';
+import ExtensionProvider from './providers/contentProviders/extensionProvider';
+import PersonaProvider from './providers/contentProviders/personaProvider';
 
 import Compose from './app/Compose';
 import ErrorBoundary from './components/common/ErrorBoundary/ErrorBoundary';
 
 import App from './app/App';
-import { PersonaProvider } from './providers/contentProviders/personaProvider';
 
 let failedStart = false;
 

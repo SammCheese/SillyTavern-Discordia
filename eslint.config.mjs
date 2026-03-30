@@ -10,21 +10,14 @@ export default defineConfig(
   tseslint.configs.recommended,
   eslintReact.configs['recommended-typescript'],
   reactHooks.configs.flat['recommended-latest'],
-  {
-    settings: {
-      react: {
-        version: 'detect',
-      },
-    },
-  },
   prettierRecommended,
-  [
-    globalIgnores([
+  {
+    ignores: [
       'dist/**',
       'node_modules/**',
       '**/*.css',
       '**/*.json',
       '*.config.{js,cjs,mjs,ts,cts,mts}',
-    ]),
-  ],
+    ],
+  },
 );

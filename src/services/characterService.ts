@@ -244,7 +244,7 @@ export async function _deleteCharacter(
     characterId !== null &&
     characterId !== undefined &&
     character &&
-    characters[characterId] === character;
+    characters[parseInt(characterId)] === character;
 
   // Close chat BEFORE deletion if this is the current character
   if (isCurrentCharacter) {

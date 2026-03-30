@@ -57,7 +57,8 @@ export const PersonaProvider = ({ children }: PersonaProviderProps) => {
     const loadedPersonas: Persona[] = [];
 
     for (const avatar of avatars) {
-      const name = power_user.personas[avatar] || avatar;
+      const name =
+        (power_user.personas as Record<string, string>)[avatar] || avatar;
       loadedPersonas.push({
         avatar,
         name,
@@ -104,3 +105,5 @@ export const usePersona = () => {
   }
   return context;
 };
+
+export default PersonaProvider;

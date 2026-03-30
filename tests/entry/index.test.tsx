@@ -7,7 +7,9 @@ describe('index entry', () => {
     vi.clearAllMocks();
     setupGlobalImports();
     document.body.innerHTML = '';
-    window.discordia = {};
+    window.discordia = {
+      backups: {},
+    };
   });
 
   afterEach(() => {
@@ -46,7 +48,10 @@ describe('index entry', () => {
     vi.doMock('../../src/providers/backHandlerProvider', () => ({
       default: ({ children }: { children: React.ReactNode }) => children,
     }));
-    vi.doMock('../../src/providers/extensionProvider', () => ({
+    vi.doMock('../../src/providers/contentProviders/extensionProvider', () => ({
+      default: ({ children }: { children: React.ReactNode }) => children,
+    }));
+    vi.doMock('../../src/providers/contentProviders/personaProvider', () => ({
       default: ({ children }: { children: React.ReactNode }) => children,
     }));
     vi.doMock('../../src/providers/popupProvider', () => ({
@@ -89,7 +94,10 @@ describe('index entry', () => {
     const performPatches = vi.fn();
     const createRoot = vi.fn(() => ({ render: vi.fn(), unmount: vi.fn() }));
 
-    vi.doMock('../../src/patches', () => ({ performPatches }));
+    vi.doMock('../../src/patches', () => ({
+      performPatches: vi.fn(),
+      unpatchAll: vi.fn(),
+    }));
     vi.doMock('react-dom/client', () => ({ createRoot }));
     vi.doMock('../../src/app/App', () => ({
       default: () => <div data-testid="app" />,
@@ -109,7 +117,10 @@ describe('index entry', () => {
     vi.doMock('../../src/providers/backHandlerProvider', () => ({
       default: ({ children }: { children: React.ReactNode }) => children,
     }));
-    vi.doMock('../../src/providers/extensionProvider', () => ({
+    vi.doMock('../../src/providers/contentProviders/extensionProvider', () => ({
+      default: ({ children }: { children: React.ReactNode }) => children,
+    }));
+    vi.doMock('../../src/providers/contentProviders/personaProvider', () => ({
       default: ({ children }: { children: React.ReactNode }) => children,
     }));
     vi.doMock('../../src/providers/popupProvider', () => ({
