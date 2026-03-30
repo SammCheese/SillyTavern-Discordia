@@ -1,21 +1,26 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 export {};
-
-declare module '*.css';
-declare module '*.scss';
 
 import * as importFunc from './utils/import';
 
 import type * as Scripts from './types/script-map';
 import type * as SillyScript from '../../../../script';
 
+declare module '*.webm' {
+  const src: string;
+}
+
+declare module '*.css' {
+  const content: { [className: string]: string };
+  export default content;
+}
+
 type Dislog = {
-  log: (...args: any[]) => void;
-  warn: (...args: any[]) => void;
-  error: (...args: any[]) => void;
-  debug: (...args: any[]) => void;
-  important: (...args: any[]) => void;
-  custom: (heading: string, ...args: any[]) => void;
+  log: (...args: unknown[]) => void;
+  warn: (...args: unknown[]) => void;
+  error: (...args: unknown[]) => void;
+  debug: (...args: unknown[]) => void;
+  important: (...args: unknown[]) => void;
+  custom: (heading: string, ...args: unknown[]) => void;
 };
 
 declare global {
@@ -37,13 +42,9 @@ declare global {
     };
   }
   const toastr: {
-    success: (message: string, title?: string, options?: any) => void;
-    error: (message: string, title?: string, options?: any) => void;
-    warning: (message: string, title?: string, options?: any) => void;
-    info: (message: string, title?: string, options?: any) => void;
+    success: (message: string, title?: string, options?: unknown) => void;
+    error: (message: string, title?: string, options?: unknown) => void;
+    warning: (message: string, title?: string, options?: unknown) => void;
+    info: (message: string, title?: string, options?: unknown) => void;
   };
-}
-
-declare module '*.webm' {
-  const src: string;
 }

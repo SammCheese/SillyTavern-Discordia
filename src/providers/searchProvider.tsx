@@ -1,5 +1,11 @@
-import type _ from 'lodash';
-import { createContext, useState, use, type ReactNode, useMemo } from 'react';
+import {
+  createContext,
+  useState,
+  use,
+  type ReactNode,
+  useMemo,
+  useEffect,
+} from 'react';
 
 interface SearchContextType {
   searchQuery: string;
@@ -10,7 +16,7 @@ export const SearchContext = createContext<SearchContextType | undefined>(
   undefined,
 );
 
-const lodash = SillyTavern.libs.lodash as typeof _;
+const lodash = SillyTavern.libs.lodash;
 
 export const SearchProvider = ({ children }: { children: ReactNode }) => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -21,6 +27,12 @@ export const SearchProvider = ({ children }: { children: ReactNode }) => {
     () => ({ searchQuery, setSearchQuery: debouncedSet }),
     [searchQuery, debouncedSet],
   );
+
+  useEffect(() => {
+    return () => {
+      debouncedSet.cancel();
+    };
+  }, [debouncedSet]);
 
   return <SearchContext value={contextValue}>{children}</SearchContext>;
 };

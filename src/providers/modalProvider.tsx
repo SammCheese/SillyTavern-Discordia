@@ -43,7 +43,7 @@ const ModalShell = ({
   useBackHandler(isVisible, onClose, 200);
 
   const handleClick = useCallback(
-    (e) => {
+    (e: React.MouseEvent<HTMLDivElement>) => {
       if (isTop && e.target === e.currentTarget) {
         onClose(modalId);
       }

@@ -7,6 +7,7 @@ interface IconButtonProps {
   tooltip?: string;
   disabled?: boolean;
   color?: string;
+  rounded?: boolean;
 }
 
 const IconButton = ({
@@ -16,6 +17,7 @@ const IconButton = ({
   tooltip,
   disabled = false,
   color,
+  rounded = false,
 }: IconButtonProps) => {
   const handleClick = useCallback(
     (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
@@ -31,7 +33,7 @@ const IconButton = ({
       className={`
         flex items-center justify-center
         ${disabled ? 'cursor-not-allowed opacity-50' : 'hover:bg-gray-700 cursor-pointer'}
-        rounded p-2 border border-base-discordia-lighter hover:border-gray-500 transition-all
+        ${rounded ? 'rounded-full' : 'rounded'} p-2 border border-base-discordia-lighter hover:border-gray-500 transition-all
       `}
       style={{ width: size + 16, height: size + 16 }}
       onClick={handleClick}

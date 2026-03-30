@@ -13,9 +13,10 @@ export default defineConfig({
       jsxRuntime: 'automatic',
     }),
     inject({
-    imports: resolve(__dirname, 'src/import.ts'),
-    dislog: resolve(__dirname, 'src/utils/logger.ts'),
-  })],
+      imports: resolve(__dirname, 'src/import.ts'),
+      dislog: resolve(__dirname, 'src/utils/logger.ts'),
+    })
+  ],
   mode: isProduction ? 'production' : 'development',
   css: {
     postcss: {

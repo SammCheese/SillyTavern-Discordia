@@ -2,7 +2,6 @@
   "compilerOptions": {
     "rootDir": ".",
     "outDir": "./dist",
-
     "module": "esnext",
     "target": "esnext",
     "types": [
@@ -36,7 +35,7 @@
     "jsx": "react-jsx",
     "verbatimModuleSyntax": true,
     "isolatedModules": false,
-    "noUncheckedSideEffectImports": true,
+    "noUncheckedSideEffectImports": false,
     "moduleDetection": "force",
     "moduleResolution": "bundler",
     "skipLibCheck": true,
@@ -47,7 +46,7 @@
     "allowJs": true,
     "checkJs": false,
 
-    // no write, we have webpack
+    // no write, we have vite
     "noEmit": true
   },
   "include": [

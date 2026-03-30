@@ -128,10 +128,13 @@ export function ContextMenuProvider({ children }: { children: ReactNode }) {
     },
   };
 
-  const handleDefaultContextMenu = useCallback((e) => {
-    e.preventDefault();
-    e.stopPropagation();
-  }, []);
+  const handleDefaultContextMenu = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      e.preventDefault();
+      e.stopPropagation();
+    },
+    [],
+  );
 
   const handleClick = useCallback((e: MouseEvent) => {
     e.stopPropagation();
