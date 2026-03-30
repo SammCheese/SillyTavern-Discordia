@@ -36,6 +36,9 @@ const SystemPromptSettings = () => {
     const selected = system_prompts.find((p) => p.name === value);
     if (!selected) return;
 
+    const enabled = context.powerUserSettings.sysprompt?.enabled ?? false;
+    selected.enabled = enabled;
+
     setSysPrompt(selected);
     context.powerUserSettings.sysprompt = selected;
     saveSettingsDebounced();
