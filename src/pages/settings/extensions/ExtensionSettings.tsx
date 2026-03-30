@@ -1,10 +1,21 @@
-import { useCallback, lazy, useMemo, useRef, Suspense, memo } from 'react';
+import {
+  useCallback,
+  lazy,
+  useMemo,
+  useRef,
+  Suspense,
+  memo,
+  useState,
+} from 'react';
 
 import type { Manifest } from '../../../services/extensionService';
 import { useExtensionState } from '../../../providers/contentProviders/extensionProvider';
 import { usePopup } from '../../../providers/popupProvider';
 import ExtensionSection from './components/ExtensionSection';
 import PendingChangesBanner from './components/PendingChanges';
+import IconButton from '../../../components/common/IconButton/IconButton';
+import InstallPopup from './components/popups/InstallPopup';
+import { useBackHandlerBypass } from '../../../hooks/useBackHandler';
 
 const SettingsFrame = lazy(() => import('../base/Base'));
 
@@ -39,12 +50,15 @@ const ExtensionSettings = () => {
     categorizedExtensions,
     disabledExtensions,
     updatedExtensions,
+    refreshExtensions,
   } = useExtensionState();
+  const { bypassAndReload } = useBackHandlerBypass();
   const { openPopup } = usePopup();
 
   const initialDisabledStateRef = useRef<Set<string>>(
     new Set(disabledExtensions),
   );
+  const [shouldForceBanner, setShouldForceBanner] = useState(false);
 
   const onToggle = useCallback(
     (extension: ExtensionInfo) => {
@@ -66,13 +80,15 @@ const ExtensionSettings = () => {
         confirmVariant: 'danger',
         cancelText: 'Cancel',
         description: `Are you sure you want to delete the extension "${extensionName}"? This action cannot be undone.`,
-        onConfirm: () => {
-          return deleteExtension(extensionName);
+        onConfirm: async () => {
+          setShouldForceBanner(true);
+          await deleteExtension(extensionName);
+          refreshExtensions();
         },
         onCancel: () => void 0,
       });
     },
-    [openPopup],
+    [openPopup, refreshExtensions],
   );
 
   const sections = useMemo(
@@ -85,6 +101,7 @@ const ExtensionSettings = () => {
   );
 
   const hasPendingChanges = useMemo(() => {
+    if (shouldForceBanner) return true;
     // eslint-disable-next-line react-hooks/refs
     if (disabledExtensions.length !== initialDisabledStateRef.current.size)
       return true;
@@ -97,11 +114,27 @@ const ExtensionSettings = () => {
     if (updatedExtensions && updatedExtensions.length > 0) return true;
 
     return false;
-  }, [disabledExtensions, initialDisabledStateRef, updatedExtensions]);
+  }, [disabledExtensions, shouldForceBanner, updatedExtensions]);
 
   const reloadWindow = useCallback(() => {
-    window.location.reload();
-  }, []);
+    bypassAndReload();
+  }, [bypassAndReload]);
+
+  const openInstallPopup = useCallback(
+    () =>
+      openPopup(
+        <InstallPopup
+          onInstall={() => {
+            setShouldForceBanner(true);
+            refreshExtensions();
+          }}
+        />,
+        {
+          title: 'Install New Extension',
+        },
+      ),
+    [openPopup, refreshExtensions],
+  );
 
   return (
     <>
@@ -130,6 +163,16 @@ const ExtensionSettings = () => {
                       />
                     ),
                 )}
+            </div>
+            <div
+              className="absolute bottom-4 right-4 text-sm text-muted bg-blurple rounded-full p-2 cursor-pointer hover:bg-blurple/80 transition"
+              onClick={openInstallPopup}
+            >
+              <IconButton
+                faIcon="fa-solid fa-plus"
+                rounded
+                tooltip="Add Extension"
+              />
             </div>
           </div>
         </SettingsFrame>

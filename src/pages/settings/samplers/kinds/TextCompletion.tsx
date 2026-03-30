@@ -2,10 +2,14 @@ import { memo, useCallback, useMemo, useState } from 'react';
 import Divider from '../../../../components/common/Divider/Divider';
 import { textgen_settings_schema } from '../data/samplers';
 import SettingsRow from '../components/SettingsRow';
+import Select from '../../../../components/common/Select/Select';
 
 const context = SillyTavern.getContext();
 
 const { amount_gen, max_context } = await imports('@script');
+const { textgenerationwebui_preset_names, textgenerationwebui_presets } =
+  await imports('@scripts/textGenSettings');
+
 const SCRIPT_SETTING_IDS = [
   'max_context',
   'amount_gen',
@@ -19,6 +23,15 @@ const TextCompletionSamplerSettings = () => {
     max_context,
     max_context_unlocked: context.powerUserSettings.max_context_unlocked,
   }));
+  const [presets] = useState(
+    (textgenerationwebui_preset_names ?? []).map((name) => ({
+      value: name,
+      label: name,
+    })),
+  );
+  const [preset, setPreset] = useState<string>(
+    context.textCompletionSettings.preset || '',
+  );
 
   const onChange = useCallback(
     (id: string, value: number | boolean | string) => {
@@ -64,6 +77,28 @@ const TextCompletionSamplerSettings = () => {
     );
   }, [onChange, settings]);
 
+  const handlePresetChange = useCallback((value: string | number) => {
+    const selected =
+      textgenerationwebui_presets[
+        textgenerationwebui_preset_names.indexOf(value as string)
+      ];
+    if (!selected) return;
+
+    context.textCompletionSettings.preset = selected.name;
+
+    for (const name of Object.keys(selected) as (keyof typeof selected)[]) {
+      const value = selected[name];
+      if (value === undefined) continue;
+      context.textCompletionSettings[name] = value;
+    }
+
+    setPreset(selected.name);
+    context.textCompletionSettings.preset = selected.name;
+    context.saveSettingsDebounced();
+
+    setSettings((prev) => ({ ...prev, ...selected }));
+  }, []);
+
   return (
     <>
       <div>
@@ -71,6 +106,16 @@ const TextCompletionSamplerSettings = () => {
           Text Completion{' '}
         </h2>
       </div>
+
+      <div className="mb-4 w-full flex flex-col gap-2">
+        <Select
+          options={presets}
+          onChange={handlePresetChange}
+          value={preset}
+        />
+      </div>
+
+      <Divider />
 
       <div>
         <SettingsRow

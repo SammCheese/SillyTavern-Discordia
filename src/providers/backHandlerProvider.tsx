@@ -18,11 +18,13 @@ type BackHandlerEntry = {
 interface BackHandlerProviderType {
   register: (id: string, callback: BackCallback, timeout?: number) => void;
   unregister: (id: string) => void;
+  bypassAndReload: () => void;
 }
 
 export const BackHandlerContext = createContext<BackHandlerProviderType>({
   register: () => {},
   unregister: () => {},
+  bypassAndReload: () => {},
 });
 
 export const BackHandlerProvider = ({ children }: { children: ReactNode }) => {
@@ -30,8 +32,22 @@ export const BackHandlerProvider = ({ children }: { children: ReactNode }) => {
   const beforeUnloadAttachedRef = useRef(false);
   const resetTimerRef = useRef<number | null>(null);
 
+  const ignoreUnloadRef = useRef(false);
+
   const beforeUnloadHandler = useCallback((e: BeforeUnloadEvent) => {
+    if (ignoreUnloadRef.current) {
+      ignoreUnloadRef.current = false;
+      return;
+    }
+
+    if (stackRef.current.length === 0) return;
+
     e.preventDefault();
+  }, []);
+
+  const bypassAndReload = useCallback(() => {
+    ignoreUnloadRef.current = true;
+    window.location.reload();
   }, []);
 
   const detachBeforeUnload = useCallback(() => {
@@ -102,8 +118,8 @@ export const BackHandlerProvider = ({ children }: { children: ReactNode }) => {
   }, [beforeUnloadHandler, detachBeforeUnload]);
 
   const contextValue = useMemo(
-    () => ({ register, unregister }),
-    [register, unregister],
+    () => ({ register, unregister, bypassAndReload }),
+    [register, unregister, bypassAndReload],
   );
 
   return (

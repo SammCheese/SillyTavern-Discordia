@@ -18,3 +18,8 @@ export const useBackHandler = (
     };
   }, [isActive, onBack, register, unregister, id, timeout]);
 };
+
+export const useBackHandlerBypass = () => {
+  const { bypassAndReload } = use(BackHandlerContext);
+  return { bypassAndReload };
+};

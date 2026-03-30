@@ -51,6 +51,7 @@ const initializePaths = async () => {
     '@scripts/presetManager': getPath('preset-manager.js', isLocal),
     '@scripts/secrets': getPath('secrets.js', isLocal),
     '@scripts/samplerSelect': getPath('samplerSelect.js', isLocal),
+    '@scripts/sysprompt': getPath('sysprompt.js', isLocal),
   };
 
   pathsInitialized = true;

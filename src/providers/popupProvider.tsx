@@ -5,6 +5,7 @@ import {
   useState,
   type ReactNode,
   useMemo,
+  type JSX,
 } from 'react';
 import { createPortal } from 'react-dom';
 import { useBackHandler } from '../hooks/useBackHandler';
@@ -12,7 +13,7 @@ import ErrorBoundary from '../components/common/ErrorBoundary/ErrorBoundary';
 import Popup, { type PopupProps } from '../components/common/Popup/Popup';
 
 export const PopupContext = createContext<{
-  openPopup: (popup: ReactNode, options?: PopupProps) => void;
+  openPopup: (popup: ReactNode | JSX.Element, options?: PopupProps) => void;
   closePopup: () => void;
 }>({
   openPopup: () => {},
