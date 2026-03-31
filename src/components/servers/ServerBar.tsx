@@ -7,6 +7,7 @@ import { DISCORDIA_EVENTS } from '../../events/eventTypes';
 import { useModal } from '../../providers/modalProvider';
 import CharacterModal from '../../modals/Character/CharacterModal';
 import Skeleton, { SkeletonTheme } from 'react-loading-skeleton';
+import Tooltip from '../common/Tooltip/Tooltip';
 
 const ServerIcon = lazy(() => import('./Icons/ServerIcon'));
 const AddCharacterIcon = lazy(() => import('./Icons/AddCharacterIcon'));
@@ -95,13 +96,15 @@ const Row = ({ index, style, data }: RowComponentProps<RowData>) => {
   }
 
   return (
-    <ServerRow
-      index={index}
-      entity={entity}
-      style={style}
-      isSelected={selectedIndex === index}
-      onClick={handleClick}
-    />
+    <Tooltip text={entity.item?.name || entity.id} direction="right">
+      <ServerRow
+        index={index}
+        entity={entity}
+        style={style}
+        isSelected={selectedIndex === index}
+        onClick={handleClick}
+      />
+    </Tooltip>
   );
 };
 
@@ -259,13 +262,19 @@ const ServerBar = ({ entities, isInitialLoad = true }: ServerBarProps) => {
             <>
               {filteredEntities.map(({ entity, index: actualIndex }) => {
                 return (
-                  <ServerRow
+                  <Tooltip
                     key={entity.id}
-                    entity={entity}
-                    index={actualIndex}
-                    isSelected={selectedIndex === actualIndex}
-                    onClick={handleItemClick}
-                  />
+                    text={entity.item?.name || entity.id}
+                    direction="right"
+                  >
+                    <ServerRow
+                      key={entity.id}
+                      entity={entity}
+                      index={actualIndex}
+                      isSelected={selectedIndex === actualIndex}
+                      onClick={handleItemClick}
+                    />
+                  </Tooltip>
                 );
               })}
               <div id="characters-divider" className="divider" />
