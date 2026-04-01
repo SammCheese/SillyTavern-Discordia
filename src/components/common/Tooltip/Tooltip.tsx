@@ -106,6 +106,9 @@ const Tooltip = ({
         className="inline-flex items-center justify-center cursor-pointer"
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
+        onTouchStart={handleMouseEnter}
+        onTouchEnd={handleMouseLeave}
+        onTouchCancel={handleMouseLeave}
       >
         {children}
       </div>
@@ -113,7 +116,7 @@ const Tooltip = ({
         createPortal(
           <div
             ref={tooltipRef}
-            className="fixed z-9999 whitespace-pre bg-[#111214] text-gray-200 text-sm font-semibold px-3 py-1.5 rounded-md shadow-lg pointer-events-none zoom-in-95 transition-opacity duration-200"
+            className="fixed z-9999 max-w-[90vw] whitespace-pre-wrap text-center bg-[#111214] text-gray-200 text-sm font-semibold px-3 py-1.5 rounded-md shadow-lg pointer-events-none zoom-in-95 transition-opacity duration-200"
             style={{
               top: coords.top,
               left: coords.left,
