@@ -99,15 +99,15 @@ const Popup = ({
         onClick={handleContentClick}
       >
         {title && (
-          <div className="px-6 pt-6 pb-4">
+          <div className="px-6 pt-6 pb-2">
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white border-b border-base-discordia-lighter pb-2">
               {title}
             </h2>
-            {description && <p className="mt-2 text-sm">{description}</p>}
+            {description && <p className="mt-4 text-sm">{description}</p>}
           </div>
         )}
 
-        {children && <div className="px-6 py-4">{children}</div>}
+        {children && <div className="px-6">{children}</div>}
 
         {showButtons && (onConfirm || onCancel) && (
           <div className="px-6 pb-6 pt-2 flex gap-3 justify-end">

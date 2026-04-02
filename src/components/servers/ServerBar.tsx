@@ -96,7 +96,11 @@ const Row = ({ index, style, data }: RowComponentProps<RowData>) => {
   }
 
   return (
-    <Tooltip text={entity.item?.name || entity.id} direction="right">
+    <Tooltip
+      text={entity.item?.name || entity.id}
+      direction="right"
+      containerWidth="100%"
+    >
       <ServerRow
         index={index}
         entity={entity}
@@ -266,6 +270,7 @@ const ServerBar = ({ entities, isInitialLoad = true }: ServerBarProps) => {
                     key={entity.id}
                     text={entity.item?.name || entity.id}
                     direction="right"
+                    containerWidth="100%"
                   >
                     <ServerRow
                       key={entity.id}
