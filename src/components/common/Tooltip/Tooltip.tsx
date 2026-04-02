@@ -13,6 +13,8 @@ interface TooltipProps {
   children: ReactNode;
   direction?: 'top' | 'bottom' | 'left' | 'right';
   delay?: number;
+  containerWidth?: number | string;
+  containerHeight?: number | string;
 }
 
 const Tooltip = ({
@@ -20,6 +22,8 @@ const Tooltip = ({
   children,
   direction = 'top',
   delay = 100,
+  containerWidth = 'auto',
+  containerHeight = 'auto',
 }: TooltipProps) => {
   const [isHovered, setIsHovered] = useState(false);
   const [coords, setCoords] = useState({ top: 0, left: 0 });
@@ -104,8 +108,15 @@ const Tooltip = ({
       <div
         ref={triggerRef}
         className="inline-flex items-center justify-center cursor-pointer"
+        style={{
+          width: containerWidth,
+          height: containerHeight,
+        }}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
+        onTouchStart={handleMouseEnter}
+        onTouchEnd={handleMouseLeave}
+        onTouchCancel={handleMouseLeave}
       >
         {children}
       </div>
@@ -113,7 +124,7 @@ const Tooltip = ({
         createPortal(
           <div
             ref={tooltipRef}
-            className="fixed z-9999 whitespace-pre bg-[#111214] text-gray-200 text-sm font-semibold px-3 py-1.5 rounded-md shadow-lg pointer-events-none zoom-in-95 transition-opacity duration-200"
+            className="fixed z-9999 max-w-[90vw] whitespace-pre-wrap text-center bg-[#111214] text-gray-200 text-sm font-semibold px-3 py-1.5 rounded-md shadow-lg pointer-events-none zoom-in-95 transition-opacity duration-200"
             style={{
               top: coords.top,
               left: coords.left,

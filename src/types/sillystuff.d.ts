@@ -30,6 +30,7 @@ type ConnectAPIMap = {
   source?: string | null;
 };
 
+// v1 character
 type Character = {
   name: string;
   description: string;
@@ -51,7 +52,32 @@ type Character = {
 };
 
 type CharacterV2Data = {
+  name: string;
+  description: string;
+  character_version: string;
+  personality: string;
+  scenario: string;
+  first_mes: string;
+  mes_example: string;
+  creator_notes: string;
+  tags: string[];
   system_prompt: string;
+  post_history_instructions: string;
+  creator: string;
+  alternate_greetings: string[];
+  character_book: object;
+  extensions?: v2ExtensionInfos;
+};
+
+type v2ExtensionInfos = {
+  talkativeness: number;
+  fav: boolean | string;
+  world: string;
+  depth_prompt: {
+    depth: number;
+    prompt: string;
+    role: 'user' | 'assistant' | 'system';
+  };
 };
 
 type Persona = {

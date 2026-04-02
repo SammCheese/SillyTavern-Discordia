@@ -78,8 +78,7 @@ export async function editCharacter(data: CharacterPayload): Promise<void> {
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function charToPayload(char: any): CharacterPayload {
+export function charToPayload(char: Character): CharacterPayload {
   const getData = (key: string, fallbackKey?: string) => {
     if (char.data && char.data[key] !== undefined && char.data[key] !== '') {
       return char.data[key];
@@ -95,7 +94,7 @@ export function charToPayload(char: any): CharacterPayload {
 
   const getExt = (key: string) => char.data?.extensions?.[key] ?? undefined;
 
-  const depth = char.data?.extensions?.depth_prompt ?? {};
+  const depth = getExt('depth_prompt') ?? {};
 
   const rawExtensions = { ...(char.data?.extensions || {}) };
   delete rawExtensions.depth_prompt;
@@ -138,8 +137,8 @@ export function charToPayload(char: any): CharacterPayload {
     alternate_greetings: alternateGreetings,
 
     talkativeness: getExt('talkativeness') ?? char.talkativeness ?? 0.5,
-    fav: String(getExt('fav') ?? char.fav ?? false),
-    world: getExt('world') ?? char.world ?? '',
+    fav: String(char.fav ?? getExt('fav') ?? false),
+    world: getExt('world') ?? char.data.extensions?.world ?? '',
     depth_prompt_prompt: depth.prompt ?? '',
     depth_prompt_depth: !isNaN(Number(depth.depth)) ? Number(depth.depth) : 4,
     depth_prompt_role: depth.role ?? 'system',

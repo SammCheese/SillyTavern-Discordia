@@ -3,6 +3,7 @@ import { useContextMenu } from '../../../providers/contextMenuProvider';
 import { DISCORDIA_EVENTS } from '../../../events/eventTypes';
 import type { ContextMenuItem } from '../../common/ContextMenuEntry/ContextMenuEntry';
 import { usePopup } from '../../../providers/popupProvider';
+import RenamePopup from '../components/RenamePopup';
 
 const {
   deleteCharacterChatByName,
@@ -71,8 +72,22 @@ export const useChannelContextMenu = (chat: Chat) => {
       onConfirm: async () => {
         await performDelete();
       },
+      onCancel: () => void 0,
     });
   }, [chat, openPopup, performDelete]);
+
+  const handleRename = useCallback(() => {
+    openPopup(
+      <RenamePopup
+        currentName={chat.file_id}
+        charId={chat.char_id}
+        groupChatId={chat.group}
+      />,
+      {
+        title: 'Rename Chat',
+      },
+    );
+  }, [chat, openPopup]);
 
   const menuOptions = useMemo(() => {
     return [
@@ -80,12 +95,20 @@ export const useChannelContextMenu = (chat: Chat) => {
         label: 'Open',
         onClick: openChat,
       },
+      {
+        label: '---',
+        variant: 'separator',
+      },
       /*{
         label: 'Export',
         onClick: () => {
           console.log('Export channel:', chat.file_id);
         },
       },*/
+      {
+        label: 'Rename',
+        onClick: handleRename,
+      },
       {
         label: '---',
         variant: 'separator',
@@ -96,7 +119,7 @@ export const useChannelContextMenu = (chat: Chat) => {
         onClick: handleDelete,
       },
     ] as ContextMenuItem[];
-  }, [handleDelete, openChat]);
+  }, [handleDelete, handleRename, openChat]);
 
   const handleContextMenu = useCallback(
     (e: React.MouseEvent) => {

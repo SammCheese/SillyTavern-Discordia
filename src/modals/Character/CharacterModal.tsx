@@ -40,7 +40,7 @@ type CharacterModalProps<T extends Type = Type> = T extends 'create'
       avatarName: string;
     };
 
-const { getThumbnailUrl } = await imports('@script');
+const { getThumbnailUrl, getOneCharacter } = await imports('@script');
 const { getContext } = SillyTavern;
 
 interface BoundInputProps extends Omit<
@@ -68,15 +68,13 @@ const BoundInput = memo(function BoundInput({
   return <Input value={value || ''} onChange={handleChange} {...props} />;
 });
 
-const CharacterModal: React.FC<CharacterModalProps> = ({
+const CharacterModal = ({
   type = 'edit',
   onClose,
   avatarName,
   onSave,
 }: CharacterModalProps) => {
-  const [characterData, setCharacterData] = useState<Character | null>(null);
   const [avatar, setAvatar] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -89,62 +87,100 @@ const CharacterModal: React.FC<CharacterModalProps> = ({
     [],
   );
 
-  const existingCharacter = useMemo(() => {
-    if (!avatarName) return undefined;
-    return getContext().characters.find(
-      (ent) => ent.avatar?.toString() === avatarName,
-    );
-  }, [avatarName]);
+  const existingCharacter = useMemo(
+    () =>
+      !isNewCharacter && avatarName
+        ? getContext().characters.find(
+            (ent) => ent.avatar?.toString() === avatarName,
+          )
+        : null,
+    [avatarName, isNewCharacter],
+  );
+
+  const isLazy = useMemo(
+    () => existingCharacter && existingCharacter?.shallow,
+    [existingCharacter],
+  );
 
   useEffect(() => {
-    if (existingCharacter) {
-      // eslint-disable-next-line @eslint-react/hooks-extra/no-direct-set-state-in-use-effect
-      setCharacterData((prev) => prev || existingCharacter);
-
-      // eslint-disable-next-line @eslint-react/hooks-extra/no-direct-set-state-in-use-effect
-      setPreviewUrl(
-        getThumbnailUrl('avatar', avatarName || 'default_Assistant.png'),
-      );
-    } else {
-      // eslint-disable-next-line @eslint-react/hooks-extra/no-direct-set-state-in-use-effect
-      setCharacterData({
-        name: '',
-        description: '',
-        scenario: 'A chat between {{user}} and {{char}}.',
-        first_mes: '',
-        personality: '',
-        creatorcomment: '',
-        data: {},
-      } as Character);
+    if (existingCharacter && isLazy) {
+      getOneCharacter(existingCharacter.avatar?.toString() || '')
+        .then(() => {
+          const fullChar = getContext().characters.find(
+            (ent) => ent.avatar?.toString() === avatarName,
+          );
+          if (fullChar) {
+            setCharacterData(fullChar);
+          }
+        })
+        .catch((error) => {
+          console.error('Error loading character:', error);
+        });
     }
-  }, [avatarName, existingCharacter]);
+  }, [avatarName, existingCharacter, isLazy]);
 
-  const setCharData = useCallback((data: Partial<Character>) => {
-    setCharacterData((prev) => {
-      if (!prev) return prev;
+  const [characterData, setCharacterData] = useState<Character | null>(() => {
+    if (existingCharacter) return existingCharacter;
+    return {
+      name: '',
+      description: '',
+      scenario: 'A chat between {{user}} and {{char}}.',
+      first_mes: '',
+      personality: '',
+      creatorcomment: '',
+      data: { extensions: {} },
+    } as Character;
+  });
 
-      // Mirror edits into V2 card while keeping V1 roots for compatibility
-      const dataPatch: Record<string, unknown> = {};
+  const [previewUrl, setPreviewUrl] = useState<string | null>(() => {
+    if (existingCharacter) {
+      return getThumbnailUrl('avatar', avatarName || 'default_Assistant.png');
+    }
+    return null;
+  });
 
-      if ('name' in data) dataPatch.name = data.name;
-      if ('description' in data) dataPatch.description = data.description;
-      if ('scenario' in data) dataPatch.scenario = data.scenario;
-      if ('personality' in data) dataPatch.personality = data.personality;
-      if ('first_mes' in data) dataPatch.first_mes = data.first_mes;
-      if ('mes_example' in data) dataPatch.mes_example = data.mes_example;
-      if ('creatorcomment' in data)
-        dataPatch.creator_notes = data.creatorcomment;
-      if ('tags' in data) dataPatch.tags = data.tags;
-      if ('fav' in data) dataPatch.fav = data.fav;
-      if ('talkativeness' in data) dataPatch.talkativeness = data.talkativeness;
+  const setCharData = useCallback(
+    (data: Partial<Character | CharacterV2Data>) => {
+      setCharacterData((prev) => {
+        if (!prev) return prev;
 
-      const mergedData = Object.keys(dataPatch).length
-        ? { ...(prev.data || {}), ...dataPatch }
-        : prev.data;
+        const v1Data: Character = {
+          ...prev,
+          ...data,
+        };
+        const v2Data: Partial<CharacterV2Data> = {
+          ...prev.data,
+          extensions: {
+            ...(prev.data?.extensions || {}),
+          } as v2ExtensionInfos,
+        };
 
-      return { ...prev, ...data, data: mergedData } as Character;
-    });
-  }, []);
+        const v1ToV2Keys = [
+          'name',
+          'description',
+          'scenario',
+          'personality',
+          'first_mes',
+          'mes_example',
+          'tags',
+          'system_prompt',
+          'post_history_instructions',
+          'creator_notes',
+          'creator',
+          'character_version',
+          'alternate_greetings',
+        ] as (keyof Character | keyof CharacterV2Data)[];
+        v1ToV2Keys.forEach((k) => {
+          if (k in data) v2Data[k] = data[k];
+        });
+
+        const mergedData = Object.assign({}, v1Data, { data: v2Data });
+
+        return mergedData;
+      });
+    },
+    [],
+  );
 
   useEffect(() => {
     return () => {
@@ -189,12 +225,8 @@ const CharacterModal: React.FC<CharacterModalProps> = ({
         await updateCharacter(avatarName, payload);
       }
 
-      if (onSave) {
-        onSave();
-      }
-
+      onSave?.();
       refreshCharacterList();
-
       closeModal();
     } catch (error) {
       console.error('Error saving character:', error);
@@ -210,16 +242,15 @@ const CharacterModal: React.FC<CharacterModalProps> = ({
     closeModal();
   }, [onClose, closeModal]);
 
-  const handleDelete = useCallback(() => {
+  const handleDelete = useCallback(async () => {
     if (!avatarName) return;
-    _deleteCharacter(avatarName, { deleteChats: true }).then(async () => {
-      closeModal();
-    });
+    await _deleteCharacter(avatarName, { deleteChats: true });
+    closeModal();
   }, [avatarName, closeModal]);
 
   const handleFavoriteToggle = useCallback(() => {
     setCharData({ fav: !characterData?.fav });
-  }, [setCharData, characterData?.fav]);
+  }, [characterData?.fav, setCharData]);
 
   const buttonLabel = useMemo(
     () => (isNewCharacter ? 'Create' : 'Save'),
@@ -316,6 +347,7 @@ const CharacterModal: React.FC<CharacterModalProps> = ({
               onChange={setCharData}
               growHeight={true}
               disabled={!isNewCharacter}
+              initialHeight={80}
             />
           </div>
         </Accordion>
@@ -333,6 +365,7 @@ const CharacterModal: React.FC<CharacterModalProps> = ({
             value={characterData?.description}
             onChange={setCharData}
             growHeight={true}
+            initialHeight={80}
           />
         </div>
 
@@ -349,6 +382,7 @@ const CharacterModal: React.FC<CharacterModalProps> = ({
             value={characterData?.first_mes}
             onChange={setCharData}
             growHeight={true}
+            initialHeight={80}
           />
         </div>
 
@@ -382,6 +416,7 @@ const CharacterModal: React.FC<CharacterModalProps> = ({
               placeholder={'A chat between {{user}} and {{char}}.'}
               onChange={setCharData}
               growHeight={true}
+              initialHeight={80}
             />
           </div>
 
@@ -419,6 +454,7 @@ const CharacterModal: React.FC<CharacterModalProps> = ({
               placeholder={'You are {{char}}, a helpful assistant.'}
               onChange={setCharData}
               growHeight={true}
+              initialHeight={80}
             />
           </div>
         </Accordion>

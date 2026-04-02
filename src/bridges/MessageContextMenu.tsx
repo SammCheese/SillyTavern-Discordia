@@ -1,7 +1,17 @@
 import { useEffect } from 'react';
 import { useContextMenu } from '../providers/contextMenuProvider';
+import type { ContextMenuItem } from '../components/common/ContextMenuEntry/ContextMenuEntry';
 
 const { messageEdit, deleteMessage } = await imports('@script');
+
+const allowedOriginalToolsTitle = [
+  '[title]Translate message',
+  '[title]Prompt',
+  '[title]Narrate',
+  '[title]Generate Image',
+  '[title]Embed file or image',
+  '[title]Create Branch',
+];
 
 const MessageContextMenu = () => {
   const { showContextMenu } = useContextMenu();
@@ -11,6 +21,35 @@ const MessageContextMenu = () => {
     navigator.clipboard.writeText(text).catch((err) => {
       dislog.error('Failed to copy text: ', err);
     });
+  };
+
+  const getOriginalTools = () => {
+    const toolsElem = document.querySelector('.extraMesButtons');
+    if (!toolsElem) return null;
+
+    const children = Array.from(toolsElem.children);
+    if (children.length === 0) return null;
+
+    const tools: ContextMenuItem[] = [];
+    children.forEach((child) => {
+      const oLabel =
+        child.getAttribute('data-i18n') ||
+        child.getAttribute('title') ||
+        child.getAttribute('aria-label') ||
+        '';
+
+      if (!allowedOriginalToolsTitle.includes(oLabel)) return;
+
+      const label = child.getAttribute('title') || oLabel || 'Unknown Tool';
+
+      tools.push({
+        label,
+        onClick: () =>
+          child.dispatchEvent(new MouseEvent('click', { bubbles: true })),
+      });
+    });
+
+    return tools;
   };
 
   useEffect(() => {
@@ -43,6 +82,8 @@ const MessageContextMenu = () => {
             messageEdit(id);
           },
         },
+        { label: '---', variant: 'separator' },
+        ...(getOriginalTools() || []),
         {
           label: '---',
           variant: 'separator',
