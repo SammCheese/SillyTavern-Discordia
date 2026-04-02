@@ -100,6 +100,7 @@ const Row = ({ index, style, data }: RowComponentProps<RowData>) => {
       text={entity.item?.name || entity.id}
       direction="right"
       containerWidth="100%"
+      containerHeight={'min-content'}
     >
       <ServerRow
         index={index}
@@ -271,6 +272,7 @@ const ServerBar = ({ entities, isInitialLoad = true }: ServerBarProps) => {
                     text={entity.item?.name || entity.id}
                     direction="right"
                     containerWidth="100%"
+                    containerHeight={'min-content'}
                   >
                     <ServerRow
                       key={entity.id}

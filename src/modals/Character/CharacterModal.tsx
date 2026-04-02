@@ -40,7 +40,7 @@ type CharacterModalProps<T extends Type = Type> = T extends 'create'
       avatarName: string;
     };
 
-const { getThumbnailUrl } = await imports('@script');
+const { getThumbnailUrl, getOneCharacter } = await imports('@script');
 const { getContext } = SillyTavern;
 
 interface BoundInputProps extends Omit<
@@ -96,6 +96,28 @@ const CharacterModal = ({
         : null,
     [avatarName, isNewCharacter],
   );
+
+  const isLazy = useMemo(
+    () => existingCharacter && existingCharacter?.shallow,
+    [existingCharacter],
+  );
+
+  useEffect(() => {
+    if (existingCharacter && isLazy) {
+      getOneCharacter(existingCharacter.avatar?.toString() || '')
+        .then(() => {
+          const fullChar = getContext().characters.find(
+            (ent) => ent.avatar?.toString() === avatarName,
+          );
+          if (fullChar) {
+            setCharacterData(fullChar);
+          }
+        })
+        .catch((error) => {
+          console.error('Error loading character:', error);
+        });
+    }
+  }, [avatarName, existingCharacter, isLazy]);
 
   const [characterData, setCharacterData] = useState<Character | null>(() => {
     if (existingCharacter) return existingCharacter;
