@@ -7,7 +7,6 @@ import { DISCORDIA_EVENTS } from '../../events/eventTypes';
 import { useModal } from '../../providers/modalProvider';
 import CharacterModal from '../../modals/Character/CharacterModal';
 import Skeleton, { SkeletonTheme } from 'react-loading-skeleton';
-import Tooltip from '../common/Tooltip/Tooltip';
 
 const ServerIcon = lazy(() => import('./Icons/ServerIcon'));
 const AddCharacterIcon = lazy(() => import('./Icons/AddCharacterIcon'));
@@ -96,20 +95,13 @@ const Row = ({ index, style, data }: RowComponentProps<RowData>) => {
   }
 
   return (
-    <Tooltip
-      text={entity.item?.name || entity.id}
-      direction="right"
-      containerWidth="100%"
-      containerHeight={'min-content'}
-    >
-      <ServerRow
-        index={index}
-        entity={entity}
-        style={style}
-        isSelected={selectedIndex === index}
-        onClick={handleClick}
-      />
-    </Tooltip>
+    <ServerRow
+      index={index}
+      entity={entity}
+      style={style}
+      isSelected={selectedIndex === index}
+      onClick={handleClick}
+    />
   );
 };
 
@@ -267,21 +259,13 @@ const ServerBar = ({ entities, isInitialLoad = true }: ServerBarProps) => {
             <>
               {filteredEntities.map(({ entity, index: actualIndex }) => {
                 return (
-                  <Tooltip
+                  <ServerRow
                     key={entity.id}
-                    text={entity.item?.name || entity.id}
-                    direction="right"
-                    containerWidth="100%"
-                    containerHeight={'min-content'}
-                  >
-                    <ServerRow
-                      key={entity.id}
-                      entity={entity}
-                      index={actualIndex}
-                      isSelected={selectedIndex === actualIndex}
-                      onClick={handleItemClick}
-                    />
-                  </Tooltip>
+                    entity={entity}
+                    index={actualIndex}
+                    isSelected={selectedIndex === actualIndex}
+                    onClick={handleItemClick}
+                  />
                 );
               })}
               <div id="characters-divider" className="divider" />
