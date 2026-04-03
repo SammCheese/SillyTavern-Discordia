@@ -5,7 +5,7 @@ export interface PopupProps {
   children?: ReactNode;
   title?: string;
   description?: string;
-  onConfirm?: () => void | Promise<void>;
+  onConfirm?: () => unknown;
   onCancel?: () => void;
   onClose?: () => void;
   confirmText?: string;
