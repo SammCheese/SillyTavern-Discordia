@@ -23,6 +23,8 @@ import Divider from '../../components/common/Divider/Divider';
 import TagManager from './TagManager';
 import IconButton from '../../components/common/IconButton/IconButton';
 import Tooltip from '../../components/common/Tooltip/Tooltip';
+import { usePopup } from '../../providers/popupProvider';
+import { importCharacter } from './helpers/charImport';
 
 type Type = 'edit' | 'create';
 
@@ -79,6 +81,7 @@ const CharacterModal = ({
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { closeModal } = useModal();
+  const { openPopup } = usePopup();
 
   const isNewCharacter = type === 'create';
 
@@ -267,6 +270,31 @@ const CharacterModal = ({
     if (characterData.name.trim() === '') return true;
     return false;
   }, [characterData, loading]);
+
+  const handleImport = useCallback(() => {
+    const doImport = async (file) => {
+      await importCharacter(file);
+      closeModal();
+    };
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.png,.json,.yaml,.yml,.charx,.byaf';
+    input.multiple = false;
+    input.onchange = () => {
+      const file = input.files?.[0];
+
+      if (!file) return;
+
+      openPopup(null, {
+        title: `Import Character from ${file?.name}?`,
+        confirmText: 'Import',
+        cancelText: 'Cancel',
+        onCancel: () => void 0,
+        onConfirm: () => doImport(file),
+      });
+    };
+    input.click();
+  }, [closeModal, openPopup]);
 
   return (
     <Modal>
@@ -468,12 +496,23 @@ const CharacterModal = ({
             </Button>
           </div>
         )}
-        <Button look={ButtonLook.TRANSPARENT} onClick={handleClose}>
-          Cancel
-        </Button>
-        <Button onClick={handleSave} disabled={disabled}>
-          {buttonLabel}
-        </Button>
+        <div className="mr-auto">
+          <Button look={ButtonLook.TRANSPARENT} onClick={handleClose}>
+            Cancel
+          </Button>
+        </div>
+        <div className="flex flex-row gap-4 ml-4">
+          {isNewCharacter && <Button onClick={handleImport}>Import</Button>}
+          {disabled ? (
+            <Tooltip text={loading ? `Loading...` : `Name must be filled out`}>
+              <Button onClick={handleSave} disabled={disabled}>
+                {buttonLabel}
+              </Button>
+            </Tooltip>
+          ) : (
+            <Button onClick={handleSave}>{buttonLabel}</Button>
+          )}
+        </div>
       </Modal.Footer>
     </Modal>
   );
