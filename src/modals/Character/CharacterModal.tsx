@@ -272,8 +272,9 @@ const CharacterModal = ({
   }, [characterData, loading]);
 
   const handleImport = useCallback(() => {
-    const doImport = async (file) => {
+    const doImport = async (file: File) => {
       await importCharacter(file);
+      refreshCharacterList();
       closeModal();
     };
     const input = document.createElement('input');
