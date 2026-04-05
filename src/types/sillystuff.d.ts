@@ -86,6 +86,17 @@ type Persona = {
   avatarURL: string;
 };
 
+type FullPersona = {
+  name: string;
+  avatar: string;
+  description: string;
+  depth?: number;
+  lorebook?: string;
+  position: number;
+  role?: number;
+  title?: string;
+};
+
 type GroupItem = {
   activation_strategy: number;
   allow_self_responses: boolean;

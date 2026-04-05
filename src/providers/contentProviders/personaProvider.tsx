@@ -7,6 +7,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
+import { DISCORDIA_EVENTS } from '../../events/eventTypes';
 
 export const PersonaContext = createContext<{
   personas: Persona[];
@@ -81,12 +82,17 @@ export const PersonaProvider = ({ children }: PersonaProviderProps) => {
   }, []);
 
   useEffect(() => {
+    eventSource.on(DISCORDIA_EVENTS.PERSONA_REFRESH, loadPersonas);
     eventSource.on(event_types.PERSONA_CHANGED, handlePersonaUpdate);
 
     return () => {
       eventSource.removeListener(
         event_types.PERSONA_CHANGED,
         handlePersonaUpdate,
+      );
+      eventSource.removeListener(
+        DISCORDIA_EVENTS.PERSONA_REFRESH,
+        loadPersonas,
       );
     };
   }, [handlePersonaUpdate]);
