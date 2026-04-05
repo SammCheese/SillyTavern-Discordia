@@ -1,23 +1,79 @@
-import { lazy, useEffect } from 'react';
+import { lazy, useEffect, useState } from 'react';
+import PersonaEditor from './components/PersonaEditor';
+import PersonaSelector from './components/PersonaSelector';
+import Divider from '../../../components/common/Divider/Divider';
+
+import { savePersonasData } from './helper';
+import { DISCORDIA_EVENTS } from '../../../events/eventTypes';
 
 const SettingsFrame = lazy(() => import('../base/Base'));
 
-const { saveSettingsDebounced } = await imports('@script');
+const { eventSource } = await imports('@script');
+
+type SillyPersona = Record<string, string>;
+type SillyPersonaDescription = Record<
+  string,
+  {
+    depth: number;
+    description: string;
+    lorebook: string;
+    position: number;
+    role: number;
+    title: string;
+  }
+>;
 
 const PersonaSettings = () => {
+  const [personas, setPersonas] = useState<FullPersona[]>(() => {
+    const personaList =
+      (SillyTavern.getContext().powerUserSettings.personas as SillyPersona) ??
+      [];
+    const descriptions =
+      (SillyTavern.getContext().powerUserSettings
+        .persona_descriptions as SillyPersonaDescription) ?? {};
+    return Object.entries(personaList).map(([avatar, name]) => ({
+      avatar,
+      name,
+      ...descriptions[avatar]!,
+    }));
+  });
+  const [selectedPersona, setSelectedPersona] = useState<string>(
+    SillyTavern.getContext().powerUserSettings.default_persona || '',
+  );
+  const [defaultPersona, setDefaultPersona] = useState<string>(
+    SillyTavern.getContext().powerUserSettings.default_persona || '',
+  );
+
   useEffect(() => {
     return () => {
-      saveSettingsDebounced();
+      savePersonasData(personas);
+      eventSource.emit(DISCORDIA_EVENTS.PERSONA_REFRESH);
     };
-  }, []);
+  }, [personas]);
 
   return (
     <SettingsFrame title="Persona Settings">
       <div className="settings-section">
-        <div className="text-2xlxl text-gray-500 text-center mt-20">
-          <span>Nothing to see here yet!</span>
-          <br />
-          <span>Check back later.</span>
+        <div className="pt-2">
+          <PersonaSelector
+            personas={personas}
+            selectedPersona={selectedPersona}
+            setSelectedPersona={setSelectedPersona}
+            setPersonas={setPersonas}
+            defaultPersona={defaultPersona}
+          />
+        </div>
+
+        <Divider />
+
+        <div>
+          <PersonaEditor
+            personas={personas}
+            selectedPersona={selectedPersona}
+            setPersonas={setPersonas}
+            defaultPersona={defaultPersona}
+            setDefaultPersona={setDefaultPersona}
+          />
         </div>
       </div>
     </SettingsFrame>
