@@ -12,6 +12,7 @@ interface PersonaEditorProps {
 }
 
 const { persona_description_positions } = await imports('@scripts/powerUser');
+const { setUserAvatar } = await imports('@scripts/personas');
 
 const PersonaEditor = ({
   personas,
@@ -20,18 +21,18 @@ const PersonaEditor = ({
   defaultPersona,
   setDefaultPersona,
 }: PersonaEditorProps) => {
-  const [persona, setPersona] = useState(
+  const [localPersona, setLocalPersona] = useState(
     personas.find((p) => p.avatar === selectedPersona),
   );
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect, @eslint-react/hooks-extra/no-direct-set-state-in-use-effect
-    setPersona(personas.find((p) => p.avatar === selectedPersona));
+    setLocalPersona(personas.find((p) => p.avatar === selectedPersona));
   }, [selectedPersona, personas]);
 
   const updateField = useMemo(() => {
     return (field: keyof FullPersona, value: string | number) => {
-      setPersona((prev) => {
+      setLocalPersona((prev) => {
         if (!prev) return prev;
         const updated = { ...prev, [field]: value };
         return updated;
@@ -68,9 +69,12 @@ const PersonaEditor = ({
   const handleDefaultChange = useCallback(() => {
     // @ts-expect-error false typing
     SillyTavern.getContext().powerUserSettings.default_persona =
-      persona?.avatar || '';
-    setDefaultPersona(persona?.avatar || '');
-  }, [persona?.avatar, setDefaultPersona]);
+      localPersona?.avatar || '';
+    setDefaultPersona(localPersona?.avatar || '');
+    setUserAvatar(localPersona?.avatar ?? 'user-default.png', {
+      toastPersonaNameChange: true,
+    });
+  }, [localPersona?.avatar, setDefaultPersona]);
 
   const positionOptions = [
     {
@@ -92,24 +96,26 @@ const PersonaEditor = ({
   return (
     <div className="persona-editor p-4 rounded">
       <h2 className="text-lg font-semibold mb-4">Edit Persona</h2>
-      {persona ? (
+      {localPersona ? (
         <div className="flex flex-col gap-4">
           <div className="flex flex-row gap-1 items-center justify-end w-full">
             <Input
-              value={persona?.name || ''}
+              value={localPersona?.name || ''}
               onChange={handleNameChange}
               placeholder="Enter a name for this persona..."
             />
             <IconButton
               faIcon="fa-solid fa-crown"
               tooltip="Make Default"
-              color={persona?.avatar === defaultPersona ? 'yellow' : 'gray'}
+              color={
+                localPersona?.avatar === defaultPersona ? 'yellow' : 'gray'
+              }
               onClick={handleDefaultChange}
             />
           </div>
           <div>
             <Input
-              value={persona?.description || ''}
+              value={localPersona?.description || ''}
               onChange={handleDescriptionChange}
               label="Description"
               placeholder={`Example:\n[{{user}} is a 28-year-old Romanian cat girl.]`}
@@ -121,13 +127,16 @@ const PersonaEditor = ({
           <div>
             <label className="block mb-1 font-medium">Position</label>
             <Select
-              value={persona.position ?? persona_description_positions.NONE}
+              value={
+                localPersona?.position ?? persona_description_positions.NONE
+              }
               options={positionOptions}
               onChange={handlePositionChange}
             />
-            {persona.position === persona_description_positions.AT_DEPTH && (
+            {localPersona?.position ===
+              persona_description_positions.AT_DEPTH && (
               <Input
-                value={persona.depth?.toString() || ''}
+                value={localPersona?.depth?.toString() || ''}
                 onChange={(value) => updateField('depth', parseInt(value, 10))}
                 label="Depth"
                 type="number"
