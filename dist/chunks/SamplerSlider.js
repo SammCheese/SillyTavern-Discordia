@@ -1,0 +1,1 @@
+import{r as e,j as s}from"./index.js";import{S as m}from"./Slider.js";const a=e.memo(({label:e,value:a,min:l,max:t,step:i,onChange:n})=>s.jsxs("div",{className:"flex flex-col mb-4 w-fit ",children:[s.jsx("label",{className:"mb-2 text-sm font-medium text-center",children:e}),s.jsx(m,{value:a,min:l,max:t??void 0,step:i,onChange:n})]}));export{a as S};
