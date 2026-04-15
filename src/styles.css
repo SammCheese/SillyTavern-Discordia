@@ -149,6 +149,28 @@ select {
   background-color: rgba(255, 255, 255, 0.05);
 }
 
+.editing-banner {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px;
+  background-color: rgba(255, 255, 255, 0.25);
+  border-radius: 4px;
+}
+.editing-banner .discordia-cancel-edit {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.8);
+  cursor: pointer;
+  padding: 4px;
+  transition: color 0.2s ease-in-out;
+}
+.editing-banner .discordia-cancel-edit:hover {
+  color: rgba(255, 255, 255, 1);
+}
+.discordia-editing {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
 dialog.popup {
   margin: auto;
 }
