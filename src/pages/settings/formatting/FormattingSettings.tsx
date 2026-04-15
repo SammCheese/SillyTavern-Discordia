@@ -1,7 +1,7 @@
 import { lazy, useCallback, useEffect, useMemo, useState } from 'react';
 import SystemPrompt from './sections/SystemPrompt';
 import Accordion from '../../../components/common/Accordion/Accordion';
-import type { MainAPIValues } from '../connection/services/connectionManager';
+import type { MainAPIValues } from '../connection/hooks/connectionManager';
 import SectionTitle from './components/SectionTitle';
 
 const SettingsFrame = lazy(() => import('../base/Base'));

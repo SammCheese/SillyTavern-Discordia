@@ -15,6 +15,13 @@ export const mockModules: Record<string, Record<string, any>> = {
     selectedGroup: null,
     characters: [],
     you: { name: 'User' },
+    eventSource: {
+      on: vi.fn(),
+      removeListener: vi.fn(),
+    },
+    event_types: {
+      CHAT_CHANGED: 'CHAT_CHANGED',
+    },
   },
   '@scripts/utils': {
     escapeHtml: vi.fn((str: string) => str),
@@ -80,6 +87,18 @@ export const setupGlobalImports = () => {
       },
     },
   };
+  (globalThis as any).$ = vi.fn(() => ({
+    on: vi.fn(),
+    off: vi.fn(),
+    append: vi.fn(),
+    find: vi.fn().mockReturnThis(),
+    each: vi.fn().mockReturnThis(),
+    css: vi.fn().mockReturnThis(),
+    remove: vi.fn(),
+    appendTo: vi.fn(),
+    hide: vi.fn(),
+    show: vi.fn(),
+  }));
   return (globalThis as any).imports;
 };
 

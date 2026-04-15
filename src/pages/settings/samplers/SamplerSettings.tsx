@@ -1,9 +1,12 @@
 import { lazy, useMemo } from 'react';
-import type { MainAPIValues } from '../connection/services/connectionManager';
+import type { MainAPIValues } from '../connection/hooks/connectionManager';
 
 const SettingsFrame = lazy(() => import('../base/Base'));
 const TextCompletionSamplerSettings = lazy(
   () => import('./kinds/TextCompletion'),
+);
+const ChatCompletionSamplerSettings = lazy(
+  () => import('./kinds/ChatCompletion'),
 );
 
 const SamplerSettings = () => {
@@ -12,6 +15,8 @@ const SamplerSettings = () => {
     switch (type) {
       case 'textgenerationwebui':
         return TextCompletionSamplerSettings;
+      case 'openai':
+        return ChatCompletionSamplerSettings;
       default:
         return null;
     }

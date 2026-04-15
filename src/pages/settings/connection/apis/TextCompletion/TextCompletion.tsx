@@ -5,7 +5,7 @@ import Input from '../../../../../components/common/Input/Input';
 import Checkbox from '../../../../../components/common/Checkbox/Checkbox';
 import Button from '../../../../../components/common/Button/Button';
 import Divider from '../../../../../components/common/Divider/Divider';
-import { useConnectionManager } from '../../services/connectionManager';
+import { useConnectionManager } from '../../hooks/connectionManager';
 import { getTextGenStatus } from '../../services/textgenConn';
 
 interface TextGenerationSettingsProps {

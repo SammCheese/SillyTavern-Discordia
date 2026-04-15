@@ -1,8 +1,9 @@
 import { useEffect } from 'react';
 import { useContextMenu } from '../providers/contextMenuProvider';
 import type { ContextMenuItem } from '../components/common/ContextMenuEntry/ContextMenuEntry';
+import MessageEditingBridge from './MessageEditing';
 
-const { messageEdit, deleteMessage } = await imports('@script');
+const { deleteMessage } = await imports('@script');
 
 const allowedOriginalToolsTitle = [
   '[title]Translate message',
@@ -15,6 +16,7 @@ const allowedOriginalToolsTitle = [
 
 const MessageContextMenu = () => {
   const { showContextMenu } = useContextMenu();
+  const { startEditing, isEditMode } = MessageEditingBridge();
 
   const handleCopyMessage = (el) => {
     const text = el.querySelector('.mes_text')?.innerText;
@@ -77,9 +79,9 @@ const MessageContextMenu = () => {
       showContextMenu(event as unknown as React.MouseEvent, [
         {
           label: 'Edit Message',
-          disabled: isSystem === 'true',
+          disabled: isSystem === 'true' || isEditMode,
           onClick: () => {
-            messageEdit(id);
+            startEditing({ id });
           },
         },
         { label: '---', variant: 'separator' },
@@ -113,7 +115,7 @@ const MessageContextMenu = () => {
     return () => {
       chatContainer.removeEventListener('contextmenu', handleRightClick);
     };
-  }, [showContextMenu]);
+  }, [isEditMode, showContextMenu, startEditing]);
 
   return null;
 };

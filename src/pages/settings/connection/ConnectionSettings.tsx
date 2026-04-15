@@ -4,7 +4,8 @@ import Divider from '../../../components/common/Divider/Divider';
 import {
   useConnectionManager,
   type MainAPIValues,
-} from './services/connectionManager';
+} from './hooks/connectionManager';
+import ChatCompletion from './apis/ChatCompletion/ChatCompletion';
 
 const SettingsFrame = lazy(() => import('../base/Base'));
 const TextGenerationSettings = lazy(
@@ -64,7 +65,7 @@ const ConnectionSettings = () => {
       case 'kobold':
         return <div>Kobold API Connection Settings</div>;
       case 'openai':
-        return <div>OpenAI API Connection Settings</div>;
+        return <ChatCompletion key={selectedProfileId} />;
       case 'novel':
         return <div>Novel API Connection Settings</div>;
       case 'textgenerationwebui':
