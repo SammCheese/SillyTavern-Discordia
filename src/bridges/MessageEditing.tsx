@@ -313,6 +313,7 @@ const MessageEditingBridge = (message?: BridgeMessage) => {
         .val(nativeText)
         .trigger('input', { source: 'discordia-main-input' })
         .trigger('focus');
+      inputField.css({ height: 'auto' });
 
       bindBridgeEvents(id);
     },
