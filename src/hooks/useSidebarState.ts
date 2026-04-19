@@ -85,6 +85,8 @@ export const useSidebarState = () => {
 
   const isFetchingRef = useRef(false);
   const pendingRefreshRef = useRef(false);
+  const activeFetchIdRef = useRef(0);
+  const refreshChatsRef = useRef<(forceRecent?: boolean) => void>(() => {});
   const openRef = useRef(state.open);
 
   useEffect(() => {
@@ -114,7 +116,7 @@ export const useSidebarState = () => {
     }
   }, []);
 
-  const refreshChats = useCallback(async (forceRecent = false) => {
+  const refreshChats = useCallback((forceRecent = false) => {
     if (isFetchingRef.current && !forceRecent) {
       pendingRefreshRef.current = true;
       return;
@@ -123,7 +125,20 @@ export const useSidebarState = () => {
     dispatch({ type: 'SET_CONTEXT', context: forceRecent ? 'recent' : 'chat' });
 
     isFetchingRef.current = true;
+    const fetchId = ++activeFetchIdRef.current;
     dispatch({ type: 'REFRESH_START' });
+
+    const finalizeRefresh = () => {
+      if (activeFetchIdRef.current !== fetchId) return;
+
+      isFetchingRef.current = false;
+
+      if (pendingRefreshRef.current) {
+        pendingRefreshRef.current = false;
+        refreshChatsRef.current();
+      }
+      dispatch({ type: 'SET_INITIAL_LOAD', isInitialLoad: false });
+    };
 
     try {
       const { characterId, groupId } = SillyTavern.getContext();
@@ -133,28 +148,31 @@ export const useSidebarState = () => {
         characterId !== undefined &&
         Number(characterId) >= 0;
 
-      let chats: Chat[] = [];
+      let chats: Promise<Chat[]> = Promise.resolve([]);
 
       if (hasGroup) {
-        chats = (await getGroupPastChats(groupId.toString())) as Chat[];
+        chats = getGroupPastChats(groupId.toString()) as Promise<Chat[]>;
       } else if (hasCharacter) {
-        chats = await getPastCharacterChats();
+        chats = getPastCharacterChats();
       }
 
-      dispatch({
-        type: 'REFRESH_SUCCESS',
-        chats,
-      });
+      chats
+        .then((chats) => {
+          if (activeFetchIdRef.current !== fetchId) return;
+          dispatch({
+            type: 'REFRESH_SUCCESS',
+            chats,
+          });
+        })
+        .catch((error) => {
+          if (activeFetchIdRef.current !== fetchId) return;
+          dislog.error('Failed to refresh chats:', error);
+          dispatch({ type: 'REFRESH_FAILURE', error });
+        })
+        .finally(finalizeRefresh);
     } catch (error) {
       dispatch({ type: 'REFRESH_FAILURE', error: error as Error });
-    } finally {
-      isFetchingRef.current = false;
-
-      if (pendingRefreshRef.current) {
-        pendingRefreshRef.current = false;
-        refreshChats();
-      }
-      dispatch({ type: 'SET_INITIAL_LOAD', isInitialLoad: false });
+      finalizeRefresh();
     }
   }, []);
 
@@ -163,6 +181,10 @@ export const useSidebarState = () => {
     refreshCharacters();
     refreshRecentChats();
   }, [refreshCharacters, refreshRecentChats]);
+
+  useEffect(() => {
+    refreshChatsRef.current = refreshChats;
+  }, [refreshChats]);
 
   const handleFullRefresh = useCallback(() => {
     refreshCharacters();

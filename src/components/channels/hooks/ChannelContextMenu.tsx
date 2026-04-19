@@ -46,20 +46,26 @@ export const useChannelContextMenu = (chat: Chat) => {
     }
   }, [chat]);
 
-  const openChat = useCallback(async () => {
+  const openChat = useCallback(() => {
     if (!chat) return;
 
-    // Handle Recent Chats
-    if (chat?.char_id) {
-      await openCharacterChat(chat.char_id);
-    } else {
+    const openAction = () => {
+      // Handle Recent Chats
+      if (chat?.char_id) {
+        return openCharacterChat(chat.char_id);
+      }
+
       const { groupId, characterId } = SillyTavern.getContext();
       if (groupId !== null && !characterId) {
-        await openGroupChat(groupId, chat?.file_name);
-      } else {
-        await openCharacterChat(chat?.file_id);
+        return openGroupChat(groupId, chat?.file_name);
       }
-    }
+
+      return openCharacterChat(chat?.file_id);
+    };
+
+    void Promise.resolve(openAction()).catch((error) => {
+      dislog.error('Error opening chat:', error);
+    });
   }, [chat]);
 
   const handleDelete = useCallback(() => {

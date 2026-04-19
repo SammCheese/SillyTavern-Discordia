@@ -1,4 +1,12 @@
-import { useCallback, useEffect, useMemo, lazy, memo, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  lazy,
+  memo,
+  useRef,
+  useState,
+} from 'react';
 import { List, type RowComponentProps } from 'react-window';
 import { selectCharacter, selectGroup } from '../../utils/utils';
 import { useSearch } from '../../providers/searchProvider';
@@ -7,6 +15,7 @@ import { DISCORDIA_EVENTS } from '../../events/eventTypes';
 import { useModal } from '../../providers/modalProvider';
 import CharacterModal from '../../modals/Character/CharacterModal';
 import Skeleton, { SkeletonTheme } from 'react-loading-skeleton';
+import { useSidebar } from '../../providers/contentProviders/sidebarStateProvider';
 
 const ServerIcon = lazy(() => import('./Icons/ServerIcon'));
 const AddCharacterIcon = lazy(() => import('./Icons/AddCharacterIcon'));
@@ -105,22 +114,28 @@ const Row = ({ index, style, data }: RowComponentProps<RowData>) => {
   );
 };
 
-interface ServerBarProps {
-  entities: Entity[];
-  isInitialLoad?: boolean;
-}
-
-const ServerBar = ({ entities, isInitialLoad = true }: ServerBarProps) => {
+const ServerBar = () => {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const latestSelectionRequestRef = useRef(0);
   const { searchQuery } = useSearch();
   const { openModal } = useModal();
+  const { entities, isInitialLoad } = useSidebar();
   //const { extensions } = useExtensionState();
 
-  const onHomeClickHandler = useCallback(async () => {
+  const onHomeClickHandler = useCallback(() => {
     setSelectedIndex(null);
-    await closeCurrentChat();
-    // Signal Sidebar to go back to recent chats
-    await eventSource.emit(DISCORDIA_EVENTS.HOME_BUTTON_CLICKED);
+    void Promise.resolve(closeCurrentChat())
+      .catch((error) => {
+        dislog.error('Error closing current chat:', error);
+      })
+      .finally(() => {
+        // Signal Sidebar to go back to recent chats
+        void Promise.resolve(
+          eventSource.emit(DISCORDIA_EVENTS.HOME_BUTTON_CLICKED),
+        ).catch((error) => {
+          dislog.error('Error emitting home click event:', error);
+        });
+      });
   }, []);
 
   const getGlobalIndex = useCallback(() => {
@@ -148,8 +163,24 @@ const ServerBar = ({ entities, isInitialLoad = true }: ServerBarProps) => {
     return null;
   }, [entities]);
 
+  const runOptimisticEntitySelect = useCallback(
+    (index: number, selectAction: () => unknown) => {
+      const requestId = ++latestSelectionRequestRef.current;
+      setSelectedIndex(index);
+
+      void Promise.resolve(selectAction()).catch((error) => {
+        dislog.error('Error selecting entity:', error);
+
+        if (latestSelectionRequestRef.current === requestId) {
+          setSelectedIndex(getGlobalIndex());
+        }
+      });
+    },
+    [getGlobalIndex],
+  );
+
   const handleItemClick = useCallback(
-    async (entity: Entity, index: number) => {
+    (entity: Entity, index: number) => {
       if (isGenerating()) {
         toastr.warning(
           'Please wait or abort the current generation before switching chats.',
@@ -157,35 +188,29 @@ const ServerBar = ({ entities, isInitialLoad = true }: ServerBarProps) => {
         return;
       }
 
-      try {
-        setSelectedIndex(index);
+      if (entity.type === 'group') {
+        const groupId = entity.id.toString();
+        const group = SillyTavern.getContext().groups.find(
+          (g) => g.id.toString() === groupId,
+        );
 
-        if (entity.type === 'group') {
-          const groupId = entity.id.toString();
-          const group = SillyTavern.getContext().groups.find(
-            (g) => g.id.toString() === groupId,
-          );
+        if (!group) return;
 
-          if (!group) return;
-
-          // Prevent sidebar from falling back to recents while IDs are cleared.
-          eventSource.emit(DISCORDIA_EVENTS.CHAT_SWITCH_PENDING);
-          await selectGroup({ group: entity });
-        } else {
-          const char_id = characters.findIndex(
-            (c) => c.avatar === entity?.item?.avatar,
-          );
-          if (char_id === -1) return;
-
-          eventSource.emit(DISCORDIA_EVENTS.CHAT_SWITCH_PENDING);
-          await selectCharacter(char_id);
-        }
-      } catch (error) {
-        dislog.error('Error selecting entity:', error);
-        getGlobalIndex();
+        // Prevent sidebar from falling back to recents while IDs are cleared.
+        eventSource.emit(DISCORDIA_EVENTS.CHAT_SWITCH_PENDING);
+        runOptimisticEntitySelect(index, () => selectGroup({ group: entity }));
+        return;
       }
+
+      const char_id = characters.findIndex(
+        (c) => c.avatar === entity?.item?.avatar,
+      );
+      if (char_id === -1) return;
+
+      eventSource.emit(DISCORDIA_EVENTS.CHAT_SWITCH_PENDING);
+      runOptimisticEntitySelect(index, () => selectCharacter(char_id));
     },
-    [getGlobalIndex],
+    [runOptimisticEntitySelect],
   );
 
   const syncIndex = useCallback(() => {

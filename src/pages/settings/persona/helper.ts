@@ -1,4 +1,7 @@
-const { saveSettingsDebounced } = await imports('@script');
+const { getRequestHeaders, getThumbnailUrl, saveSettingsDebounced } =
+  await imports('@script');
+const { ensureImageFormatSupported } = await imports('@scripts/utils');
+const { getUserAvatar, getUserAvatars } = await imports('@scripts/personas');
 
 export const deletePersona = (avatarName: string) => {
   const context = SillyTavern.getContext();
@@ -102,4 +105,54 @@ export const savePersonasData = (personas: FullPersona[]) => {
   context.powerUserSettings.persona_descriptions = newDescriptions;
 
   saveSettingsDebounced();
+};
+
+export const updatePersonaAvatarImage = async (
+  avatarName: string,
+  rawFile: File,
+) => {
+  if (!avatarName || !(rawFile instanceof File)) {
+    throw new Error('Invalid persona avatar update payload');
+  }
+
+  const file = await ensureImageFormatSupported(rawFile);
+  const formData = new FormData();
+  formData.append('avatar', file);
+  formData.append('overwrite_name', avatarName);
+
+  const response = await fetch('/api/avatars/upload', {
+    method: 'POST',
+    headers: getRequestHeaders({ omitContentType: true }),
+    cache: 'no-cache',
+    body: formData,
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to upload persona avatar: ${response.statusText}`);
+  }
+
+  const data = await response.json();
+  const updatedAvatar = String(data?.path || avatarName);
+
+  await fetch(getUserAvatar(updatedAvatar), { cache: 'reload' });
+  await fetch(getThumbnailUrl('persona', updatedAvatar), { cache: 'reload' });
+  await getUserAvatars(true, updatedAvatar);
+
+  return updatedAvatar;
+};
+
+export const withCacheBust = (
+  url: string,
+  nonce: string | number | null | undefined,
+) => {
+  if (!url || nonce === null || nonce === undefined) {
+    return url;
+  }
+
+  const hashIndex = url.indexOf('#');
+  const baseUrl = hashIndex >= 0 ? url.slice(0, hashIndex) : url;
+  const hash = hashIndex >= 0 ? url.slice(hashIndex) : '';
+  const separator = baseUrl.includes('?') ? '&' : '?';
+
+  return `${baseUrl}${separator}dc=${encodeURIComponent(String(nonce))}${hash}`;
 };

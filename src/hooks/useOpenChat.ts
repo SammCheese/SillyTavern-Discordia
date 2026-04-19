@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useRef, useState } from 'react';
 
 import { selectCharacter, selectGroup } from '../utils/utils';
 
@@ -6,6 +6,9 @@ const { openCharacterChat, isGenerating } = await imports('@script');
 const { openGroupChat } = await imports('@scripts/groupChats');
 
 export function useOpenChat() {
+  const [currentChatId, setCurrentChatId] = useState<string | null>(null);
+  const latestOpenRequestRef = useRef(0);
+
   const isSelectedChat = useCallback((chat: Chat): boolean => {
     try {
       // file_id is used for character chats, file_name for group chats
@@ -37,8 +40,26 @@ export function useOpenChat() {
     return false;
   }, []);
 
+  const runOptimisticOpen = useCallback(
+    (chatId: string | null, openAction: () => unknown) => {
+      const previousChatId = SillyTavern.getContext().chatId ?? null;
+      const requestId = ++latestOpenRequestRef.current;
+
+      setCurrentChatId(chatId);
+
+      void Promise.resolve(openAction()).catch((error) => {
+        dislog.error('Failed to open chat:', error);
+
+        if (latestOpenRequestRef.current === requestId) {
+          setCurrentChatId(previousChatId);
+        }
+      });
+    },
+    [],
+  );
+
   const openChat = useCallback(
-    async (chat: Chat): Promise<void> => {
+    (chat: Chat): void => {
       if (!chat) return;
 
       // Safety, opening a chat may corrupt chat otherwise.
@@ -51,6 +72,8 @@ export function useOpenChat() {
 
       if (isSelectedChat(chat)) return;
 
+      const targetChatId = chat.file_id ?? chat.file_name ?? null;
+
       const entityOpen = isEntityOpen();
 
       // Entity already open
@@ -58,9 +81,13 @@ export function useOpenChat() {
         const isGroup = chat?.file_id === undefined;
         if (isGroup) {
           const { groupId } = SillyTavern.getContext();
-          await openGroupChat(groupId!, chat.file_name);
+          runOptimisticOpen(targetChatId, () =>
+            openGroupChat(groupId!, chat.file_name),
+          );
         } else if (!isGroup) {
-          await openCharacterChat(chat.file_id);
+          runOptimisticOpen(targetChatId, () =>
+            openCharacterChat(chat.file_id),
+          );
         }
         return;
       }
@@ -69,19 +96,26 @@ export function useOpenChat() {
       if (!entityOpen) {
         if (chat.is_group) {
           // Selecting a group with a specific chat
-          await selectGroup({
-            id: chat.group,
-            chat_id: chat.file_name,
-          });
-        } else if (chat?.char_id !== undefined) {
+          runOptimisticOpen(targetChatId, () =>
+            selectGroup({
+              id: chat.group,
+              chat_id: chat.file_name,
+            }),
+          );
+        } else {
+          const charId = chat.char_id;
+          if (typeof charId !== 'number') return;
+
           // Selecting a character with a specific chat
-          await selectCharacter(chat.char_id, chat.file_id);
+          runOptimisticOpen(targetChatId, () =>
+            selectCharacter(charId, chat.file_id),
+          );
         }
         return;
       }
     },
-    [isCurrentlyGenerating, isSelectedChat, isEntityOpen],
+    [isCurrentlyGenerating, isSelectedChat, isEntityOpen, runOptimisticOpen],
   );
 
-  return { openChat, isSelectedChat } as const;
+  return { openChat, isSelectedChat, currentChatId, setCurrentChatId } as const;
 }
