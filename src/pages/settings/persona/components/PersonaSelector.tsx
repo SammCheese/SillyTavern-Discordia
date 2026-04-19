@@ -9,6 +9,7 @@ interface PersonaSelectorProps {
   setSelectedPersona?: (avatar: string) => void;
   setPersonas: (prev) => void;
   defaultPersona: string;
+  avatarRefreshNonce: number;
 }
 
 const PersonaSelector = ({
@@ -17,6 +18,7 @@ const PersonaSelector = ({
   setSelectedPersona,
   setPersonas,
   defaultPersona,
+  avatarRefreshNonce,
 }: PersonaSelectorProps) => {
   const { openPopup } = usePopup();
 
@@ -98,6 +100,7 @@ const PersonaSelector = ({
             onSelect={handleSetSelectedPersona}
             onDelete={handleDelete}
             defaultPersona={defaultPersona}
+            avatarRefreshNonce={avatarRefreshNonce}
           />
         ))}
         <div

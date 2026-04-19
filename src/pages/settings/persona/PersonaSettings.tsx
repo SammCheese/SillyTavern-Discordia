@@ -43,6 +43,9 @@ const PersonaSettings = () => {
   const [defaultPersona, setDefaultPersona] = useState<string>(
     SillyTavern.getContext().powerUserSettings.default_persona || '',
   );
+  const [avatarRefreshNonce, setAvatarRefreshNonce] = useState(() =>
+    Date.now(),
+  );
 
   useEffect(() => {
     return () => {
@@ -61,6 +64,7 @@ const PersonaSettings = () => {
             setSelectedPersona={setSelectedPersona}
             setPersonas={setPersonas}
             defaultPersona={defaultPersona}
+            avatarRefreshNonce={avatarRefreshNonce}
           />
         </div>
 
@@ -73,6 +77,8 @@ const PersonaSettings = () => {
             setPersonas={setPersonas}
             defaultPersona={defaultPersona}
             setDefaultPersona={setDefaultPersona}
+            avatarRefreshNonce={avatarRefreshNonce}
+            onAvatarUpdated={() => setAvatarRefreshNonce(Date.now())}
           />
         </div>
       </div>

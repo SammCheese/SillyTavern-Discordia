@@ -1,4 +1,5 @@
 import { memo, useCallback, useMemo } from 'react';
+import { withCacheBust } from '../helper';
 
 const { getThumbnailUrl } = await imports('@script');
 
@@ -8,6 +9,7 @@ interface PersonaCardProps {
   onSelect?: (avatar: string) => void;
   onDelete?: (avatar: string) => void;
   defaultPersona: string;
+  avatarRefreshNonce: number;
 }
 
 const PersonaCard = ({
@@ -16,10 +18,14 @@ const PersonaCard = ({
   onSelect,
   onDelete,
   defaultPersona,
+  avatarRefreshNonce,
 }: PersonaCardProps) => {
   const imgSrc = useMemo(() => {
-    return getThumbnailUrl('persona', persona.avatar ?? 'default-user.png');
-  }, [persona.avatar]);
+    return withCacheBust(
+      getThumbnailUrl('persona', persona.avatar || 'default-user.png'),
+      avatarRefreshNonce,
+    );
+  }, [avatarRefreshNonce, persona.avatar]);
 
   const handleDelete = useCallback(() => {
     onDelete?.(persona.avatar);
