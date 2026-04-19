@@ -9,6 +9,7 @@ import { useOpenChat } from '../../hooks/useOpenChat';
 import Skeleton, { SkeletonTheme } from 'react-loading-skeleton';
 import NewChatButton from './NewChatButton';
 import ChannelHeaderEntry from './ChannelHeaderEntry';
+import { useSidebar } from '../../providers/contentProviders/sidebarStateProvider';
 
 const Divider = lazy(() => import('../common/Divider/Divider'));
 const ChannelEntry = lazy(() => import('./ChannelEntry'));
@@ -33,26 +34,19 @@ const FormattingSettings = lazy(
   () => import('../../pages/settings/formatting/FormattingSettings'),
 );
 
-interface ChannelBarProps {
-  icons: Icon[] | null;
-  chats: Chat[];
-  recentChats: Chat[];
-  setOpen: (value: boolean) => void;
-  isLoadingChats?: boolean;
-  isInitialLoad?: boolean;
-}
-
 const { doNewChat, eventSource, event_types } = await imports('@script');
 
 const ChannelRow = ({
   index,
   style,
   chats,
+  currentChatId,
   onClick,
   isSelectedChat,
   makeAvatar,
 }: RowComponentProps & {
   chats: Chat[];
+  currentChatId: string | null;
   onClick: (chat: Chat) => void;
   isSelectedChat: (chat: Chat) => boolean;
   makeAvatar: (props: { chat: Chat }) => string;
@@ -60,8 +54,10 @@ const ChannelRow = ({
   const chat = chats[index]!;
 
   const isSelected = useMemo(
-    () => isSelectedChat(chat),
-    [chat, isSelectedChat],
+    () =>
+      currentChatId === (chat.file_id ?? chat.file_name) ||
+      isSelectedChat(chat),
+    [chat, currentChatId, isSelectedChat],
   );
   const avatar = useMemo(() => makeAvatar({ chat }), [chat, makeAvatar]);
 
@@ -77,18 +73,14 @@ const ChannelRow = ({
   );
 };
 
-const ChannelBar = ({
-  icons,
-  chats,
-  recentChats,
-  setOpen,
-  isLoadingChats = false,
-  isInitialLoad = true,
-}: ChannelBarProps) => {
+const ChannelBar = () => {
   const [context, setContext] = useState('recent');
   const { openPage } = usePage();
   const { setSearchQuery } = useSearch();
-  const { openChat, isSelectedChat } = useOpenChat();
+  const { openChat, isSelectedChat, currentChatId, setCurrentChatId } =
+    useOpenChat();
+  const { chats, recentChats, isLoadingChats, setOpen, isInitialLoad, icons } =
+    useSidebar();
 
   const handleToolclick = useCallback(
     (icon: Icon) => {
@@ -120,8 +112,8 @@ const ChannelBar = ({
   );
 
   const handleChannelClick = useCallback(
-    async (chat: Chat) => {
-      await openChat(chat);
+    (chat: Chat) => {
+      openChat(chat);
       if (window.innerWidth <= 1000) setOpen(false);
     },
     [openChat, setOpen],
@@ -152,6 +144,7 @@ const ChannelBar = ({
         setContext('chat');
       } else {
         setContext('recent');
+        setCurrentChatId(null);
       }
     };
     eventSource.on(event_types.CHAT_CHANGED, handleChatChange);
@@ -159,7 +152,7 @@ const ChannelBar = ({
     return () => {
       eventSource.removeListener(event_types.CHAT_CHANGED, handleChatChange);
     };
-  }, []);
+  }, [setCurrentChatId]);
 
   const title = context === 'recent' ? 'Recent Chats' : 'Chats';
 
@@ -201,7 +194,7 @@ const ChannelBar = ({
               </SkeletonTheme>
             )}
 
-            {chatsMemo.length > 50 ? (
+            {chatsMemo.length > 30 ? (
               <List
                 rowComponent={ChannelRow}
                 rowCount={chatsMemo.length}
@@ -210,7 +203,8 @@ const ChannelBar = ({
                   onClick: handleChannelClick,
                   isSelectedChat,
                   makeAvatar,
-                  chats,
+                  chats: chatsMemo,
+                  currentChatId,
                 }}
                 overscanCount={5}
                 style={{ width: '100%' }}
@@ -221,7 +215,10 @@ const ChannelBar = ({
                   chat={chat}
                   key={chat.file_id || index}
                   onClick={handleChannelClick}
-                  isSelected={isSelectedChat(chat)}
+                  isSelected={
+                    currentChatId === (chat.file_id ?? chat.file_name) ||
+                    isSelectedChat(chat)
+                  }
                   avatar={makeAvatar({ chat })}
                 />
               ))

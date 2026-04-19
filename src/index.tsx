@@ -19,6 +19,7 @@ import Compose from './app/Compose';
 import ErrorBoundary from './components/common/ErrorBoundary/ErrorBoundary';
 
 import App from './app/App';
+import { SidebarProvider } from './providers/contentProviders/sidebarStateProvider';
 
 let failedStart = false;
 
@@ -65,6 +66,7 @@ const startApp = (safeStart: boolean = false) => {
       // Functionality Provider
       BackHandlerProvider,
       // Data Providers
+      SidebarProvider,
       ExtensionProvider,
       PersonaProvider,
       // UI Providers

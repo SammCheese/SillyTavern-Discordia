@@ -1,23 +1,14 @@
 import { lazy, memo, useCallback } from 'react';
 import ErrorBoundary from '../common/ErrorBoundary/ErrorBoundary';
 import { useBackHandler } from '../../hooks/useBackHandler';
+import { useSidebar } from '../../providers/contentProviders/sidebarStateProvider';
 
 const ProfileMount = lazy(() => import('../ProfileMount/ProfileMount'));
 const ChannelBar = lazy(() => import('../channels/ChannelBar'));
 const ServerBar = lazy(() => import('../servers/ServerBar'));
 
-interface SideBarProps {
-  open: boolean;
-  setOpen: (value: boolean) => void;
-  entities: Entity[];
-  chats: Chat[];
-  recentChats: Chat[];
-  icons: Icon[] | null;
-  isLoadingChats?: boolean;
-  isInitialLoad?: boolean;
-}
-
-const SideBar = ({ ...state }: SideBarProps) => {
+const SideBar = () => {
+  const state = useSidebar();
   const handleBack = useCallback(() => {
     state.setOpen(false);
   }, [state]);
@@ -33,18 +24,8 @@ const SideBar = ({ ...state }: SideBarProps) => {
         }`}
       >
         <div id="server-container">
-          <ServerBar
-            entities={state.entities}
-            isInitialLoad={state.isInitialLoad}
-          />
-          <ChannelBar
-            recentChats={state.recentChats}
-            icons={state.icons}
-            chats={state.chats}
-            setOpen={state.setOpen}
-            isLoadingChats={state.isLoadingChats}
-            isInitialLoad={state.isInitialLoad}
-          />
+          <ServerBar />
+          <ChannelBar />
         </div>
         <div id="user-container">
           <ProfileMount icons={state.icons} />
