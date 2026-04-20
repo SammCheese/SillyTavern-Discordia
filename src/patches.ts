@@ -10,7 +10,7 @@ import {
   unpatchSpinner,
 } from './patches/unpatch';
 
-type Patch = {
+export type Patch = {
   name: string;
   run: () => void;
   antipatch?: () => void;
@@ -31,6 +31,22 @@ const patches: Patch[] = [
   },
   { name: 'poolDOMExtensions', run: poolDOMExtensions },
 ];
+
+export const addPatch = (patch: Patch) => {
+  patches.push(patch);
+};
+
+export const removePatch = (name: string) => {
+  const index = patches.findIndex((patch) => patch.name === name);
+  if (index !== -1) {
+    patches.splice(index, 1);
+  }
+};
+
+export const getPatches = () => patches;
+
+export const getPatchByName = (name: string) =>
+  patches.find((patch) => patch.name === name);
 
 export const performPatches = async () => {
   for (const patch of patches) {

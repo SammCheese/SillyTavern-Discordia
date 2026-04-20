@@ -5,12 +5,14 @@ import {
   useState,
   type ReactNode,
   useMemo,
+  useEffect,
   type JSX,
 } from 'react';
 import { createPortal } from 'react-dom';
 import { useBackHandler } from '../hooks/useBackHandler';
 import ErrorBoundary from '../components/common/ErrorBoundary/ErrorBoundary';
 import Popup, { type PopupProps } from '../components/common/Popup/Popup';
+import { setDiscordiaPopupController } from '../apis/extensionAPI';
 
 export const PopupContext = createContext<{
   openPopup: (popup: ReactNode | JSX.Element, options?: PopupProps) => void;
@@ -52,6 +54,17 @@ export const PopupProvider = ({ children }: { children: ReactNode }) => {
     () => ({ openPopup, closePopup }),
     [openPopup, closePopup],
   );
+
+  useEffect(() => {
+    setDiscordiaPopupController({
+      open: (popup, options) => openPopup(popup, options as PopupProps),
+      close: closePopup,
+    });
+
+    return () => {
+      setDiscordiaPopupController(null);
+    };
+  }, [openPopup, closePopup]);
 
   return (
     <ErrorBoundary>

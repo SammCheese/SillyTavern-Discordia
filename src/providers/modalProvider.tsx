@@ -12,6 +12,7 @@ import {
 import { createPortal } from 'react-dom';
 import ErrorBoundary from '../components/common/ErrorBoundary/ErrorBoundary';
 import { useBackHandler } from '../hooks/useBackHandler';
+import { setDiscordiaModalController } from '../apis/extensionAPI';
 
 export const ModalContext = createContext<{
   openModal: (modal: ReactNode) => number;
@@ -146,6 +147,18 @@ export function ModalProvider({ children }: { children: ReactNode }) {
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [closeModal]);
+
+  useEffect(() => {
+    setDiscordiaModalController({
+      open: openModal,
+      close: closeModal,
+      closeAll,
+    });
+
+    return () => {
+      setDiscordiaModalController(null);
+    };
+  }, [openModal, closeModal, closeAll]);
 
   const container = document.getElementById('discordia-root') || document.body;
 
