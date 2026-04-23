@@ -9,6 +9,8 @@ const splashTexts = [
   'Loading your chat experience...',
   'Preparing the fun...',
   'Delaying reality...',
+  'Where have you been...?',
+  'Follow me into the endless night...',
 ];
 
 export const overrideSpinner = () => {
@@ -17,10 +19,14 @@ export const overrideSpinner = () => {
     // Backup for unpatch
     window.discordia.backups.originalLoadSpinner = loadSpinner.clone();
 
+    const getRandomSplashText = () => {
+      const randomIndex = Math.floor(Math.random() * splashTexts.length);
+      return splashTexts[randomIndex];
+    };
+
     if (loadSpinner) {
       loadSpinner.remove();
-      const randomIndex = Math.floor(Math.random() * splashTexts.length);
-      const randomText = splashTexts[randomIndex];
+      const randomText = getRandomSplashText();
       const parent = $('#loader');
       const newSpinner = $(`
       <div id="load-spinner">

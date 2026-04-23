@@ -10,7 +10,7 @@ const allowedOriginalToolsTitle = [
   '[title]Prompt',
   '[title]Narrate',
   '[title]Generate Image',
-  '[title]Embed file or image',
+  //'[title]Embed file or image',
   '[title]Create Branch',
 ];
 

@@ -41,6 +41,40 @@
   );
 
   --color-accordion-header: hsl(240 calc(1 * 4%) 60.784% /0.0784313725490196);
+
+  --font-family-base:
+    'gg-sans', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  --default-font-family: var(--font-family-base);
+  --font-gg-sans: 'gg-sans', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  --font-gg-sans-medium:
+    'gg-sans-medium', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  --font-gg-sans-bold: 'gg-sans-bold', 'Segoe UI', Tahoma, Geneva, Verdana;
+}
+
+@font-face {
+  font-family: 'gg-sans-medium';
+  src: url('../assets/fonts/gg-sans-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-size: 26px;
+}
+
+@font-face {
+  font-family: 'gg-sans';
+  src: url('../assets/fonts/gg-sans-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-size: 26px;
+}
+
+@font-face {
+  font-family: 'gg-sans-bold';
+  src: url('../assets/fonts/gg-sans-Bold.ttf') format('truetype');
+  font-weight: 400;
+  font-size: 26px;
+}
+
+body {
+  font-family:
+    'gg-sans-medium', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
 }
 
 @media (min-width: 601px) and (max-width: 1000px) {
@@ -147,6 +181,17 @@ select {
 
 .mes:hover {
   background-color: rgba(255, 255, 255, 0.05);
+}
+
+.mes_text,
+.name_text {
+  font-family:
+    'gg-sans-medium', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+  font-size: large;
+}
+
+.timestamp {
+  font-size: small !important;
 }
 
 .editing-banner {

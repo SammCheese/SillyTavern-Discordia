@@ -61,7 +61,16 @@ const ChannelEntry = ({
                 />
               )}
 
-              <div className="truncate select-none">{name}</div>
+              <div
+                style={
+                  isSelected
+                    ? { fontWeight: 'bold', opacity: 1 }
+                    : { opacity: 0.7 }
+                }
+                className="truncate select-none font-gg-sans-bold hover:opacity-100"
+              >
+                {name}
+              </div>
             </div>
           </div>
           <div className="items-center flex flex-row shrink-0 justify-end box-border ps-px-[16px]">
