@@ -1,6 +1,5 @@
 import { useMemo, memo } from 'react';
 
-// @ts-expect-error css file
 import './GroupAvatar.css';
 
 const { getThumbnailUrl, characters, default_avatar } =

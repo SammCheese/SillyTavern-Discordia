@@ -53,6 +53,9 @@ describe('index entry', () => {
         default: ({ children }: { children: React.ReactNode }) => children,
       }),
     );
+    vi.doMock('../../src/providers/platformProvider', () => ({
+      default: ({ children }: { children: React.ReactNode }) => children,
+    }));
     vi.doMock('../../src/providers/backHandlerProvider', () => ({
       default: ({ children }: { children: React.ReactNode }) => children,
     }));
@@ -133,6 +136,9 @@ describe('index entry', () => {
         default: ({ children }: { children: React.ReactNode }) => children,
       }),
     );
+    vi.doMock('../../src/providers/platformProvider', () => ({
+      default: ({ children }: { children: React.ReactNode }) => children,
+    }));
     vi.doMock('../../src/providers/backHandlerProvider', () => ({
       default: ({ children }: { children: React.ReactNode }) => children,
     }));

@@ -14,6 +14,7 @@ import BackHandlerProvider from './providers/backHandlerProvider';
 import SearchProvider from './providers/searchProvider';
 import ExtensionProvider from './providers/contentProviders/extensionProvider';
 import PersonaProvider from './providers/contentProviders/personaProvider';
+import PlatformProvider from './providers/platformProvider';
 
 import Compose from './app/Compose';
 import ErrorBoundary from './components/common/ErrorBoundary/ErrorBoundary';
@@ -68,6 +69,7 @@ const startApp = (safeStart: boolean = false) => {
       // Necessary Evil
       ErrorBoundary,
       // Functionality Provider
+      PlatformProvider,
       BackHandlerProvider,
       // Data Providers
       SidebarProvider,

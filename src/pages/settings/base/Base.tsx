@@ -1,12 +1,14 @@
-import { memo, useCallback, useMemo, type ReactNode } from 'react';
+import { memo, useCallback, type ReactNode } from 'react';
 import { usePage } from '../../../providers/pageProvider';
 import CloseButton from './CloseButton';
+import { usePlatform } from '../../../providers/platformProvider';
 
 interface SettingsFrameProps {
-  title: string;
+  title?: string;
   children: ReactNode;
   header?: ReactNode;
   onClose?: () => void;
+  noPadding?: boolean;
 }
 
 const SettingsFrame = ({
@@ -14,8 +16,10 @@ const SettingsFrame = ({
   children,
   header,
   onClose,
+  noPadding = false,
 }: SettingsFrameProps) => {
   const { closePage } = usePage();
+  const { isSmallScreen } = usePlatform();
 
   const handleClose = useCallback(() => {
     closePage(onClose);
@@ -25,8 +29,6 @@ const SettingsFrame = ({
     e.stopPropagation();
   }, []);
 
-  const isSmallScreen = useMemo(() => window.innerWidth < 1000, []);
-
   return (
     <div
       onClick={handleClick}
@@ -35,11 +37,11 @@ const SettingsFrame = ({
       <div
         className="settings-header w-full flex justify-between items-center p-4 mb-4 border-b border-gray-700 shrink-0"
         style={{
-          maxWidth: isSmallScreen ? '100%' : '800px',
+          maxWidth: isSmallScreen || noPadding ? '100%' : '800px',
           margin: '0 auto',
         }}
       >
-        <h2 className="text-3xl font-semibold">{title}</h2>
+        {title && <h2 className="text-3xl font-semibold">{title}</h2>}
         <button className="group" onClick={handleClose}>
           <CloseButton />
         </button>
@@ -47,9 +49,9 @@ const SettingsFrame = ({
       {header && <div className="px-4 w-full">{header}</div>}
 
       <div
-        className="settings-content w-full flex-1 overflow-auto overflow-x-hidden min-h-0"
+        className="settings-content w-full flex-1 overflow-auto overflow-x-hidden min-h-0 "
         style={{
-          maxWidth: isSmallScreen ? '100%' : '800px',
+          maxWidth: isSmallScreen || noPadding ? '100%' : '800px',
           margin: '0 auto',
         }}
       >
