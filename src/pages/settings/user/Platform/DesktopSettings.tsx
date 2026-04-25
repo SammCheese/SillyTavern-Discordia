@@ -1,6 +1,7 @@
 import { memo } from 'react';
 import Search from '../../../../components/common/search/search';
 import type { UserSettingsCategory, UserSettingsItem } from '../Tabs/Settings';
+import SettingsContent from '../Tabs/SettingsContent';
 
 interface DesktopSettingsMenuProps {
   categories: UserSettingsCategory[];
@@ -116,18 +117,7 @@ const DesktopSettingsMenu = ({
             <div className="text-2xl mb-2">Select a setting to view</div>
           </div>
         )}
-        {hasResults && selectedItem && (
-          <div className="rounded-xl border border-base-discordia-lighter bg-base-discordia-lighter/40 p-5">
-            <div className="text-2xl font-gg-sans-bold mb-2">
-              {selectedItem.label}
-            </div>
-            {selectedItem.description && (
-              <div className="text-sm opacity-80">
-                {selectedItem.description}
-              </div>
-            )}
-          </div>
-        )}
+        {hasResults && selectedItem && <SettingsContent item={selectedItem} />}
       </div>
     </div>
   );

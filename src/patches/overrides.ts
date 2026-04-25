@@ -5,11 +5,13 @@ const splashTexts = [
   'Gathering your Characters...',
   'Summoning the spirits...',
   'Warning the AI...',
+  'Brewing some coffee...',
+  'I thought this is all there is...',
   'Aligning the pixels...',
   'Loading your chat experience...',
   'Preparing the fun...',
   'Delaying reality...',
-  'Where have you been...?',
+  "Do you know when you're coming back?",
   'Follow me into the endless night...',
 ];
 

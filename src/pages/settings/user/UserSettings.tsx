@@ -111,6 +111,7 @@ const UserSettings = () => {
           <div>
             <MobileSettings
               categories={filteredCategories}
+              selectedItem={selectedItem}
               onSearchQueryChange={setSearchQuery}
               onSelectItem={handleSelectItem}
             />

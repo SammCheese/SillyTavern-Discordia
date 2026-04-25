@@ -48,14 +48,12 @@ export const Settings: UserSettingsCategory[] = [
       {
         id: 'theme',
         label: 'Theme',
-        description: 'Choose between light and dark mode.',
         searchTerms: ['color', 'dark mode', 'light mode'],
       },
       {
         id: 'ui-behavior',
         label: 'UI Behavior',
-        description:
-          'Customize how the UI behaves, including animations and interactions.',
+        description: 'Customize how the UI behaves.',
         searchTerms: ['animation', 'motion', 'interaction'],
       },
       {
@@ -68,8 +66,6 @@ export const Settings: UserSettingsCategory[] = [
       {
         id: 'advanced-appearance',
         label: 'Advanced Appearance',
-        description:
-          'Fine-tune the appearance of the app with advanced settings.',
         searchTerms: ['advanced', 'styles', 'css'],
       },
     ],
@@ -84,7 +80,6 @@ export const Settings: UserSettingsCategory[] = [
         variant: 'danger',
         hasSubMenu: false,
         type: 'action',
-        description: 'Sign out from the current account.',
         searchTerms: ['sign out', 'session'],
       },
     ],
