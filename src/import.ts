@@ -54,6 +54,7 @@ const initializePaths = async () => {
     '@scripts/sysprompt': getPath('sysprompt.js', isLocal),
     '@scripts/tags': getPath('tags.js', isLocal),
     '@scripts/rossMods': getPath('RossAscends-mods.js', isLocal),
+    '@scripts/user': getPath('user.js', isLocal),
   };
 
   pathsInitialized = true;

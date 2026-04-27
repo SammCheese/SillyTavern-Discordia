@@ -96,7 +96,7 @@ const MobileSettingsMenu = ({
         <div className="bg-base-discordia h-full">
           <button
             type="button"
-            className="mb-4 inline-flex items-center gap-2 px-1 py-1 text-sm opacity-80 hover:opacity-100 transition-opacity"
+            className="mb-4 inline-flex items-center gap-2 px-1 py-1 text-sm opacity-80 hover:opacity-100 transition-opacity cursor-pointer"
             onClick={closePanel}
           >
             <span className="text-base">&lt;</span>
