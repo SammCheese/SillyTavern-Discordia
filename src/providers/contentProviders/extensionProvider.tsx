@@ -20,7 +20,8 @@ import { DISCORDIA_EVENTS } from '../../events/eventTypes';
 const { enableExtension, disableExtension } = await imports(
   '@scripts/extensions',
 );
-const { saveSettingsDebounced, eventSource } = await imports('@script');
+const { saveSettingsDebounced, eventSource, event_types } =
+  await imports('@script');
 
 export interface ExtensionRecord {
   name: string;
@@ -51,6 +52,7 @@ interface ExtensionContextType {
   refreshExtensions: () => void;
   updatedExtensions: string[] | null;
   updateExtension: (extensionName: string) => Promise<void>;
+  fetchVersions: (exts: ExtensionInfo[]) => Promise<void>;
 }
 
 const normalizeExtensionName = (name: string): string =>
@@ -100,35 +102,40 @@ export const ExtensionProvider = ({
     isMountedRef.current = true;
   }, [disabledExtensions]);
 
-  const fetchVersions = useCallback(async (exts: ExtensionInfo[]) => {
-    const needVersion = exts.filter((e) => e.type !== 'system');
-    if (needVersion.length === 0) return;
+  const fetchVersions = useCallback(
+    async (exts?: ExtensionInfo[]) => {
+      const needVersion =
+        exts?.filter((e) => e.type !== 'system') ||
+        extensions.filter((e) => e.type !== 'system' && !e.version);
+      if (needVersion.length === 0) return;
 
-    const results = await Promise.allSettled(
-      needVersion.map(async (ext) => {
-        const ver = await getExtensionVersion(ext.name);
-        return { name: ext.name, version: ver };
-      }),
-    );
+      const results = await Promise.allSettled(
+        needVersion.map(async (ext) => {
+          const ver = await getExtensionVersion(ext.name);
+          return { name: ext.name, version: ver };
+        }),
+      );
 
-    setExtensions((prev) => {
-      const updates = new Map();
-      results.forEach((r) => {
-        if (r.status === 'fulfilled' && r.value?.version) {
-          updates.set(r.value.name, r.value.version);
-        }
+      setExtensions((prev) => {
+        const updates = new Map();
+        results.forEach((r) => {
+          if (r.status === 'fulfilled' && r.value?.version) {
+            updates.set(r.value.name, r.value.version);
+          }
+        });
+
+        if (updates.size === 0) return prev;
+
+        return prev.map((ext) => {
+          if (updates.has(ext.name)) {
+            return { ...ext, version: updates.get(ext.name) };
+          }
+          return ext;
+        });
       });
-
-      if (updates.size === 0) return prev;
-
-      return prev.map((ext) => {
-        if (updates.has(ext.name)) {
-          return { ...ext, version: updates.get(ext.name) };
-        }
-        return ext;
-      });
-    });
-  }, []);
+    },
+    [extensions],
+  );
 
   const fetchBaseData = useCallback(async () => {
     setIsLoading(true);
@@ -143,14 +150,12 @@ export const ExtensionProvider = ({
       }));
 
       setExtensions(enriched);
-
-      fetchVersions(enriched);
     } catch (err) {
       dislog.error('Failed to load extensions', err);
     } finally {
       setIsLoading(false);
     }
-  }, [fetchVersions]);
+  }, []);
 
   useEffect(() => {
     fetchBaseData();
@@ -177,13 +182,15 @@ export const ExtensionProvider = ({
     };
 
     eventSource.on(DISCORDIA_EVENTS.EXTENSION_HTML_POPULATED, fetchSettings);
+    eventSource.on(event_types.APP_READY, fetchVersions);
     return () => {
       eventSource.removeListener(
         DISCORDIA_EVENTS.EXTENSION_HTML_POPULATED,
         fetchSettings,
       );
+      eventSource.removeListener(event_types.APP_READY, fetchVersions);
     };
-  }, []);
+  }, [fetchVersions]);
 
   const updateExtension = useCallback(async (extensionName: string) => {
     try {
@@ -268,6 +275,7 @@ export const ExtensionProvider = ({
       refreshExtensions,
       updatedExtensions,
       updateExtension,
+      fetchVersions,
     }),
     [
       extensions,
@@ -279,6 +287,7 @@ export const ExtensionProvider = ({
       refreshExtensions,
       updatedExtensions,
       updateExtension,
+      fetchVersions,
     ],
   );
 

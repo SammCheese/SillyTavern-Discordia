@@ -1,24 +1,16 @@
 import { memo, useCallback } from 'react';
 import { useSettings } from '../../../../providers/discordiaSettingsProvider';
 import type { UserSettingsItem } from './Settings';
-import { settingsContentRegistry } from './content';
+import { settingsContentRegistry } from './shared';
 import DefaultSettingsContent from './content/DefaultSettingsContent';
-import type { SettingsShape } from './content/types';
+import type { SettingsShape } from './shared/types';
 
 const SettingsContent = ({ item }: { item: UserSettingsItem }) => {
   const { settings, saveSettings } = useSettings();
 
-  const updateAppearance = useCallback(
-    (patch: Partial<SettingsShape['appearance']>) => {
-      saveSettings({
-        appearance: {
-          ...settings.appearance,
-          ...patch,
-        },
-      });
-    },
-    [saveSettings, settings.appearance],
-  );
+  const updateAppearance = useCallback(() => {
+    console.log('stub');
+  }, []);
 
   const updateBehavior = useCallback(
     (patch: Partial<SettingsShape['behavior']>) => {
@@ -32,14 +24,16 @@ const SettingsContent = ({ item }: { item: UserSettingsItem }) => {
     [saveSettings, settings.behavior],
   );
 
-  const renderer = settingsContentRegistry[item.id] ?? DefaultSettingsContent;
+  const Renderer = settingsContentRegistry[item.id] ?? DefaultSettingsContent;
 
-  return renderer({
-    item,
-    settings,
-    updateAppearance,
-    updateBehavior,
-  });
+  return (
+    <Renderer
+      item={item}
+      settings={settings}
+      updateAppearance={updateAppearance}
+      updateBehavior={updateBehavior}
+    />
+  );
 };
 
 export default memo(SettingsContent);

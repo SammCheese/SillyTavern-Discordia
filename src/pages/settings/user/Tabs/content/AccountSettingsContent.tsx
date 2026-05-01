@@ -1,8 +1,8 @@
 import Button, {
   ButtonLook,
 } from '../../../../../components/common/Button/Button';
-import { SECTION_CARD_CLASS } from './shared';
-import type { SettingsContentRenderer } from './types';
+import { SECTION_CARD_CLASS } from '../shared/shared';
+import type { SettingsContentRenderer } from '../shared/types';
 
 const { isAdmin, currentUser } = await imports('@scripts/user');
 

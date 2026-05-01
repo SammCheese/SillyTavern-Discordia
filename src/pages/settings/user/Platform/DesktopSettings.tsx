@@ -69,6 +69,27 @@ const DesktopSettingsMenu = ({
 }: DesktopSettingsMenuProps) => {
   const hasResults = categories.some((category) => category.items.length > 0);
 
+  const visibleCategories = categories.filter(
+    (category) => category.items.length > 0,
+  );
+
+  const categoriesWithHandlers = visibleCategories.map((category) => {
+    const visibleItems = category.items.filter(async (item) => {
+      if (item.visibilityCondition) {
+        return await item.visibilityCondition();
+      }
+      return true;
+    });
+
+    return {
+      ...category,
+      items: visibleItems.map((item) => ({
+        ...item,
+        onClick: () => onSelectItem(item),
+      })),
+    };
+  });
+
   return (
     <div className="flex bg-base-discordia overflow-hidden">
       <div className="w-64 h-full pr-6 border-r border-base-discordia-lighter shrink-0 flex flex-col">
@@ -81,7 +102,7 @@ const DesktopSettingsMenu = ({
               No settings match your search.
             </div>
           )}
-          {categories.map((category) => (
+          {categoriesWithHandlers.map((category) => (
             <div
               key={category.id}
               className="mb-4 border-b border-base-discordia-lighter pb-4"

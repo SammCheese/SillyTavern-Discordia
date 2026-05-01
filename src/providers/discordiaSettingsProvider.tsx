@@ -12,27 +12,16 @@ interface SettingsContextType {
 }
 
 interface Settings {
-  appearance: {
-    theme: string;
-    fontSize: number;
-    backgroundColor: string;
-  };
   behavior: {
     legacyEditing: boolean;
   };
 }
 
 const DefaultSettings: Settings = {
-  appearance: {
-    theme: 'light',
-    fontSize: 14,
-    backgroundColor: '#ffffff',
-  },
   behavior: {
     legacyEditing: false,
   },
 };
-
 const { saveSettingsDebounced } = await imports('@script');
 
 export const SettingsProvider = ({ children }: SettingsProviderProps) => {

@@ -1,5 +1,5 @@
-import { SECTION_CARD_CLASS } from './shared';
-import type { SettingsContentRenderer } from './types';
+import { SECTION_CARD_CLASS } from '../shared/shared';
+import type { SettingsContentRenderer } from '../shared/types';
 
 const AdminPanelSettingsContent: SettingsContentRenderer = () => (
   <div className={SECTION_CARD_CLASS}>

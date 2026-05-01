@@ -1,6 +1,5 @@
 export {};
 
-import type importsFunc from './src/import';
 import type {
   DiscordiaAPIv1,
   DiscordiaAPIVersionRange,
@@ -29,11 +28,10 @@ type Dislog = {
 
 declare global {
   type ScriptKeys = keyof typeof Scripts;
+  function imports(mod: '@script'): Promise<typeof SillyScript>;
   function imports<K extends ScriptKeys>(
     mod: `@scripts/${K}`,
   ): Promise<(typeof Scripts)[K]>;
-  function imports(mod: '@script'): Promise<typeof SillyScript>;
-  function imports(mod: string): Promise<typeof importsFunc>;
 
   var dislog: Dislog;
 

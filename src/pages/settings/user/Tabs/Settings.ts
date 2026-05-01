@@ -12,6 +12,7 @@ export interface UserSettingsItem {
   icon?: ReactNode | string;
   searchTerms?: string[];
   type?: UserSettingsItemType;
+  visibilityCondition?: () => boolean | Promise<boolean>;
 }
 
 export interface UserSettingsCategory {
@@ -38,6 +39,22 @@ export const Settings: UserSettingsCategory[] = [
         label: 'Admin Panel',
         description: 'Access administrative tools and settings.',
         searchTerms: ['admin', 'moderation', 'permissions'],
+        visibilityCondition: async () => {
+          const { isAdmin } = await imports('@scripts/user');
+          return isAdmin();
+        },
+      },
+    ],
+  },
+  {
+    id: 'discordia-settings',
+    title: 'Discordia Settings',
+    items: [
+      {
+        id: 'discordia',
+        label: 'Discordia',
+        description: 'Configure Discordia-specific settings.',
+        searchTerms: ['discordia', 'extension'],
       },
     ],
   },
@@ -48,7 +65,15 @@ export const Settings: UserSettingsCategory[] = [
       {
         id: 'theme',
         label: 'Theme',
-        searchTerms: ['color', 'dark mode', 'light mode'],
+        searchTerms: [
+          'color',
+          'accent',
+          'background',
+          'opacity',
+          'image',
+          'dark mode',
+          'light mode',
+        ],
       },
       {
         id: 'ui-behavior',

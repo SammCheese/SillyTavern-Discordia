@@ -37,17 +37,23 @@ const MobileSettingsMenu = ({
     [onSelectItem],
   );
 
-  const categoriesWithHandlers = useMemo(
-    () =>
-      categories.map((category) => ({
-        ...category,
-        items: category.items.map((item) => ({
-          ...item,
-          onClick: () => handleSelectItem(item),
-        })),
+  const categoriesWithHandlers = useMemo(() => {
+    const visibleCategories = categories.filter((category) => {
+      const visibleItems = category.items.filter(async (item) => {
+        if (!item.visibilityCondition) return true;
+        return await item.visibilityCondition();
+      });
+      return visibleItems.length > 0;
+    });
+
+    return visibleCategories.map((category) => ({
+      ...category,
+      items: category.items.map((item) => ({
+        ...item,
+        onClick: () => handleSelectItem(item),
       })),
-    [categories, handleSelectItem],
-  );
+    }));
+  }, [categories, handleSelectItem]);
 
   const hasResults = categoriesWithHandlers.some(
     (category) => category.items.length > 0,
