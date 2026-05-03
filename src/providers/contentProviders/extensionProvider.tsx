@@ -86,6 +86,7 @@ export const ExtensionProvider = ({
   );
 
   const isMountedRef = useRef(false);
+  const fetchingVersionsRef = useRef(new Set<string>());
 
   useEffect(() => {
     const init = async () => {
@@ -104,37 +105,77 @@ export const ExtensionProvider = ({
 
   const fetchVersions = useCallback(
     async (exts?: ExtensionInfo[]) => {
-      const needVersion =
-        exts?.filter((e) => e.type !== 'system') ||
-        extensions.filter((e) => e.type !== 'system' && !e.version);
-      if (needVersion.length === 0) return;
-
-      const results = await Promise.allSettled(
-        needVersion.map(async (ext) => {
-          const ver = await getExtensionVersion(ext.name);
-          return { name: ext.name, version: ver };
-        }),
+      const baseList = exts || extensions;
+      const needVersion = baseList.filter(
+        (ext) => ext.type !== 'system' && !ext.version,
       );
 
-      setExtensions((prev) => {
-        const updates = new Map();
-        results.forEach((r) => {
-          if (r.status === 'fulfilled' && r.value?.version) {
-            updates.set(r.value.name, r.value.version);
-          }
-        });
+      if (needVersion.length === 0) return;
 
-        if (updates.size === 0) return prev;
+      const pending = fetchingVersionsRef.current;
+      const toFetch = needVersion.filter((ext) => !pending.has(ext.name));
+      if (toFetch.length === 0) return;
 
-        return prev.map((ext) => {
-          if (updates.has(ext.name)) {
-            return { ...ext, version: updates.get(ext.name) };
+      toFetch.forEach((ext) => pending.add(ext.name));
+
+      try {
+        const results: Array<
+          PromiseSettledResult<{ name: string; version: Version | undefined }>
+        > = [];
+        const batchSize = 4;
+
+        for (let i = 0; i < toFetch.length; i += batchSize) {
+          const batch = toFetch.slice(i, i + batchSize);
+          const batchResults = await Promise.allSettled(
+            batch.map(async (ext) => {
+              const ver = await getExtensionVersion(ext.name);
+              return { name: ext.name, version: ver };
+            }),
+          );
+
+          results.push(...batchResults);
+
+          if (i + batchSize < toFetch.length) {
+            await new Promise((resolve) => setTimeout(resolve, 0));
           }
-          return ext;
+        }
+
+        setExtensions((prev) => {
+          const updates = new Map();
+          results.forEach((r) => {
+            if (r.status === 'fulfilled' && r.value?.version) {
+              updates.set(r.value.name, r.value.version);
+            }
+          });
+
+          if (updates.size === 0) return prev;
+
+          return prev.map((ext) => {
+            if (updates.has(ext.name)) {
+              return { ...ext, version: updates.get(ext.name) };
+            }
+            return ext;
+          });
         });
-      });
+      } finally {
+        toFetch.forEach((ext) => pending.delete(ext.name));
+      }
     },
     [extensions],
+  );
+
+  const scheduleFetchVersions = useCallback(
+    (exts?: ExtensionInfo[]) => {
+      const run = () => {
+        void fetchVersions(exts);
+      };
+      if (typeof requestIdleCallback === 'function') {
+        requestIdleCallback(run, { timeout: 2000 });
+      } else {
+        setTimeout(run, 0);
+      }
+    },
+    [fetchVersions],
   );
 
   const fetchBaseData = useCallback(async () => {
@@ -182,15 +223,15 @@ export const ExtensionProvider = ({
     };
 
     eventSource.on(DISCORDIA_EVENTS.EXTENSION_HTML_POPULATED, fetchSettings);
-    eventSource.on(event_types.APP_READY, fetchVersions);
+    eventSource.on(event_types.APP_READY, scheduleFetchVersions);
     return () => {
       eventSource.removeListener(
         DISCORDIA_EVENTS.EXTENSION_HTML_POPULATED,
         fetchSettings,
       );
-      eventSource.removeListener(event_types.APP_READY, fetchVersions);
+      eventSource.removeListener(event_types.APP_READY, scheduleFetchVersions);
     };
-  }, [fetchVersions]);
+  }, [fetchVersions, scheduleFetchVersions]);
 
   const updateExtension = useCallback(async (extensionName: string) => {
     try {
