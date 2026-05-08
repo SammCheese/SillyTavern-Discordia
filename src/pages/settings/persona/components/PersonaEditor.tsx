@@ -2,7 +2,6 @@ import {
   type ChangeEvent,
   memo,
   useCallback,
-  useEffect,
   useMemo,
   useRef,
   useState,
@@ -40,11 +39,6 @@ const PersonaEditor = ({
     personas.find((p) => p.avatar === selectedPersona),
   );
   const [avatarUploadPending, setAvatarUploadPending] = useState(false);
-
-  useEffect(() => {
-    // eslint-disable-next-line @eslint-react/hooks-extra/no-direct-set-state-in-use-effect
-    setLocalPersona(personas.find((p) => p.avatar === selectedPersona));
-  }, [selectedPersona, personas]);
 
   const updateField = useMemo(() => {
     return (field: keyof FullPersona, value: string | number) => {
@@ -93,7 +87,7 @@ const PersonaEditor = ({
   }, [localPersona?.avatar, setDefaultPersona]);
 
   const personaAvatar = useMemo(() => {
-    if (!localPersona?.avatar) {
+    if (!localPersona || !localPersona.avatar) {
       return '';
     }
 
@@ -101,7 +95,7 @@ const PersonaEditor = ({
       getThumbnailUrl('persona', localPersona.avatar),
       avatarRefreshNonce,
     );
-  }, [avatarRefreshNonce, localPersona?.avatar]);
+  }, [avatarRefreshNonce, localPersona]);
 
   const handleOpenAvatarPicker = useCallback(() => {
     avatarInputRef.current?.click();

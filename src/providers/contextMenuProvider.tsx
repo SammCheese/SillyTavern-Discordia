@@ -28,6 +28,7 @@ export function ContextMenuProvider({ children }: { children: ReactNode }) {
   const [isRendered, setIsRendered] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
 
+  // eslint-disable-next-line @eslint-react/no-unused-state
   const [clickPosition, setClickPosition] = useState<{
     x: number;
     y: number;

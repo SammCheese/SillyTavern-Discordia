@@ -2,7 +2,7 @@ import { memo, useCallback, useMemo, useState } from 'react';
 import SettingsHost from './SettingsHost';
 import ErrorBoundary from '../../../../components/common/ErrorBoundary/ErrorBoundary';
 import Accordion from '../../../../components/common/Accordion/Accordion';
-import Skeleton from 'react-loading-skeleton';
+import Skeleton from '../../../../components/common/Skeleton/Skeleton';
 import { type Manifest } from '../../../../services/extensionService';
 import type { ExtensionInfo, Version } from '../ExtensionSettings';
 import Divider from '../../../../components/common/Divider/Divider';

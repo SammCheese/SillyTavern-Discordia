@@ -1,4 +1,4 @@
-import { type ReactNode, useCallback, useState, memo, useEffect } from 'react';
+import { type ReactNode, useCallback, useState, memo } from 'react';
 
 interface AccordionProps {
   title: string | ReactNode;
@@ -10,22 +10,21 @@ interface AccordionProps {
 
 export const Accordion = ({
   title,
-  isOpen = false,
+  isOpen,
   onToggle,
   children,
   destroyOnClose = false,
 }: AccordionProps) => {
-  const [open, setOpen] = useState(isOpen);
-
-  useEffect(() => {
-    // eslint-disable-next-line @eslint-react/hooks-extra/no-direct-set-state-in-use-effect
-    setOpen(isOpen);
-  }, [isOpen]);
+  const isControlled = isOpen !== undefined;
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(isOpen ?? false);
+  const open = isControlled ? isOpen : uncontrolledOpen;
 
   const handleToggle = useCallback(() => {
-    setOpen((prevOpen) => !prevOpen);
+    if (!isControlled) {
+      setUncontrolledOpen((prevOpen) => !prevOpen);
+    }
     onToggle?.();
-  }, [onToggle]);
+  }, [isControlled, onToggle]);
 
   return (
     <div className="accordion rounded mb-4 border border-base-discordia-lighter overflow-hidden">

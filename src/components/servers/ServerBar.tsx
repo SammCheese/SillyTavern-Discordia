@@ -14,7 +14,7 @@ import ErrorBoundary from '../common/ErrorBoundary/ErrorBoundary';
 import { DISCORDIA_EVENTS } from '../../events/eventTypes';
 import { useModal } from '../../providers/modalProvider';
 import CharacterModal from '../../modals/Character/CharacterModal';
-import Skeleton, { SkeletonTheme } from 'react-loading-skeleton';
+import Skeleton, { SkeletonTheme } from '../common/Skeleton/Skeleton';
 import { useSidebar } from '../../providers/contentProviders/sidebarStateProvider';
 
 const ServerIcon = lazy(() => import('./Icons/ServerIcon'));

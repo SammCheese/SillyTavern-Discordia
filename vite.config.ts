@@ -2,20 +2,14 @@ import { defineConfig } from 'vite';
 import { resolve } from 'path';
 
 import react from '@vitejs/plugin-react';
-import inject from '@rollup/plugin-inject';
 
 const isProduction = process.env.NODE_ENV === 'production';
 
 export default defineConfig({
   plugins: [
     react({
-      include: [resolve(__dirname, 'src/**/*.tsx')],
       jsxRuntime: 'automatic',
     }),
-    inject({
-      imports: resolve(__dirname, 'src/import.ts'),
-      dislog: resolve(__dirname, 'src/utils/logger.ts'),
-    })
   ],
   mode: isProduction ? 'production' : 'development',
   css: {
@@ -37,12 +31,18 @@ export default defineConfig({
     sourcemap: !isProduction ? 'inline' : false,
     cssMinify: isProduction,
     cssCodeSplit: false,
-    dynamicImportVarsOptions: {
-      warnOnError: true,
+    watch: isProduction ? undefined : {
+      exclude: ['**/dist/**'],
     },
-    rollupOptions: {
+    rolldownOptions: {
       input: resolve(__dirname, 'src/index.tsx'),
       treeshake: isProduction,
+      transform: {
+        inject: {
+          imports: resolve(__dirname, 'src/import.ts'),
+          dislog: resolve(__dirname, 'src/utils/logger.ts'),
+        },
+      },
       output: {
         assetFileNames: (assetInfo) => {
           if (assetInfo.names.includes('style.css')) {
@@ -53,14 +53,19 @@ export default defineConfig({
         entryFileNames: 'bundle.js',
         esModule: true,
         format: 'es',
-        manualChunks: undefined,
         chunkFileNames: 'chunks/[name].js',
+        manualChunks: undefined,
+        minifyInternalExports: isProduction,
+        minify: isProduction,
       },
     },
   },
   server: {
     open: false,
     port: 3000,
+    hmr: {
+      overlay: false,
+    },
     watch: {
       ignored: ['**/node_modules/**', '**/dist/**'],
     },

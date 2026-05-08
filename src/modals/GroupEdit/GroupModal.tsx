@@ -153,34 +153,39 @@ const GroupEditModal = ({ entity }: GroupEditModalProps) => {
 
   const handleRemoveMember = useCallback(
     (character: Character) => {
-      const members = group?.members || [];
-      const newMembers = members.filter((m) => m !== character.avatar);
-      setGroup((prevGroup) =>
-        prevGroup ? { ...prevGroup, members: newMembers } : prevGroup,
-      );
+      setGroup((prevGroup) => {
+        if (!prevGroup) return prevGroup;
+        const members = prevGroup.members || [];
+        const newMembers = members.filter((m) => m !== character.avatar);
+        return { ...prevGroup, members: newMembers };
+      });
     },
-    [group?.members, setGroup],
+    [setGroup],
   );
 
   const handleAddMember = useCallback(
     (character: Character) => {
-      const members = group?.members || [];
-      if (character.avatar && members.includes(character.avatar)) return;
+      setGroup((prevGroup) => {
+        if (!prevGroup) return prevGroup;
+        const members = prevGroup.members || [];
+        if (character.avatar && members.includes(character.avatar)) {
+          return prevGroup;
+        }
 
-      const newMembers = [...members, character.avatar || ''];
-      setGroup((prevGroup) =>
-        prevGroup ? { ...prevGroup, members: newMembers } : prevGroup,
-      );
+        const newMembers = [...members, character.avatar || ''];
+        return { ...prevGroup, members: newMembers };
+      });
     },
-    [group?.members, setGroup],
+    [setGroup],
   );
 
+  const memberIds = group?.members;
   const members = useMemo(() => {
-    if (!group?.members) return [];
+    if (!memberIds) return [];
 
     const members: Character[] = [];
 
-    for (const member of group.members) {
+    for (const member of memberIds) {
       if (!member) continue;
       const characterCard = getContext().characters.find(
         (c) => c.avatar === member,
@@ -190,7 +195,7 @@ const GroupEditModal = ({ entity }: GroupEditModalProps) => {
     }
 
     return members;
-  }, [group?.members]);
+  }, [memberIds]);
 
   const disabled = useMemo(() => {
     if (!group) return true;

@@ -3,7 +3,6 @@ import { createRoot, type Root } from 'react-dom/client';
 import { performPatches, unpatchAll } from './patches';
 
 import './styles.css';
-import 'react-loading-skeleton/dist/skeleton.css';
 
 import PageProvider from './providers/pageProvider';
 import ModalProvider from './providers/modalProvider';

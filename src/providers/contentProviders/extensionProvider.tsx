@@ -199,7 +199,10 @@ export const ExtensionProvider = ({
   }, []);
 
   useEffect(() => {
-    fetchBaseData();
+    const timer = setTimeout(() => {
+      void fetchBaseData();
+    }, 0);
+    return () => clearTimeout(timer);
   }, [fetchBaseData]);
 
   useEffect(() => {
