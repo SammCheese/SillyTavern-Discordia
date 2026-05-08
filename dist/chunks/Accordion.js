@@ -1,1 +1,1 @@
-import{n as e,t}from"./Accordion2.js";export{t as Accordion,e as default};
+import{n as o,t as a}from"./Accordion2.js";export{a as Accordion,o as default};

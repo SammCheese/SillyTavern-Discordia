@@ -1,1 +1,1 @@
-import{t as e}from"./search2.js";export{e as default};
+import{t as a}from"./search2.js";export{a as default};

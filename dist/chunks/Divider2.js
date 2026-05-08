@@ -1,1 +1,1 @@
-import{n as e,t}from"./jsx-runtime.js";var n=e(),r=t(),i=(0,n.memo)(({width:e=`w-full`,className:t=``})=>(0,r.jsx)(r.Fragment,{children:(0,r.jsx)(`div`,{style:{backgroundColor:`rgba(255, 255, 255, 0.1)`},className:`${e} h-px my-2 mx-auto ${t}`})}));export{i as t};
+import{n as a,t as s}from"./jsx-runtime.js";var m=a(),r=s(),t=(0,m.memo)(({width:a="w-full",className:s=""})=>(0,r.jsx)(r.Fragment,{children:(0,r.jsx)("div",{style:{backgroundColor:"rgba(255, 255, 255, 0.1)"},className:`${a} h-px my-2 mx-auto ${s}`})}));export{t};

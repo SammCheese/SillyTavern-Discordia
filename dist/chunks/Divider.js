@@ -1,1 +1,1 @@
-import{t as e}from"./Divider2.js";export{e as default};
+import{t as r}from"./Divider2.js";export{r as default};

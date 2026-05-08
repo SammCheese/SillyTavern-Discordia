@@ -1,3 +1,5 @@
+/* eslint-disable @eslint-react/hooks-extra/no-direct-set-state-in-use-effect */
+
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import Button from '../../../../components/common/Button/Button';
 import Checkbox from '../../../../components/common/Checkbox/Checkbox';
@@ -18,79 +20,61 @@ const { saveSettingsDebounced } = await imports('@script');
 const { oai_settings, settingsToUpdate, chat_completion_sources } =
   await imports('@scripts/openai');
 
-type NativeSnapshot = {
-  settings: Record<string, unknown>;
-  presetOptions: Array<{ value: string; label: string }>;
-  presetValue: string;
-  maxContextCap: number;
-  biasPresetOptions: Array<{ value: string; label: string }>;
-};
-
-const buildNativeSnapshot = (): NativeSnapshot => {
-  const settings = { ...(oai_settings as Record<string, unknown>) };
-
-  const presetSelect = $('#settings_preset_openai');
-  const presetValue = String(presetSelect.val() ?? '');
-
-  const presetOptions = presetSelect
-    .find('option')
-    .map(function () {
-      return {
-        value: String($(this).val()),
-        label: String($(this).text()),
-      };
-    })
-    .get();
-
-  const maxFromDom = Number($('#openai_max_context').attr('max') ?? 128000);
-  const maxContextCap = Number.isFinite(maxFromDom) ? maxFromDom : 128000;
-
-  const biasPresets = (settings.bias_presets as Record<string, unknown>) || {};
-  const biasPresetOptions = Object.keys(biasPresets).map((name) => ({
-    value: name,
-    label: name,
-  }));
-
-  return {
-    settings,
-    presetOptions,
-    presetValue,
-    maxContextCap,
-    biasPresetOptions,
-  };
-};
-
 const ChatCompletionSamplerSettings = () => {
-  const initialSnapshot = useMemo(() => buildNativeSnapshot(), []);
-  const [settings, setSettings] = useState<Record<string, unknown>>(
-    initialSnapshot.settings,
-  );
+  const [settings, setSettings] = useState<Record<string, unknown>>(() => ({
+    ...(oai_settings as Record<string, unknown>),
+  }));
   const [presetOptions, setPresetOptions] = useState<
     Array<{ value: string; label: string }>
-  >(initialSnapshot.presetOptions);
-  const [presetValue, setPresetValue] = useState<string>(
-    initialSnapshot.presetValue,
-  );
-  const [maxContextCap, setMaxContextCap] = useState<number>(
-    initialSnapshot.maxContextCap,
-  );
+  >([]);
+  const [presetValue, setPresetValue] = useState<string>('');
+  const [maxContextCap, setMaxContextCap] = useState<number>(128000);
 
   const [biasPresetOptions, setBiasPresetOptions] = useState<
     Array<{ value: string; label: string }>
-  >(initialSnapshot.biasPresetOptions);
+  >([]);
 
   const source = String(settings.chat_completion_source || 'openai');
 
   const syncFromNativeState = useCallback(() => {
-    const snapshot = buildNativeSnapshot();
-    setSettings(snapshot.settings);
-    setPresetOptions(snapshot.presetOptions);
-    setPresetValue(snapshot.presetValue);
-    setMaxContextCap(snapshot.maxContextCap);
-    setBiasPresetOptions(snapshot.biasPresetOptions);
+    const next = { ...(oai_settings as Record<string, unknown>) };
+    setSettings(next);
+
+    const presetSelect = $('#settings_preset_openai');
+    const selectedPresetValue = String(presetSelect.val() ?? '');
+
+    const options = presetSelect
+      .find('option')
+      .map(function () {
+        return {
+          value: String($(this).val()),
+          label: String($(this).text()),
+        };
+      })
+      .get();
+
+    setPresetOptions(options);
+    setPresetValue(selectedPresetValue);
+
+    const maxFromDom = Number($('#openai_max_context').attr('max') ?? 128000);
+    setMaxContextCap(Number.isFinite(maxFromDom) ? maxFromDom : 128000);
+
+    const biasPresets =
+      ((oai_settings as Record<string, unknown>).bias_presets as Record<
+        string,
+        unknown
+      >) || {};
+    const biasOptions = Object.keys(biasPresets).map((name) => ({
+      value: name,
+      label: name,
+    }));
+
+    setBiasPresetOptions(biasOptions);
   }, []);
 
   useEffect(() => {
+    syncFromNativeState();
+
     const sync = () => syncFromNativeState();
     $(document).on(
       'input.discordiaSampler change.discordiaSampler',

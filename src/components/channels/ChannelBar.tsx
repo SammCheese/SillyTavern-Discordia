@@ -6,7 +6,7 @@ import { List } from 'react-window';
 import { useSearch } from '../../providers/searchProvider';
 import ErrorBoundary from '../common/ErrorBoundary/ErrorBoundary';
 import { useOpenChat } from '../../hooks/useOpenChat';
-import Skeleton, { SkeletonTheme } from '../common/Skeleton/Skeleton';
+import Skeleton, { SkeletonTheme } from 'react-loading-skeleton';
 import NewChatButton from './NewChatButton';
 import ChannelHeaderEntry from './ChannelHeaderEntry';
 import { useSidebar } from '../../providers/contentProviders/sidebarStateProvider';

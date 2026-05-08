@@ -1,1 +1,1 @@
-import{t as e}from"./Input2.js";export{e as default};
+import{t}from"./Input2.js";export{t as default};
