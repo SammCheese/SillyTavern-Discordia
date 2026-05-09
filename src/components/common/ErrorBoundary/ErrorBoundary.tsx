@@ -1,5 +1,4 @@
 import { Component, type ReactNode } from 'react';
-
 interface ErrorBoundaryProps {
   children: ReactNode;
   fallback?: (error: Error, errorInfo: string, reset: () => void) => ReactNode;
@@ -99,6 +98,31 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
               className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded font-medium"
             >
               Reload Page
+            </button>
+            <button
+              onClick={async () => {
+                try {
+                  const { disableExtension, findExtension } = await imports(
+                    '@scripts/extensions',
+                  );
+                  const extension = findExtension('SillyTavern-Discordia');
+                  if (!extension) {
+                    toastr.error(
+                      'Could not find the Discordia extension. Please remove the Extension Folder manually to disable it.',
+                    );
+                    return;
+                  }
+                  await disableExtension(extension.name, true);
+                } catch (e) {
+                  console.error('Failed to disable Discordia:', e);
+                  toastr.error(
+                    'An error occurred while trying to disable Discordia. Remove the Extension Folder manually to disable it.',
+                  );
+                }
+              }}
+              className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded font-medium"
+            >
+              Disable Discordia
             </button>
           </div>
         </div>
