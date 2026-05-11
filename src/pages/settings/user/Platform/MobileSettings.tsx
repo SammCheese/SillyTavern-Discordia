@@ -99,7 +99,13 @@ const MobileSettingsMenu = ({
             : 'opacity-0 translate-x-4 pointer-events-none'
         }`}
       >
-        <div className="bg-base-discordia h-full">
+        <div
+          className="h-full"
+          style={{
+            backgroundColor:
+              'var(--SmartThemeBlurTintColor, rgba(54, 57, 63, 0.8))',
+          }}
+        >
           <button
             type="button"
             className="mb-4 inline-flex items-center gap-2 px-1 py-1 text-sm opacity-80 hover:opacity-100 transition-opacity cursor-pointer"

@@ -32,7 +32,11 @@ const SettingsFrame = ({
   return (
     <div
       onClick={handleClick}
-      className="w-full h-full p-[5%] bg-base-discordia text-white flex flex-col overflow-hidden"
+      style={{
+        backgroundColor:
+          'var(--SmartThemeBlurTintColor, rgba(54, 57, 63, 0.8))',
+      }}
+      className="w-full h-full p-[5%]  text-white flex flex-col overflow-hidden"
     >
       <div
         className="settings-header w-full flex justify-between items-center p-4 mb-4 border-b border-gray-700 shrink-0"

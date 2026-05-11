@@ -91,8 +91,15 @@ const DesktopSettingsMenu = ({
   });
 
   return (
-    <div className="flex bg-base-discordia overflow-hidden">
-      <div className="w-64 h-full pr-6 border-r border-base-discordia-lighter shrink-0 flex flex-col">
+    <div
+      className="flex overflow-hidden"
+      style={{
+        height: 'calc(100vh - 120px)',
+        backgroundColor:
+          'var(--SmartThemeBlurTintColor, rgba(54, 57, 63, 0.8))',
+      }}
+    >
+      <div className="w-64 h-full pr-6 border-r border-lighter shrink-0 flex flex-col">
         <div className="py-2 mb-4 w-full">
           <Search placeholder="Search Settings" onInput={onSearchQueryChange} />
         </div>
@@ -105,7 +112,7 @@ const DesktopSettingsMenu = ({
           {categoriesWithHandlers.map((category) => (
             <div
               key={category.id}
-              className="mb-4 border-b border-base-discordia-lighter pb-4"
+              className="mb-4 border-b border-lighter pb-4"
             >
               {category.title && <SectionHeader title={category.title} />}
               <div className="space-y-2">

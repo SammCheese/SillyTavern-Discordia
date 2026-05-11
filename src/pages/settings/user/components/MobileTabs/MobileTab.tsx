@@ -52,13 +52,13 @@ const MobileTab = ({
   return (
     <div
       role="menuitem"
-      className={`px-4 py-3 flex items-center space-x-3 select-none bg-base-discordia-lighter transition-colors text-base
+      className={`px-4 py-3 flex items-center space-x-3 select-none bg-lighter transition-colors text-base
         ${variantClasses[variant]}
         ${getRoundingClasses}
         ${
           disabled
             ? 'opacity-50 cursor-not-allowed'
-            : 'cursor-pointer active:scale-[0.98] transition-transform hover:bg-lighter'
+            : 'cursor-pointer active:scale-[0.98] transition-transform hover:bg-lighter/50'
         }
         ${className || ''}`}
       onClick={handleClick}
