@@ -258,6 +258,10 @@ dialog.popup {
   margin: auto;
 }
 
+#load-spinner {
+  background-color: var(--SmartThemeBlurTintColor) !important;
+}
+
 #sidebar-container {
   height: 100dvh;
   z-index: 31;

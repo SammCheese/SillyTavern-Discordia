@@ -1,76 +1,50 @@
-// ST doesnt expose this function on their own.
-export const applyThemeColor = (type: string, color: string) => {
-  if (type === 'main') {
-    document.documentElement.style.setProperty('--SmartThemeBodyColor', color);
-    const col = color.split('(')[1]!.split(')')[0]!.split(',');
-    document.documentElement.style.setProperty(
-      '--SmartThemeCheckboxBgColorR',
-      col[0]!,
-    );
-    document.documentElement.style.setProperty(
-      '--SmartThemeCheckboxBgColorG',
-      col[1]!,
-    );
-    document.documentElement.style.setProperty(
-      '--SmartThemeCheckboxBgColorB',
-      col[2]!,
-    );
-    document.documentElement.style.setProperty(
-      '--SmartThemeCheckboxBgColorA',
-      col[3]!,
-    );
+import { powerToAppearanceSettings } from './../hooks/useThemeSettings';
+
+type AppearanceSettingKey = keyof ReturnType<typeof powerToAppearanceSettings>;
+
+// Hatred.
+export const legacyColorUpdate = (
+  type: AppearanceSettingKey,
+  color: string,
+) => {
+  let elem: HTMLElement | null = null;
+
+  if (type === 'main_text_color') {
+    elem = document.getElementById('main-text-color-picker');
   }
-  if (type === 'italics') {
-    document.documentElement.style.setProperty('--SmartThemeEmColor', color);
+  if (type === 'italics_text_color') {
+    elem = document.getElementById('italics-color-picker');
   }
-  if (type === 'underline') {
-    document.documentElement.style.setProperty(
-      '--SmartThemeUnderlineColor',
-      color,
-    );
+  if (type === 'underline_text_color') {
+    elem = document.getElementById('underline-color-picker');
   }
-  if (type === 'quote') {
-    document.documentElement.style.setProperty('--SmartThemeQuoteColor', color);
+  if (type === 'quote_text_color') {
+    elem = document.getElementById('quote-color-picker');
   }
-  /*     if (type === 'fastUIBG') {
-            document.documentElement.style.setProperty('--SmartThemeFastUIBGColor', power_user.fastui_bg_color);
-        } */
-  if (type === 'blurTint') {
-    const metaThemeColor = document.querySelector('meta[name=theme-color]');
-    document.documentElement.style.setProperty(
-      '--SmartThemeBlurTintColor',
-      color,
-    );
-    metaThemeColor?.setAttribute('content', color);
+  if (type === 'blur_tint_color') {
+    elem = document.getElementById('blur-tint-color-picker');
   }
-  if (type === 'chatTint') {
-    document.documentElement.style.setProperty(
-      '--SmartThemeChatTintColor',
-      color,
-    );
+  if (type === 'chat_tint_color') {
+    elem = document.getElementById('chat-tint-color-picker');
   }
-  if (type === 'userMesBlurTint') {
-    document.documentElement.style.setProperty(
-      '--SmartThemeUserMesBlurTintColor',
-      color,
-    );
+  if (type === 'user_mes_blur_tint_color') {
+    elem = document.getElementById('user-mes-blur-tint-color-picker');
   }
-  if (type === 'botMesBlurTint') {
-    document.documentElement.style.setProperty(
-      '--SmartThemeBotMesBlurTintColor',
-      color,
-    );
+  if (type === 'bot_mes_blur_tint_color') {
+    elem = document.getElementById('bot-mes-blur-tint-color-picker');
   }
-  if (type === 'shadow') {
-    document.documentElement.style.setProperty(
-      '--SmartThemeShadowColor',
-      color,
-    );
+  if (type === 'shadow_color') {
+    elem = document.getElementById('shadow-color-picker');
   }
-  if (type === 'border') {
-    document.documentElement.style.setProperty(
-      '--SmartThemeBorderColor',
-      color,
-    );
+  if (type === 'border_color') {
+    elem = document.getElementById('border-color-picker');
+  }
+
+  if (elem) {
+    const event = new CustomEvent('change', {
+      detail: { rgba: color },
+      bubbles: true,
+    });
+    elem.dispatchEvent(event);
   }
 };

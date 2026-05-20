@@ -8,18 +8,21 @@ interface SettingsProviderProps {
 
 interface SettingsContextType {
   saveSettings: (settings: Partial<Settings>) => void;
+  getSettings: () => Settings;
   settings: Settings;
 }
 
 interface Settings {
   behavior: {
     legacyEditing: boolean;
+    closeChatOnHomeButton: boolean;
   };
 }
 
 const DefaultSettings: Settings = {
   behavior: {
     legacyEditing: false,
+    closeChatOnHomeButton: false,
   },
 };
 const { saveSettingsDebounced } = await imports('@script');
@@ -46,12 +49,17 @@ export const SettingsProvider = ({ children }: SettingsProviderProps) => {
     saveSettingsDebounced();
   }, []);
 
+  const getSettings = useCallback(() => {
+    return discordiaSettings;
+  }, [discordiaSettings]);
+
   const contextValue = useMemo(() => {
     return {
       settings: discordiaSettings,
       saveSettings,
+      getSettings,
     };
-  }, [discordiaSettings, saveSettings]);
+  }, [discordiaSettings, saveSettings, getSettings]);
 
   return <SettingsContext value={contextValue}>{children}</SettingsContext>;
 };
