@@ -154,6 +154,11 @@ function* extensionProcessorGenerator(
           .children() as JQuery<HTMLElement>);
     if (content.length === 0) continue;
 
+    // Avoid accidentally overwriting extensions with emptiness (WHY THE HELL)
+    if (content.find(INTERACTIVE_SELECTOR).length === 0) {
+      continue;
+    }
+
     const result = (() => {
       const directOwner = getOwner(element.get(0)!);
       if (directOwner) return { elem: content, owner: directOwner };
