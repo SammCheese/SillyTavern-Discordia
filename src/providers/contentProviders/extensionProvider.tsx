@@ -70,6 +70,22 @@ const sortExtensions = (extensions: ExtensionInfo[]) => {
 
 const ExtensionContext = createContext<ExtensionContextType | null>(null);
 
+const initialDataPromise = (async () => {
+  try {
+    const exts = await discoverExtensions();
+    const manifests = await getManifests(exts.map((ext) => ext.name));
+
+    return exts.map((ext) => ({
+      ...ext,
+      manifest: manifests?.[ext.name],
+      version: undefined,
+    }));
+  } catch (err) {
+    dislog.error('Failed to load extensions', err);
+    return [];
+  }
+})();
+
 export const ExtensionProvider = ({
   children,
 }: {
@@ -78,6 +94,7 @@ export const ExtensionProvider = ({
   const [settingsRecord, setSettingsRecord] = useState<
     ExtensionRecord[] | null
   >(null);
+
   const [extensions, setExtensions] = useState<ExtensionInfo[]>([]);
   const [disabledExtensions, setDisabledExtensions] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -102,6 +119,40 @@ export const ExtensionProvider = ({
     }
     isMountedRef.current = true;
   }, [disabledExtensions]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    initialDataPromise.then((data) => {
+      if (isMounted) {
+        setExtensions(data);
+        setIsLoading(false);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const refreshExtensions = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const exts = await discoverExtensions();
+      const manifests = await getManifests(exts.map((ext) => ext.name));
+      setExtensions(
+        exts.map((ext) => ({
+          ...ext,
+          manifest: manifests?.[ext.name],
+          version: undefined,
+        })),
+      );
+    } catch (err) {
+      dislog.error('Failed to refresh extensions', err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
   const fetchVersions = useCallback(
     async (exts?: ExtensionInfo[]) => {
@@ -177,30 +228,6 @@ export const ExtensionProvider = ({
     },
     [fetchVersions],
   );
-
-  const fetchBaseData = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const exts = await discoverExtensions();
-      const manifests = await getManifests(exts.map((ext) => ext.name));
-
-      const enriched = exts.map((ext) => ({
-        ...ext,
-        manifest: manifests?.[ext.name],
-        version: undefined,
-      }));
-
-      setExtensions(enriched);
-    } catch (err) {
-      dislog.error('Failed to load extensions', err);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchBaseData();
-  }, [fetchBaseData]);
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -300,10 +327,6 @@ export const ExtensionProvider = ({
       throw error;
     }
   }, []);
-
-  const refreshExtensions = useCallback(() => {
-    fetchBaseData();
-  }, [fetchBaseData]);
 
   const contextValue = useMemo(
     () => ({

@@ -126,7 +126,7 @@ export const makeAvatar = ({
     const group = SillyTavern.getContext().groups.find(
       (g) => g.id.toString() === groupId.toString(),
     );
-    return group.avatar_url;
+    return group?.avatar_url ?? system_avatar;
   }
 
   const charIdNum =
@@ -137,6 +137,20 @@ export const makeAvatar = ({
 
   return getThumbnailUrl('avatar', character.avatar || '');
 };
+
+const reqestIdleCallbackFn =
+  window.requestIdleCallback ||
+  function (cb) {
+    return setTimeout(() => {
+      const start = Date.now();
+      cb({
+        didTimeout: false,
+        timeRemaining: function () {
+          return Math.max(0, 50 - (Date.now() - start));
+        },
+      });
+    }, 1);
+  };
 
 export const runTaskInIdle = <T>(
   taskGenerator: Generator<T | null, void, unknown>,
@@ -169,10 +183,10 @@ export const runTaskInIdle = <T>(
       }
 
       if (!signal?.aborted) {
-        requestIdleCallback(processBatch);
+        reqestIdleCallbackFn(processBatch);
       }
     };
 
-    requestIdleCallback(processBatch);
+    reqestIdleCallbackFn(processBatch);
   });
 };

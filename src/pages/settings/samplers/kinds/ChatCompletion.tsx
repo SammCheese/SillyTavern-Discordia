@@ -73,6 +73,7 @@ const ChatCompletionSamplerSettings = () => {
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     syncFromNativeState();
 
     const sync = () => syncFromNativeState();

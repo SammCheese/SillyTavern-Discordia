@@ -61,8 +61,11 @@ const ServerRow = memo(
       prevProps.entity.item?.avatar ?? prevProps.entity.item?.avatar_url;
     const nextAvatar =
       nextProps.entity.item?.avatar ?? nextProps.entity.item?.avatar_url;
+    const name = prevProps.entity.item?.name;
+    const nextName = nextProps.entity.item?.name;
     return (
       avatar === nextAvatar &&
+      name === nextName &&
       prevProps.isSelected === nextProps.isSelected &&
       prevProps.onClick === nextProps.onClick
     );
@@ -120,7 +123,6 @@ const ServerBar = () => {
   const { searchQuery } = useSearch();
   const { openModal } = useModal();
   const { entities, isInitialLoad } = useSidebar();
-  //const { extensions } = useExtensionState();
 
   const onHomeClickHandler = useCallback(() => {
     setSelectedIndex(null);
@@ -242,12 +244,6 @@ const ServerBar = () => {
   const handleAddCharacterClick = useCallback(() => {
     openModal(<CharacterModal type="create" />);
   }, [openModal]);
-
-  /*const hasBotBrowser = useMemo(() => {
-    return extensions.some(
-      (ext) => ext?.manifest?.display_name === 'Bot Browser',
-    );
-  }, [extensions]);*/
 
   return (
     <ErrorBoundary>

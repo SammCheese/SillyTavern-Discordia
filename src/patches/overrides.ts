@@ -26,7 +26,7 @@ export const overrideSpinner = () => {
       return splashTexts[randomIndex];
     };
 
-    if (loadSpinner) {
+    if (loadSpinner.length) {
       loadSpinner.remove();
       const randomText = getRandomSplashText();
       const parent = $('#loader');
@@ -63,7 +63,7 @@ export const overrideSpinner = () => {
 export const angleSendButton = () => {
   try {
     const rightSendForm = $('#rightSendForm');
-    if (rightSendForm) {
+    if (rightSendForm.length) {
       const send_button = rightSendForm.find('#send_but');
       send_button.addClass('fa-rotate-by');
       send_button.attr('style', '--fa-rotate-angle: 45deg');
@@ -94,11 +94,11 @@ export const combineChatMenu = () => {
 
       extrasMenu.on('click', () => {
         if (extensionsMenu.is(':visible') || optionsMenu.is(':visible')) {
-          window.removeEventListener('click', toggleCombinedChatMenu);
           extensionsMenu.hide();
           optionsMenu.hide();
           return;
         }
+        window.removeEventListener('click', toggleCombinedChatMenu);
 
         window.addEventListener('click', toggleCombinedChatMenu);
         $('#extensionsMenu').show();

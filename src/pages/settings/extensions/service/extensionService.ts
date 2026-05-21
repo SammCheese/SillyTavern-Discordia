@@ -133,6 +133,10 @@ function* extensionProcessorGenerator(
   let processedCount = 0;
 
   for (let i = 0; i < elements.length; i++) {
+    if (i > 0 && i % batchSize === 0) {
+      yield null;
+    }
+
     let element = elements[i] as JQueryDOMElement;
 
     if (element.length > 0 && element[0]?.childNodes.length === 0) {
@@ -141,7 +145,13 @@ function* extensionProcessorGenerator(
       }
     }
 
-    const content = element.find('.inline-drawer-content');
+    const isStandardFormat = element.find('.inline-drawer-content').length > 0;
+    const content = isStandardFormat
+      ? element.find('.inline-drawer-content')
+      : (element
+          // Dirty fix for extensions like VectHare
+          .filter(':not([class*="-modal"])')
+          .children() as JQuery<HTMLElement>);
     if (content.length === 0) continue;
 
     const result = (() => {
