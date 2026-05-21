@@ -39,9 +39,18 @@ const AccountSettingsContent: SettingsContentRenderer = () => {
           <div className="text-lg font-gg-sans-bold mt-4">Actions</div>
 
           <div className="flex flex-col gap-2 mt-2">
-            <Button look={ButtonLook.PRIMARY}> Change Password </Button>
-            <Button look={ButtonLook.PRIMARY}> Settings Snapshots </Button>
-            <Button look={ButtonLook.PRIMARY}> Download Backup </Button>
+            <Button look={ButtonLook.PRIMARY} disabled>
+              {' '}
+              Change Password{' '}
+            </Button>
+            <Button look={ButtonLook.PRIMARY} disabled>
+              {' '}
+              Settings Snapshots{' '}
+            </Button>
+            <Button look={ButtonLook.PRIMARY} disabled>
+              {' '}
+              Download Backup{' '}
+            </Button>
           </div>
         </div>
 
@@ -49,8 +58,14 @@ const AccountSettingsContent: SettingsContentRenderer = () => {
           <div className="text-lg font-gg-sans-bold mt-4">Danger Zone</div>
 
           <div className="flex flex-col gap-2 mt-2">
-            <Button look={ButtonLook.DANGER}> Reset Settings </Button>
-            <Button look={ButtonLook.DANGER}> Reset Everything </Button>
+            <Button look={ButtonLook.DANGER} disabled>
+              {' '}
+              Reset Settings{' '}
+            </Button>
+            <Button look={ButtonLook.DANGER} disabled>
+              {' '}
+              Reset Everything{' '}
+            </Button>
           </div>
         </div>
       </div>

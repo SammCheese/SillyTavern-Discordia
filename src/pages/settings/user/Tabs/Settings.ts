@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { logout } from '../../../../utils/userUtils';
 
 export type UserSettingsItemType = 'view' | 'action';
 export type UserSettingsItemVariant = 'default' | 'danger';
@@ -13,6 +14,7 @@ export interface UserSettingsItem {
   searchTerms?: string[];
   type?: UserSettingsItemType;
   visibilityCondition?: () => boolean | Promise<boolean>;
+  action?: () => void | Promise<void>;
 }
 
 export interface UserSettingsCategory {
@@ -105,6 +107,7 @@ export const Settings: UserSettingsCategory[] = [
         variant: 'danger',
         hasSubMenu: false,
         type: 'action',
+        action: () => logout(),
         searchTerms: ['sign out', 'session'],
       },
     ],

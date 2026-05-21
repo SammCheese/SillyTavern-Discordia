@@ -1,0 +1,1 @@
+import{i as t}from"./import.js";const{getRequestHeaders:o}=await t("@script");async function e(){await fetch("/api/users/logout",{method:"POST",headers:o({omitContentType:!0})});const t=new URLSearchParams(window.location.search);t.set("noauto","true"),window.location.search=t.toString()}export{e as l};

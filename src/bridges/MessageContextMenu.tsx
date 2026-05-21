@@ -2,8 +2,9 @@ import { useEffect } from 'react';
 import { useContextMenu } from '../providers/contextMenuProvider';
 import type { ContextMenuItem } from '../components/common/ContextMenuEntry/ContextMenuEntry';
 import MessageEditingBridge from './MessageEditing';
+import { useSettings } from '../providers/discordiaSettingsProvider';
 
-const { deleteMessage } = await imports('@script');
+const { deleteMessage, messageEdit } = await imports('@script');
 
 const allowedOriginalToolsTitle = [
   '[title]Translate message',
@@ -17,6 +18,7 @@ const allowedOriginalToolsTitle = [
 const MessageContextMenu = () => {
   const { showContextMenu } = useContextMenu();
   const { startEditing, isEditMode } = MessageEditingBridge();
+  const { getSettings } = useSettings();
 
   const handleCopyMessage = (el) => {
     const text = el.querySelector('.mes_text')?.innerText;
@@ -81,7 +83,11 @@ const MessageContextMenu = () => {
           label: 'Edit Message',
           disabled: isSystem === 'true' || isEditMode,
           onClick: () => {
-            startEditing({ id });
+            if (getSettings().behavior.legacyEditing) {
+              messageEdit(id);
+            } else {
+              startEditing({ id });
+            }
           },
         },
         { label: '---', variant: 'separator' },
@@ -115,7 +121,7 @@ const MessageContextMenu = () => {
     return () => {
       chatContainer.removeEventListener('contextmenu', handleRightClick);
     };
-  }, [isEditMode, showContextMenu, startEditing]);
+  }, [getSettings, isEditMode, showContextMenu, startEditing]);
 
   return null;
 };
