@@ -1,4 +1,4 @@
-import { memo, useCallback, useState } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 
 interface StackPusherProps {
   inactiveEntries?: string[];
@@ -15,38 +15,78 @@ const StackPusher = ({
   inactiveLabel = 'Inactive Entries',
   onStackChange,
 }: StackPusherProps) => {
-  const [activeEntriesState, setActiveEntriesState] = useState(
-    activeEntries || [],
+  const isControlled =
+    activeEntries !== undefined &&
+    inactiveEntries !== undefined &&
+    typeof onStackChange === 'function';
+
+  const sanitizeStacks = useCallback(
+    (active: string[] = [], inactive: string[] = []) => {
+      const normalizedActive = [...new Set(active)];
+      const activeSet = new Set(normalizedActive);
+      const normalizedInactive = [...new Set(inactive)].filter(
+        (entry) => !activeSet.has(entry),
+      );
+
+      return {
+        active: normalizedActive,
+        inactive: normalizedInactive,
+      };
+    },
+    [],
   );
-  const [inactiveEntriesState, setInactiveEntriesState] = useState(
-    inactiveEntries || [],
+
+  const [entriesState, setEntriesState] = useState(() =>
+    sanitizeStacks(activeEntries, inactiveEntries),
   );
+
+  const controlledEntries = useMemo(
+    () => sanitizeStacks(activeEntries, inactiveEntries),
+    [activeEntries, inactiveEntries, sanitizeStacks],
+  );
+
+  const renderedActiveEntries = isControlled
+    ? controlledEntries.active
+    : entriesState.active;
+  const renderedInactiveEntries = isControlled
+    ? controlledEntries.inactive
+    : entriesState.inactive;
 
   const handleStackChange = useCallback(
     (newActiveEntries: string[], newInactiveEntries: string[]) => {
-      setActiveEntriesState(newActiveEntries);
-      setInactiveEntriesState(newInactiveEntries);
-      onStackChange?.(newActiveEntries, newInactiveEntries);
+      const sanitized = sanitizeStacks(newActiveEntries, newInactiveEntries);
+
+      if (!isControlled) {
+        setEntriesState(sanitized);
+      }
+
+      onStackChange?.(sanitized.active, sanitized.inactive);
     },
-    [onStackChange],
+    [isControlled, onStackChange, sanitizeStacks],
   );
 
   const handleSetActive = useCallback(
     (entry: string) => {
-      const newActive = [...activeEntriesState, entry];
-      const newInactive = inactiveEntriesState.filter((e) => e !== entry);
+      const newActive = [
+        ...renderedActiveEntries.filter((e) => e !== entry),
+        entry,
+      ];
+      const newInactive = renderedInactiveEntries.filter((e) => e !== entry);
       handleStackChange(newActive, newInactive);
     },
-    [activeEntriesState, inactiveEntriesState, handleStackChange],
+    [renderedActiveEntries, renderedInactiveEntries, handleStackChange],
   );
 
   const handleSetInactive = useCallback(
     (entry: string) => {
-      const newInactive = [...inactiveEntriesState, entry];
-      const newActive = activeEntriesState.filter((e) => e !== entry);
+      const newInactive = [
+        ...renderedInactiveEntries.filter((e) => e !== entry),
+        entry,
+      ];
+      const newActive = renderedActiveEntries.filter((e) => e !== entry);
       handleStackChange(newActive, newInactive);
     },
-    [activeEntriesState, inactiveEntriesState, handleStackChange],
+    [renderedActiveEntries, renderedInactiveEntries, handleStackChange],
   );
 
   return (
@@ -58,16 +98,16 @@ const StackPusher = ({
           </h3>
         </div>
         <div className="flex flex-col overflow-auto w-full h-full">
-          {activeEntriesState.map((entry, index) => (
+          {renderedActiveEntries.map((entry) => (
             <div
-              key={entry.toString() || index}
+              key={entry}
               className="p-2 flex hover:bg-base-discordia-lighter"
             >
               <div className="truncate content-center">{entry}</div>
               <div className="ml-auto">
                 <button
                   className="px-2 py-1 bg-red-500 text-white rounded cursor-pointer"
-                  onClick={handleSetInactive.bind(null, entry)}
+                  onClick={() => handleSetInactive(entry)}
                 >
                   &#8212;
                 </button>
@@ -83,16 +123,16 @@ const StackPusher = ({
           </h3>
         </div>
         <div className="flex flex-col overflow-auto w-full h-full">
-          {inactiveEntriesState.map((entry, index) => (
+          {renderedInactiveEntries.map((entry) => (
             <div
-              key={entry.toString() || index}
+              key={entry}
               className="p-2 flex hover:bg-base-discordia-lighter"
             >
               <div className="truncate content-center">{entry}</div>
               <div className="ml-auto">
                 <button
                   className="px-2 py-1 bg-green-500 text-white rounded cursor-pointer"
-                  onClick={handleSetActive.bind(null, entry)}
+                  onClick={() => handleSetActive(entry)}
                 >
                   &#43;
                 </button>

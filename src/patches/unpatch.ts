@@ -26,11 +26,14 @@ export const unpatchSpinner = () => {
 export const unpatchCombinedChatMenu = () => {
   try {
     const menu = $('#extras_menu_button');
-    if (menu) {
+    if (menu.length) {
+      const optionsMenu = menu
+        .find('#options')
+        .removeClass('font-family-reset');
+      const extensionsMenu = menu
+        .find('#extensionsMenu')
+        .removeClass('font-family-reset');
       menu.remove();
-      const optionsMenu = $('#options').removeClass('font-family-reset');
-      const extensionsMenu =
-        $('#extensionsMenu').removeClass('font-family-reset');
       const parent = $('#leftSendForm');
       parent.empty();
       parent.append(optionsMenu, extensionsMenu);

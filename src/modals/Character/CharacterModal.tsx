@@ -105,6 +105,19 @@ const CharacterModal = ({
     [existingCharacter],
   );
 
+  const [characterData, setCharacterData] = useState<Character | null>(() => {
+    if (existingCharacter) return existingCharacter;
+    return {
+      name: '',
+      description: '',
+      scenario: 'A chat between {{user}} and {{char}}.',
+      first_mes: '',
+      personality: '',
+      creatorcomment: '',
+      data: { extensions: {} },
+    } as Character;
+  });
+
   useEffect(() => {
     if (existingCharacter && isLazy) {
       getOneCharacter(existingCharacter.avatar?.toString() || '')
@@ -121,19 +134,6 @@ const CharacterModal = ({
         });
     }
   }, [avatarName, existingCharacter, isLazy]);
-
-  const [characterData, setCharacterData] = useState<Character | null>(() => {
-    if (existingCharacter) return existingCharacter;
-    return {
-      name: '',
-      description: '',
-      scenario: 'A chat between {{user}} and {{char}}.',
-      first_mes: '',
-      personality: '',
-      creatorcomment: '',
-      data: { extensions: {} },
-    } as Character;
-  });
 
   const [previewUrl, setPreviewUrl] = useState<string | null>(() => {
     if (existingCharacter) {
@@ -182,7 +182,7 @@ const CharacterModal = ({
         return mergedData;
       });
     },
-    [],
+    [setCharacterData],
   );
 
   useEffect(() => {

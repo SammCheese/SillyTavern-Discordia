@@ -1,4 +1,4 @@
-import { type ReactNode, useCallback, useState, memo, useEffect } from 'react';
+import { type ReactNode, useCallback, useState, memo } from 'react';
 
 interface AccordionProps {
   title: string | ReactNode;
@@ -16,14 +16,15 @@ export const Accordion = ({
   destroyOnClose = false,
 }: AccordionProps) => {
   const [open, setOpen] = useState(isOpen);
+  const [prevIsOpenProp, setPrevIsOpenProp] = useState(isOpen);
 
-  useEffect(() => {
-    // eslint-disable-next-line @eslint-react/hooks-extra/no-direct-set-state-in-use-effect
+  if (isOpen !== prevIsOpenProp) {
+    setPrevIsOpenProp(isOpen);
     setOpen(isOpen);
-  }, [isOpen]);
+  }
 
   const handleToggle = useCallback(() => {
-    setOpen((prevOpen) => !prevOpen);
+    setOpen((prev) => !prev);
     onToggle?.();
   }, [onToggle]);
 

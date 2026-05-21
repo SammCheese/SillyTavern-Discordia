@@ -73,6 +73,7 @@ const ChatCompletionSamplerSettings = () => {
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     syncFromNativeState();
 
     const sync = () => syncFromNativeState();
@@ -351,7 +352,7 @@ const ChatCompletionSamplerSettings = () => {
 
       <div className="flex flex-col gap-3">
         <h3 className="text-lg font-semibold">Generation</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 justify-items-center">
           {generationSliders.map((item) => (
             <SamplerSlider
               key={`${item.id}-${String(settings[item.id] ?? '')}`}
@@ -380,7 +381,7 @@ const ChatCompletionSamplerSettings = () => {
 
       <div className="flex flex-col gap-3">
         <h3 className="text-lg font-semibold">Sampling</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 justify-items-center">
           {samplerSliders.map((item) => (
             <SamplerSlider
               key={`${item.id}-${String(settings[item.id] ?? '')}`}
@@ -427,7 +428,7 @@ const ChatCompletionSamplerSettings = () => {
           />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 ">
           <div className="flex flex-col gap-1">
             <label className="text-sm font-medium">Reasoning Effort</label>
             <Select

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useReducer, useRef } from 'react';
+import { useCallback, useEffect, useReducer, useRef } from 'react';
 import { getRecentChats } from '../services/chatService';
 import { DISCORDIA_EVENTS } from '../events/eventTypes';
 
@@ -112,6 +112,7 @@ export const useSidebarState = () => {
       const recentChats = await getRecentChats();
       dispatch({ type: 'REFRESH_SUCCESS', recentChats });
     } catch (error) {
+      dispatch({ type: 'REFRESH_FAILURE', error: error as Error });
       dislog.error('Failed to refresh recent chats:', error);
     }
   }, []);
@@ -328,10 +329,8 @@ export const useSidebarState = () => {
     showRecentChats,
   ]);
 
-  const memoizedState = useMemo(() => state, [state]);
-
   return {
-    ...memoizedState,
+    ...state,
     setOpen,
   };
 };

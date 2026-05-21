@@ -16,3 +16,6 @@ export * as secrets from '../../../../secrets';
 export * as samplerSelect from '../../../../samplerSelect';
 export * as sysprompt from '../../../../sysprompt';
 export * as tags from '../../../../tags';
+export * as rossMods from '../../../../RossAscends-mods';
+export * as user from '../../../../user';
+export * as backgrounds from '../../../../backgrounds';

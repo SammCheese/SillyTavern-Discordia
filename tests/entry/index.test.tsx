@@ -9,6 +9,8 @@ describe('index entry', () => {
     document.body.innerHTML = '';
     window.discordia = {
       backups: {},
+      extensionTemplates: [],
+      imports: vi.fn(),
     };
   });
 
@@ -27,9 +29,15 @@ describe('index entry', () => {
     const performPatches = vi.fn();
     const render = vi.fn();
     const createRoot = vi.fn(() => ({ render, unmount: vi.fn() }));
+    const registerExtensionAPI = vi.fn();
+    const markDiscordiaReady = vi.fn();
 
     vi.doMock('../../src/patches', () => ({ performPatches }));
     vi.doMock('react-dom/client', () => ({ createRoot }));
+    vi.doMock('../../src/apis/extensionAPI', () => ({
+      registerExtensionAPI,
+      markDiscordiaReady,
+    }));
     vi.doMock('../../src/app/App', () => ({
       default: () => <div data-testid="app" />,
     }));
@@ -45,6 +53,9 @@ describe('index entry', () => {
         default: ({ children }: { children: React.ReactNode }) => children,
       }),
     );
+    vi.doMock('../../src/providers/platformProvider', () => ({
+      default: ({ children }: { children: React.ReactNode }) => children,
+    }));
     vi.doMock('../../src/providers/backHandlerProvider', () => ({
       default: ({ children }: { children: React.ReactNode }) => children,
     }));
@@ -65,6 +76,17 @@ describe('index entry', () => {
     }));
     vi.doMock('../../src/providers/contextMenuProvider', () => ({
       default: ({ children }: { children: React.ReactNode }) => children,
+    }));
+    vi.doMock(
+      '../../src/providers/contentProviders/sidebarStateProvider',
+      () => ({
+        SidebarProvider: ({ children }: { children: React.ReactNode }) =>
+          children,
+      }),
+    );
+    vi.doMock('../../src/providers/discordiaSettingsProvider', () => ({
+      SettingsProvider: ({ children }: { children: React.ReactNode }) =>
+        children,
     }));
 
     await import('../../src/index');
@@ -114,6 +136,9 @@ describe('index entry', () => {
         default: ({ children }: { children: React.ReactNode }) => children,
       }),
     );
+    vi.doMock('../../src/providers/platformProvider', () => ({
+      default: ({ children }: { children: React.ReactNode }) => children,
+    }));
     vi.doMock('../../src/providers/backHandlerProvider', () => ({
       default: ({ children }: { children: React.ReactNode }) => children,
     }));

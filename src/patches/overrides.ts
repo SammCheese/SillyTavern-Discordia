@@ -5,10 +5,14 @@ const splashTexts = [
   'Gathering your Characters...',
   'Summoning the spirits...',
   'Warning the AI...',
+  'Brewing some coffee...',
+  'I thought this is all there is...',
   'Aligning the pixels...',
   'Loading your chat experience...',
   'Preparing the fun...',
   'Delaying reality...',
+  "Do you know when you're coming back?",
+  'Follow me into the endless night...',
 ];
 
 export const overrideSpinner = () => {
@@ -17,10 +21,14 @@ export const overrideSpinner = () => {
     // Backup for unpatch
     window.discordia.backups.originalLoadSpinner = loadSpinner.clone();
 
-    if (loadSpinner) {
-      loadSpinner.remove();
+    const getRandomSplashText = () => {
       const randomIndex = Math.floor(Math.random() * splashTexts.length);
-      const randomText = splashTexts[randomIndex];
+      return splashTexts[randomIndex];
+    };
+
+    if (loadSpinner.length) {
+      loadSpinner.remove();
+      const randomText = getRandomSplashText();
       const parent = $('#loader');
       const newSpinner = $(`
       <div id="load-spinner">
@@ -55,7 +63,7 @@ export const overrideSpinner = () => {
 export const angleSendButton = () => {
   try {
     const rightSendForm = $('#rightSendForm');
-    if (rightSendForm) {
+    if (rightSendForm.length) {
       const send_button = rightSendForm.find('#send_but');
       send_button.addClass('fa-rotate-by');
       send_button.attr('style', '--fa-rotate-angle: 45deg');
@@ -86,11 +94,11 @@ export const combineChatMenu = () => {
 
       extrasMenu.on('click', () => {
         if (extensionsMenu.is(':visible') || optionsMenu.is(':visible')) {
-          window.removeEventListener('click', toggleCombinedChatMenu);
           extensionsMenu.hide();
           optionsMenu.hide();
           return;
         }
+        window.removeEventListener('click', toggleCombinedChatMenu);
 
         window.addEventListener('click', toggleCombinedChatMenu);
         $('#extensionsMenu').show();

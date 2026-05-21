@@ -41,6 +41,75 @@
   );
 
   --color-accordion-header: hsl(240 calc(1 * 4%) 60.784% /0.0784313725490196);
+
+  --font-family-base:
+    'gg-sans', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  --default-font-family: var(--font-family-base);
+  --font-gg-sans: 'gg-sans', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  --font-gg-sans-medium:
+    'gg-sans-medium', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  --font-gg-sans-bold: 'gg-sans-bold', 'Segoe UI', Tahoma, Geneva, Verdana;
+}
+
+@font-face {
+  font-family: 'gg-sans-medium';
+  src: url('../assets/fonts/gg-sans-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-size: 26px;
+}
+
+@font-face {
+  font-family: 'gg-sans';
+  src: url('../assets/fonts/gg-sans-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-size: 26px;
+}
+
+@font-face {
+  font-family: 'gg-sans-bold';
+  src: url('../assets/fonts/gg-sans-Bold.ttf') format('truetype');
+  font-weight: 400;
+  font-size: 26px;
+}
+
+body {
+  font-family:
+    'gg-sans-medium', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+}
+
+#discordia-root {
+  --discordia-accent-color: #5865f2;
+  --discordia-background-color: rgba(255, 255, 255, 0.95);
+  --discordia-background-image: none;
+  --discordia-background-image-opacity: 0;
+
+  --color-blurple: var(--discordia-accent-color);
+  --color-blurple-lighter: color-mix(
+    in srgb,
+    var(--discordia-accent-color) 88%,
+    #fff 12%
+  );
+
+  position: relative;
+  min-height: 100dvh;
+  background-color: var(--discordia-background-color);
+}
+
+#discordia-root::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: var(--discordia-background-image);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
+  opacity: var(--discordia-background-image-opacity);
+  pointer-events: none;
+  z-index: 0;
+}
+
+#discordia-root > * {
+  z-index: 1;
 }
 
 @media (min-width: 601px) and (max-width: 1000px) {
@@ -141,12 +210,26 @@ input[type='range'].discordia-slider {
   }
 }
 
+input.file-picker {
+  display: block !important;
+}
+
 select {
   padding: 8px !important;
 }
 
 .mes:hover {
   background-color: rgba(255, 255, 255, 0.05);
+}
+
+.mes_text,
+.name_text {
+  font-family:
+    'gg-sans-medium', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+}
+
+.timestamp {
+  font-size: small !important;
 }
 
 .editing-banner {
@@ -175,13 +258,17 @@ dialog.popup {
   margin: auto;
 }
 
+#load-spinner {
+  background-color: var(--SmartThemeBlurTintColor) !important;
+}
+
 #sidebar-container {
   height: 100dvh;
   z-index: 31;
   width: var(--sidebar-width);
   position: relative;
-  backdrop-filter: blur(calc(var(--SmartThemeBlurStrength) * 2), 10px);
-  background-color: var(--SmartThemeChatTintColor, rgba(255, 255, 255, 0.95));
+  backdrop-filter: blur(var(--SmartThemeBlurStrength), 10px);
+  background-color: var(--SmartThemeBlurTintColor);
   border-right: rgba(255, 255, 255, 0.1) 1px solid;
 }
 

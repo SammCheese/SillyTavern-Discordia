@@ -3,6 +3,7 @@ import { render, fireEvent, waitFor } from '@testing-library/react';
 import { setupGlobalImports } from '../utils/mockImports';
 import { ContextMenuProvider } from '../../src/providers/contextMenuProvider';
 import MessageContextMenu from '../../src/bridges/MessageContextMenu';
+import { SettingsProvider } from '../../src/providers/discordiaSettingsProvider';
 
 describe('MessageContextMenu', () => {
   beforeEach(async () => {
@@ -43,9 +44,11 @@ describe('MessageContextMenu', () => {
 
   it('should show context menu on right-clicking a user message', async () => {
     render(
-      <ContextMenuProvider>
-        <MessageContextMenu />
-      </ContextMenuProvider>,
+      <SettingsProvider>
+        <ContextMenuProvider>
+          <MessageContextMenu />
+        </ContextMenuProvider>
+      </SettingsProvider>,
     );
 
     const userMessage = document.querySelector('.mes[mesid="1"]');
@@ -71,9 +74,11 @@ describe('MessageContextMenu', () => {
 
   it('should disable Edit Message for system messages', async () => {
     render(
-      <ContextMenuProvider>
-        <MessageContextMenu />
-      </ContextMenuProvider>,
+      <SettingsProvider>
+        <ContextMenuProvider>
+          <MessageContextMenu />
+        </ContextMenuProvider>
+      </SettingsProvider>,
     );
 
     const systemMessage = document.querySelector('.mes[mesid="2"]');
@@ -99,9 +104,11 @@ describe('MessageContextMenu', () => {
       .mockResolvedValue();
 
     render(
-      <ContextMenuProvider>
-        <MessageContextMenu />
-      </ContextMenuProvider>,
+      <SettingsProvider>
+        <ContextMenuProvider>
+          <MessageContextMenu />
+        </ContextMenuProvider>
+      </SettingsProvider>,
     );
 
     const userMessage = document.querySelector('.mes[mesid="1"]');
@@ -128,9 +135,11 @@ describe('MessageContextMenu', () => {
 
   it('should not show context menu when editing a message', async () => {
     render(
-      <ContextMenuProvider>
-        <MessageContextMenu />
-      </ContextMenuProvider>,
+      <SettingsProvider>
+        <ContextMenuProvider>
+          <MessageContextMenu />
+        </ContextMenuProvider>
+      </SettingsProvider>,
     );
 
     const userMessage = document.querySelector('.mes[mesid="3"]');

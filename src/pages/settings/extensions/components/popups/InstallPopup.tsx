@@ -75,7 +75,7 @@ const InstallPopup = ({ onClose, onInstall }: InstallPopupProps) => {
         />
       </div>
 
-      <div className="mt-6 flex flex-row justify-end gap-2">
+      <div className="mt-6 flex flex-row justify-end gap-2 pb-2">
         <Button look={ButtonLook.TRANSPARENT} onClick={handleClose}>
           Cancel
         </Button>

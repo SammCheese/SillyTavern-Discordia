@@ -1,10 +1,4 @@
-import {
-  useState,
-  useCallback,
-  type ChangeEvent,
-  memo,
-  useEffect,
-} from 'react';
+import { useState, useCallback, type ChangeEvent, memo } from 'react';
 
 interface CheckboxProps {
   label: string;
@@ -14,6 +8,12 @@ interface CheckboxProps {
 
 const Checkbox = ({ label, checked = false, onChange }: CheckboxProps) => {
   const [checkedState, setCheckedState] = useState(checked);
+  const [prevCheckedProp, setPrevCheckedProp] = useState(checked);
+
+  if (checked !== prevCheckedProp) {
+    setPrevCheckedProp(checked);
+    setCheckedState(checked);
+  }
 
   const toggleCheckbox = useCallback(
     (e: ChangeEvent<HTMLInputElement>) => {
@@ -26,11 +26,6 @@ const Checkbox = ({ label, checked = false, onChange }: CheckboxProps) => {
     },
     [checkedState, onChange],
   );
-
-  useEffect(() => {
-    // eslint-disable-next-line @eslint-react/hooks-extra/no-direct-set-state-in-use-effect
-    setCheckedState(checked);
-  }, [checked]);
 
   return (
     <div className="flex items-center gap-2">

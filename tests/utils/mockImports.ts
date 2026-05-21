@@ -68,6 +68,9 @@ export const setupGlobalImports = () => {
     getContext: () => ({
       imports: (globalThis as any).imports,
       saveSettingsDebounced: vi.fn(),
+      extensionSettings: {
+        discordia: {},
+      },
     }),
     libs: {
       jquery: {

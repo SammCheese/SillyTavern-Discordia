@@ -1,6 +1,9 @@
 export {};
 
-import * as importFunc from './utils/import';
+import type {
+  DiscordiaAPIv1,
+  DiscordiaAPIVersionRange,
+} from './src/apis/extensionAPI';
 
 import type * as Scripts from './types/script-map';
 import type * as SillyScript from '../../../../script';
@@ -25,11 +28,10 @@ type Dislog = {
 
 declare global {
   type ScriptKeys = keyof typeof Scripts;
+  function imports(mod: '@script'): Promise<typeof SillyScript>;
   function imports<K extends ScriptKeys>(
     mod: `@scripts/${K}`,
   ): Promise<(typeof Scripts)[K]>;
-  function imports(mod: '@script'): Promise<typeof SillyScript>;
-  function imports(mod: string): Promise<typeof importFunc.default>;
 
   var dislog: Dislog;
 
@@ -39,6 +41,12 @@ declare global {
       backups: {
         originalLoadSpinner?: JQuery<HTMLElement>;
       };
+      api?: DiscordiaAPIv1;
+      apis?: {
+        v1?: DiscordiaAPIv1;
+      };
+      getApi?: (versionRange?: DiscordiaAPIVersionRange) => DiscordiaAPIv1;
+      imports: typeof imports;
     };
   }
   const toastr: {

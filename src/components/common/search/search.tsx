@@ -6,9 +6,15 @@ interface SearchBarProps {
   onInput: (query: string) => void;
   style?: CSSProperties;
   onIconClick?: () => void;
+  placeholder?: string;
 }
 
-const SearchBar = ({ onInput, style, onIconClick }: SearchBarProps) => {
+const SearchBar = ({
+  onInput,
+  style,
+  onIconClick,
+  placeholder,
+}: SearchBarProps) => {
   const [query, setQuery] = useState('');
 
   const handleInputChange = useCallback(
@@ -31,7 +37,11 @@ const SearchBar = ({ onInput, style, onIconClick }: SearchBarProps) => {
       className=" relative p-1 mx-2 flex content-center gap-2 bg-input-bg rounded-md items-baseline flex-row"
       style={style}
     >
-      <Input placeholder="Search" value={query} onChange={handleInputChange} />
+      <Input
+        placeholder={placeholder ?? 'Search'}
+        value={query}
+        onChange={handleInputChange}
+      />
       <div
         className="fa-solid fa-magnifying-glass content-center cursor-pointer w-5 h-5 hover:opacity-100 opacity-70 absolute right-3 top-1/2 transform -translate-y-1/2"
         onClick={handleIconClick}

@@ -173,7 +173,7 @@ const ChannelBar = () => {
           </div>
         </div>
         <div id="channel-divider" className="divider"></div>
-        <div className="section-header">{title}</div>
+        <div className="section-header font-gg-sans-bold">{title}</div>
         <div id="channel-list">
           <div id="channels-list-container">
             {/* Skeleton Chats for loading */}

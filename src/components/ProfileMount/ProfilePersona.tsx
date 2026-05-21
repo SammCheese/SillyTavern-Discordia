@@ -81,7 +81,7 @@ const ProfilePersona = () => {
 
         <div id="user-info">
           {' '}
-          <div id="user-name" className="select-none">
+          <div id="user-name" className="select-none font-gg-sans-bold">
             {name}
           </div>
           <div id="user-status"></div>

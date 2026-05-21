@@ -13,6 +13,7 @@ import { createPortal } from 'react-dom';
 import { rootContainer } from '../index';
 import ErrorBoundary from '../components/common/ErrorBoundary/ErrorBoundary';
 import { useBackHandler } from '../hooks/useBackHandler';
+import { setDiscordiaPageController } from '../apis/extensionAPI';
 
 const OpenPage = lazy(() => import('../pages/OpenPage'));
 
@@ -60,6 +61,17 @@ export function PageProvider({ children }: { children: ReactNode }) {
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [closePage]);
+
+  useEffect(() => {
+    setDiscordiaPageController({
+      open: openPage,
+      close: closePage,
+    });
+
+    return () => {
+      setDiscordiaPageController(null);
+    };
+  }, [openPage, closePage]);
 
   useBackHandler(isVisible, closePage);
 

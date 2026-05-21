@@ -47,9 +47,13 @@ const Button = ({
 
   const buttonClass = useMemo(() => getButtonClass(), [getButtonClass]);
 
+  const stateClass = useMemo(() => {
+    return disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer';
+  }, [disabled]);
+
   return (
     <button
-      className={`px-4 py-2 text-white font-bold border cursor-pointer rounded disabled:opacity-50 ${buttonClass} transition-colors duration-200 ease-in-out active:scale-95`}
+      className={`px-4 py-2 text-white font-bold border rounded ${buttonClass} ${stateClass} transition-colors duration-200 ease-in-out active:scale-95`}
       onClick={handleClick}
       disabled={disabled}
     >

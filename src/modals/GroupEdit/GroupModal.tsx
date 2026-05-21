@@ -159,7 +159,7 @@ const GroupEditModal = ({ entity }: GroupEditModalProps) => {
         prevGroup ? { ...prevGroup, members: newMembers } : prevGroup,
       );
     },
-    [group?.members, setGroup],
+    [group, setGroup],
   );
 
   const handleAddMember = useCallback(
@@ -172,7 +172,7 @@ const GroupEditModal = ({ entity }: GroupEditModalProps) => {
         prevGroup ? { ...prevGroup, members: newMembers } : prevGroup,
       );
     },
-    [group?.members, setGroup],
+    [group, setGroup],
   );
 
   const members = useMemo(() => {
@@ -190,7 +190,7 @@ const GroupEditModal = ({ entity }: GroupEditModalProps) => {
     }
 
     return members;
-  }, [group?.members]);
+  }, [group]);
 
   const disabled = useMemo(() => {
     if (!group) return true;
