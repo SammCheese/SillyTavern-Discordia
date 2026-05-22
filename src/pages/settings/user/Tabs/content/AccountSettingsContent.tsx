@@ -15,7 +15,7 @@ const AccountSettingsContent: SettingsContentRenderer = () => {
         <div className="flex flex-row items-center gap-4">
           <div className="w-20 h-20 rounded-full bg-gray-300 overflow-hidden">
             <img
-              src={currentUser.avatar}
+              src={currentUser?.avatar || 'user-default.png'}
               loading="lazy"
               alt="Avatar"
               className="w-full h-full rounded-full object-cover"
