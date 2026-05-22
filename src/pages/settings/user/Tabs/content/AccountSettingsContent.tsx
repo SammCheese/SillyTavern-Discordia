@@ -15,7 +15,7 @@ const AccountSettingsContent: SettingsContentRenderer = () => {
         <div className="flex flex-row items-center gap-4">
           <div className="w-20 h-20 rounded-full bg-gray-300 overflow-hidden">
             <img
-              src={currentUser.avatar}
+              src={currentUser?.avatar ?? 'user-default.png'}
               loading="lazy"
               alt="Avatar"
               className="w-full h-full rounded-full object-cover"
@@ -24,9 +24,13 @@ const AccountSettingsContent: SettingsContentRenderer = () => {
           <div className="flex flex-row items-center gap-2">
             <div className="flex flex-col">
               <div className="text-lg font-gg-sans-bold">
-                {currentUser.name}
+                {currentUser?.name ??
+                  SillyTavern.getContext().name1 ??
+                  'Unknown User'}
               </div>
-              <div className="text-sm text-gray-500">{currentUser.handle}</div>
+              <div className="text-sm text-gray-500">
+                {currentUser?.handle ?? 'Unknown Handle'}
+              </div>
             </div>
 
             <div className="bg-blurple text-white rounded-md px-3 py-0 mt-1 inline-block self-baseline">

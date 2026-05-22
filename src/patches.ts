@@ -17,6 +17,16 @@ export type Patch = {
 };
 
 const patches: Patch[] = [
+  {
+    name: 'hideTopBar',
+    run: () => $('#top-bar').hide(),
+    antipatch: () => $('#top-bar').show(),
+  },
+  {
+    name: 'hideTopSettingsHolder',
+    run: () => $('#top-settings-holder').hide(),
+    antipatch: () => $('#top-settings-holder').show(),
+  },
   { name: 'hijackJquery', run: hijackJquery },
   { name: 'overrideSpinner', run: overrideSpinner, antipatch: unpatchSpinner },
   {
