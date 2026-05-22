@@ -56,8 +56,6 @@ const startApp = (safeStart: boolean = false) => {
 
     if (topBar) {
       topBar?.parentNode?.insertBefore(rootContainer, topBar);
-      // Unneeded. Remove for the sake of cleaner DOM
-      topBar.style.display = 'none';
     }
 
     if (!safeStart && !isRemounting) {

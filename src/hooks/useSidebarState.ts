@@ -214,7 +214,6 @@ export const useSidebarState = () => {
       };
     });
 
-    settingsHolder.attr('style', 'display: none !important;');
     dispatch({ type: 'SET_ICONS', icons });
   }, []);
 

@@ -93,7 +93,6 @@ describe('index entry', () => {
 
     const rootContainer = document.getElementById('discordia-root');
     expect(rootContainer).toBeTruthy();
-    expect(topBar.style.display).toBe('none');
     expect(host.firstElementChild?.id).toBe('discordia-root');
     expect(performPatches).toHaveBeenCalledTimes(1);
     expect(createRoot).toHaveBeenCalledWith(rootContainer);

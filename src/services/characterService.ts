@@ -257,6 +257,8 @@ export async function _deleteCharacter(
 
 export async function refreshCharacterList(): Promise<void> {
   await getCharacters();
+  // Refresh chats and entities that might be using the deleted/edited character
+  eventSource.emit(DISCORDIA_EVENTS.CHAT_UPDATE);
   eventSource.emit(DISCORDIA_EVENTS.ENTITY_CHANGED);
 }
 

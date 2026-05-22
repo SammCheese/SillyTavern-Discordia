@@ -1,5 +1,6 @@
 // @ts-expect-error Video Import
 import video from '../../assets/cord.webm';
+import { disableDiscordia } from '../utils/utils';
 
 const splashTexts = [
   'Gathering your Characters...',
@@ -32,6 +33,10 @@ export const overrideSpinner = () => {
       const parent = $('#loader');
       const newSpinner = $(`
       <div id="load-spinner">
+        <div id="disable-discordia" style="position: absolute; top: 20px; right: 20px; cursor: pointer; display: flex; align-items: center; gap: 8px; padding: 8px 12px; transition: background-color 0.3s;">
+          <span>X</span>
+          <span>Temporarily Disable Discordia</span>
+        </div>
         <video autoplay loop muted playsinline  style="width: 300px; height: 300px; object-fit: cover; border-radius: 12px;">
           <source src="${video}" type="video/webm" />
         </video>
@@ -51,6 +56,9 @@ export const overrideSpinner = () => {
         left: 0,
         zIndex: 1000,
         backgroundColor: '#1e1e1e',
+      });
+      newSpinner.find('#disable-discordia').on('click', () => {
+        disableDiscordia();
       });
       parent.append(newSpinner);
     }
