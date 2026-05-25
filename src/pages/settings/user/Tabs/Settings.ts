@@ -107,7 +107,7 @@ export const Settings: UserSettingsCategory[] = [
         variant: 'danger',
         hasSubMenu: false,
         type: 'action',
-        action: () => logout(),
+        action: async () => await logout(),
         searchTerms: ['sign out', 'session'],
       },
     ],

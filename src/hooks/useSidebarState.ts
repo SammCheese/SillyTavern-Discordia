@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useReducer, useRef } from 'react';
-import { getRecentChats } from '../services/chatService';
+import { getRecentChats, invalidateEntityCache } from '../services/chatService';
 import { DISCORDIA_EVENTS } from '../events/eventTypes';
 
 const { getGroupPastChats } = await imports('@scripts/groupChats');
@@ -99,6 +99,7 @@ export const useSidebarState = () => {
 
   const refreshCharacters = useCallback(() => {
     try {
+      invalidateEntityCache();
       const entities = getEntitiesList({ doFilter: true, doSort: true });
       dispatch({ type: 'SET_ENTITIES', entities });
     } catch (error) {
@@ -196,22 +197,24 @@ export const useSidebarState = () => {
   const processMenuIcons = useCallback(() => {
     const settingsHolder = $('#top-settings-holder');
     if (!settingsHolder.length) return;
+    const children = settingsHolder.children();
 
-    const children = settingsHolder.children().toArray();
-    const icons: Icon[] = children.map((el) => {
+    const icons: Icon[] = [];
+    children.each((_, el) => {
       const jEl = $(el);
-      const id = `#${jEl.attr('id')}`;
-      const infoEl = jEl.find('.drawer-icon');
-
-      return {
-        className: infoEl.attr('class') || '',
+      const id = jEl.attr('id');
+      if (!id) return;
+      icons.push({
+        className: jEl.find('.drawer-icon').attr('class') || '',
         title:
-          infoEl.attr('title') ||
+          jEl.find('.drawer-icon').attr('title') ||
           jEl.find('.drawer-toggle').attr('title') ||
           '',
-        showInProfile: PROFILE_MENU_CONFIG.some((item) => item.id === id),
-        id: id,
-      };
+        showInProfile: PROFILE_MENU_CONFIG.some(
+          (item) => item.id === `#${jEl.attr('id')}`,
+        ),
+        id: `#${jEl.attr('id')}`,
+      });
     });
 
     dispatch({ type: 'SET_ICONS', icons });
@@ -248,17 +251,23 @@ export const useSidebarState = () => {
     const body = $('body');
     let touchStartX = 0;
     let touchEndX = 0;
-
+    let lastMove = 0;
     const onPointerDown = (e) => {
       touchStartX = e.clientX ?? 0;
     };
     const onPointerMove = (e) => {
+      const now = performance.now();
+      if (now - lastMove < 16) return;
+      lastMove = now;
       touchEndX = e.clientX ?? 0;
     };
     const onTouchStart = (e) => {
       touchStartX = e.originalEvent?.touches[0]?.clientX ?? 0;
     };
     const onTouchMove = (e) => {
+      const now = performance.now();
+      if (now - lastMove < 16) return;
+      lastMove = now;
       touchEndX = e.originalEvent?.touches[0]?.clientX ?? 0;
     };
 

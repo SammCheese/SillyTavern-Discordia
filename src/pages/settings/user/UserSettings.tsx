@@ -69,34 +69,14 @@ const UserSettings = () => {
     return visibleItems.find((item) => item.type !== 'action');
   }, [visibleItems, selectedSettingId]);
 
-  const handleLogout = useCallback(async () => {
-    try {
-      const response = await fetch('/api/users/logout', { method: 'POST' });
-
-      if (!response.ok && response.status !== 204) {
-        console.error('Failed to log out. Status:', response.status);
-        return;
-      }
-
-      window.location.reload();
-    } catch (error) {
-      console.error('Logout request failed:', error);
+  const handleSelectItem = useCallback(async (item: UserSettingsItem) => {
+    if (item.type === 'action') {
+      await item.action?.();
+      return;
     }
+
+    setSelectedSettingId(item.id);
   }, []);
-
-  const handleSelectItem = useCallback(
-    (item: UserSettingsItem) => {
-      if (item.type === 'action') {
-        if (item.id === 'logout') {
-          void handleLogout();
-        }
-        return;
-      }
-
-      setSelectedSettingId(item.id);
-    },
-    [handleLogout],
-  );
 
   useEffect(() => {
     return () => {

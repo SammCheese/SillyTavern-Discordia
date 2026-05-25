@@ -3,6 +3,28 @@ const { characters, getRequestHeaders, getThumbnailUrl, system_avatar } =
 const { groups } = await imports('@scripts/groupChats');
 const { sortMoments, timestampToMoment } = await imports('@scripts/utils');
 
+let cachedCharacterMap: Map<string, Character> | null = null;
+let cachedGroupMap: Map<string, GroupItem> | null = null;
+
+export const invalidateEntityCache = () => {
+  cachedCharacterMap = null;
+  cachedGroupMap = null;
+};
+
+const getCharacterMap = () => {
+  if (!cachedCharacterMap) {
+    cachedCharacterMap = new Map(characters.map((c) => [c.avatar!, c]));
+  }
+  return cachedCharacterMap;
+};
+
+const getGroupMap = () => {
+  if (!cachedGroupMap) {
+    cachedGroupMap = new Map(groups.map((g) => [g.id.toString(), g]));
+  }
+  return cachedGroupMap;
+};
+
 export async function getRecentChats(entities?: Entity[], amount = 20) {
   const response = await fetch('/api/chats/recent', {
     method: 'POST',
@@ -22,8 +44,9 @@ export async function getRecentChats(entities?: Entity[], amount = 20) {
     return [];
   }
 
-  const charactersByAvatar = new Map(characters.map((c) => [c.avatar, c]));
-  const groupsById = new Map(groups.map((g) => [g.id.toString(), g]));
+  // Use cached maps for performance
+  const charactersByAvatar = getCharacterMap();
+  const groupsById = getGroupMap();
 
   const validEntityKeys = new Set<string>();
 
@@ -43,23 +66,23 @@ export async function getRecentChats(entities?: Entity[], amount = 20) {
     .sort((a, b) =>
       sortMoments(timestampToMoment(a.last_mes), timestampToMoment(b.last_mes)),
     )
-    .map((chat, index) => {
+    .reduce((result, chat, index) => {
       const character = chat.avatar
         ? charactersByAvatar.get(chat.avatar)
         : undefined;
       const group = chat.group ? groupsById.get(String(chat.group)) : undefined;
 
-      if (hasEntityFilter && !character && !group) return null;
+      if (hasEntityFilter && !character && !group) return result;
 
       if (hasEntityFilter) {
         const hasMatchingEntity =
           (character && validEntityKeys.has(`char:${character.avatar}`)) ||
           (group && validEntityKeys.has(`group:${group.id}`));
-        if (!hasMatchingEntity) return null;
+        if (!hasMatchingEntity) return result;
       }
 
       const chatTimestamp = timestampToMoment(chat.last_mes);
-      return {
+      result.push({
         ...chat,
         char_name: character?.name || group?.name || String(chat.group || ''),
         date_short: chatTimestamp.format('l'),
@@ -71,9 +94,10 @@ export async function getRecentChats(entities?: Entity[], amount = 20) {
         is_group: Boolean(group || chat.group),
         hidden: index >= 15,
         char_id: character ? characters.indexOf(character) : undefined,
-      };
-    })
-    .filter((chat) => chat !== null);
+      });
+
+      return result;
+    }, []);
 
   return dataWithEntities;
 }

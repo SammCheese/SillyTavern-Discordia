@@ -600,6 +600,26 @@ function* extensionCloningGenerator(
         }
       }
 
+      clone.on('discordia-sync', function () {
+        cloneInputs.forEach((cloneElem) => {
+          const originalElem = nodeMap.get(cloneElem as Element);
+          if (!originalElem) return;
+
+          const cloneInput = cloneElem as HTMLInputElement;
+          const originalInput = originalElem as HTMLInputElement;
+
+          if (cloneInput.type === 'checkbox' || cloneInput.type === 'radio') {
+            if (cloneInput.checked !== originalInput.checked) {
+              cloneInput.checked = originalInput.checked;
+            }
+          } else {
+            if (cloneInput.value !== originalInput.value) {
+              cloneInput.value = originalInput.value;
+            }
+          }
+        });
+      });
+
       clone.on('input change click', interactiveSelector, function (e) {
         const targetOriginal = nodeMap.get(this);
         if (!targetOriginal) return;
@@ -610,16 +630,20 @@ function* extensionCloningGenerator(
         }
 
         if (this.type === 'checkbox' || this.type === 'radio') {
-          (targetOriginal as HTMLInputElement).checked = (
-            this as HTMLInputElement
-          ).checked;
+          const checked = (this as HTMLInputElement).checked;
+          if ((targetOriginal as HTMLInputElement).checked !== checked) {
+            (targetOriginal as HTMLInputElement).checked = checked;
+            $(targetOriginal).trigger(e.type);
+          }
         } else {
-          (targetOriginal as HTMLInputElement).value = (
+          const value = (
             this as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
           ).value;
+          if ((targetOriginal as HTMLInputElement).value !== value) {
+            (targetOriginal as HTMLInputElement).value = value;
+            $(targetOriginal).trigger(e.type);
+          }
         }
-
-        $(targetOriginal).trigger(e.type);
       });
 
       clone.find('.inline-drawer-content').css('display', 'block');

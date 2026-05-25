@@ -22,6 +22,7 @@ const SettingsHost = ({ settings, disabled }: SettingsHostProps) => {
 
     if (node.parentElement !== host) {
       host.replaceChildren(node);
+      $(node).trigger('discordia-sync');
     }
 
     return () => {

@@ -11,6 +11,16 @@ export interface Manifest {
   auto_update: boolean;
 }
 
+const manifestCache = new Map<string, Manifest>();
+
+export const invalidateManifestCache = (name?: string) => {
+  if (name) {
+    manifestCache.delete(name);
+  } else {
+    manifestCache.clear();
+  }
+};
+
 export async function getManifests(
   names: string[],
 ): Promise<Record<string, Manifest>> {
@@ -18,23 +28,26 @@ export async function getManifests(
   const promises: Promise<Manifest>[] = [];
 
   for (const name of names) {
-    const promise: Promise<Manifest> = new Promise((resolve, reject) => {
+    if (manifestCache.has(name)) {
+      obj[name] = manifestCache.get(name)!;
+      continue;
+    }
+
+    const promise = new Promise<Manifest>((resolve, reject) => {
       fetch(`/scripts/extensions/${name}/manifest.json`)
         .then(async (response) => {
           if (response.ok) {
             const json = await response.json();
+            manifestCache.set(name, json); // Cache it
             obj[name] = json;
             resolve(json);
-          } else {
-            reject();
-          }
+          } else reject();
         })
         .catch((err) => {
           reject();
           dislog.warn('Could not load manifest.json for ' + name, err);
         });
     });
-
     promises.push(promise);
   }
 
