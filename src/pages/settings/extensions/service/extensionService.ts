@@ -1,6 +1,7 @@
 import { runTaskInIdle } from '../../../../utils/utils';
 import { getOwner } from '../../../../patches/settingsHijack';
 import type { ExtensionInfo } from '../ExtensionSettings';
+import { specialExtensionHandling } from './extensionCompat';
 
 const { getRequestHeaders } = await imports('@script');
 
@@ -139,25 +140,19 @@ function* extensionProcessorGenerator(
 
     let element = elements[i] as JQueryDOMElement;
 
+    // Handle Mobile Edgecases where the element is empty
     if (element.length > 0 && element[0]?.childNodes.length === 0) {
       if (element.prevObject && element.prevObject.length > 0) {
         element = element.prevObject.clone(true, true);
       }
     }
 
-    const isStandardFormat = element.find('.inline-drawer-content').length > 0;
-    const content = isStandardFormat
-      ? element.find('.inline-drawer-content')
-      : (element
-          // Dirty fix for extensions like VectHare
-          .filter(':not([class*="-modal"])')
-          .children() as JQuery<HTMLElement>);
-    if (content.length === 0) continue;
+    const drawer = element.find('.inline-drawer');
+    let content = drawer.find('.inline-drawer-content');
 
-    // Avoid accidentally overwriting extensions with emptiness (WHY THE HELL)
-    if (content.find(INTERACTIVE_SELECTOR).length === 0) {
-      continue;
-    }
+    content = specialExtensionHandling(element) || content;
+
+    if (content.length === 0) continue;
 
     const result = (() => {
       const directOwner = getOwner(element.get(0)!);
