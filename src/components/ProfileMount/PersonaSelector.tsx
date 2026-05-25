@@ -28,7 +28,10 @@ const PersonaSelector = ({ personas, onSelect }: PersonaSelectorProps) => {
   }
 
   return (
-    <div className="max-h-64 w-64 overflow-y-auto rounded-md border border-gray-700 bg-base-discordia shadow-lg">
+    <div
+      className="max-h-64 w-64 overflow-y-auto rounded-md border border-gray-700 shadow-lg"
+      style={{ backgroundColor: 'var(--SmartThemeBlurTintColor, #2a2a2a)' }}
+    >
       {sortedPersonas.map((persona) => (
         <Persona
           key={persona.avatar}

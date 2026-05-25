@@ -118,13 +118,13 @@ export function ContextMenuProvider({ children }: { children: ReactNode }) {
 
   const styles = {
     mobile: {
-      container: `absolute h-fit z-70 bg-base-discordia border-t border-darker rounded-t-xl shadow-2xl p-4 pb-8
+      container: `absolute h-fit z-70 border-t border-darker rounded-t-xl shadow-2xl p-4 pb-8
         transform transition-transform duration-300 ease-in-out
         ${isVisible ? 'translate-y-0' : 'translate-y-full'}`,
     },
     desktop: {
       container:
-        'fixed z-70 min-w-[180px] max-w-[300px] bg-base-discordia border border-darker rounded-lg shadow-lg p-1 animate-in fade-in zoom-in-95 duration-100',
+        'fixed z-70 min-w-[180px] max-w-[300px] border border-darker rounded-lg shadow-lg p-1 animate-in fade-in zoom-in-95 duration-100',
     },
   };
 
@@ -164,10 +164,18 @@ export function ContextMenuProvider({ children }: { children: ReactNode }) {
                 ref={menuRef}
                 style={
                   isMobile
-                    ? { bottom: 0, left: 0, width: '100%' }
+                    ? {
+                        bottom: 0,
+                        left: 0,
+                        width: '100%',
+                        backgroundColor:
+                          'var(--SmartThemeBlurTintColor, #2a2a2a)',
+                      }
                     : {
                         position: 'fixed',
                         opacity: isVisible ? 1 : 0,
+                        backgroundColor:
+                          'var(--SmartThemeBlurTintColor, #2a2a2a)',
                       }
                 }
                 className={`discordia-context-menu ${isMobile ? styles.mobile.container : styles.desktop.container} `}
