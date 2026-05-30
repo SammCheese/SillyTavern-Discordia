@@ -1,36 +1,23 @@
-import { lazy, useCallback, useEffect, useMemo, useState } from 'react';
-import SystemPrompt from './sections/SystemPrompt';
-import Accordion from '../../../components/common/Accordion/Accordion';
+import { lazy, memo, useEffect, useMemo } from 'react';
 import type { MainAPIValues } from '../connection/hooks/connectionManager';
-import SectionTitle from './components/SectionTitle';
+import TextCompletionFormatting from './API/textcompletion/TextCompletionFormatting/TextCompletionFormatting';
+import ChatCompletionFormatting from './API/chatcompletion/ChatCompletionFormatting.tsx/ChatCompletionFormatting';
 
 const SettingsFrame = lazy(() => import('../base/Base'));
 
 const { saveSettingsDebounced } = await imports('@script');
 
 const FormattingSettings = () => {
-  const [syspromptEnabled, setSyspromptEnabled] = useState(
-    SillyTavern.getContext().powerUserSettings.sysprompt?.enabled,
-  );
-
-  const supported = useMemo(() => {
+  const FormattingSettings = useMemo(() => {
     const type = SillyTavern.getContext().mainApi as MainAPIValues;
     switch (type) {
       case 'textgenerationwebui':
-        return true;
+        return TextCompletionFormatting;
+      case 'openai':
+        return ChatCompletionFormatting;
       default:
-        return false;
+        return null;
     }
-  }, []);
-
-  const handleToggleSystemPrompt = useCallback(() => {
-    const current =
-      SillyTavern.getContext().powerUserSettings.sysprompt?.enabled ?? false;
-    SillyTavern.getContext().powerUserSettings.sysprompt = {
-      ...SillyTavern.getContext().powerUserSettings.sysprompt,
-      enabled: !current,
-    };
-    setSyspromptEnabled(!current);
   }, []);
 
   useEffect(() => {
@@ -42,19 +29,8 @@ const FormattingSettings = () => {
   return (
     <SettingsFrame title="Formatting Settings">
       <div className="settings-section">
-        {supported ? (
-          <Accordion
-            title={
-              <SectionTitle
-                title="System Prompt"
-                onClick={handleToggleSystemPrompt}
-                enabled={syspromptEnabled}
-              />
-            }
-            isOpen={true}
-          >
-            <SystemPrompt />
-          </Accordion>
+        {FormattingSettings ? (
+          <FormattingSettings />
         ) : (
           <div className="text-muted">
             No formatting settings available for the current API (yet)
@@ -65,4 +41,4 @@ const FormattingSettings = () => {
   );
 };
 
-export default FormattingSettings;
+export default memo(FormattingSettings);

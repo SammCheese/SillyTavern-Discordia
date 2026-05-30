@@ -1,6 +1,6 @@
 import { memo, useCallback, useState } from 'react';
-import Select from '../../../../components/common/Select/Select';
-import Input from '../../../../components/common/Input/Input';
+import Select from '../../../../../../components/common/Select/Select';
+import Input from '../../../../../../components/common/Input/Input';
 
 const context = SillyTavern.getContext();
 

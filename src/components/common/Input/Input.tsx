@@ -49,7 +49,7 @@ const Input = ({
   useEffect(() => {
     if (growHeight && textAreaRef.current) {
       textAreaRef.current.style.height = 'auto';
-      textAreaRef.current.style.height = `${Math.min(Math.max(textAreaRef.current.scrollHeight, initialHeight ?? 0), maxHeight)}px`;
+      textAreaRef.current.style.height = `${Math.min(Math.max(textAreaRef.current.scrollHeight, initialHeight ?? 48), maxHeight)}px`;
     }
   }, [content, growHeight, maxHeight, initialHeight]);
 
