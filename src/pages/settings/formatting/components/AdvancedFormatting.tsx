@@ -334,7 +334,7 @@ const AdvancedFormatting = ({ mode }: AdvancedFormattingProps) => {
   const warningNotice = useMemo(() => {
     if (!isChatCompletion) return null;
     return (
-      <div className="rounded border border-yellow-600/70 bg-yellow-900/20 p-3 text-sm text-yellow-200">
+      <div className="rounded border border-yellow-600/70 bg-yellow-900/20 p-3 text-sm text-yellow-200 text-wrap">
         Some advanced formatting options are only available for text completion
         APIs.
       </div>
