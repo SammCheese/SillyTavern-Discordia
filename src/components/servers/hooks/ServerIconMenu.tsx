@@ -4,6 +4,10 @@ import { useModal } from '../../../providers/modalProvider';
 import type { ContextMenuItem } from '../../common/ContextMenuEntry/ContextMenuEntry';
 import { DISCORDIA_EVENTS } from '../../../events/eventTypes';
 import { usePopup } from '../../../providers/popupProvider';
+import {
+  getDiscordiaSettings,
+  updateDiscordiaSettings,
+} from '../../../services/extensionSettingService';
 
 const CharacterModal = lazy(
   () => import('../../../modals/Character/CharacterModal'),
@@ -83,6 +87,19 @@ export const useServerIconMenu = (entity: Entity) => {
     }
   }, [entity, openModal]);
 
+  const handleHideCharacter = useCallback(() => {
+    const avatarUrl = entity.item?.avatar?.toString();
+    if (!avatarUrl) return;
+
+    const hiddenCharacters = getDiscordiaSettings().hiddenCharacters;
+    if (hiddenCharacters.includes(avatarUrl)) return;
+
+    const updatedHiddenCharacters = [...hiddenCharacters, avatarUrl];
+    updateDiscordiaSettings({ hiddenCharacters: updatedHiddenCharacters });
+
+    eventSource.emit(DISCORDIA_EVENTS.ENTITY_CHANGED);
+  }, [entity.item?.avatar]);
+
   const menuOptions = useMemo(() => {
     return [
       {
@@ -95,6 +112,10 @@ export const useServerIconMenu = (entity: Entity) => {
         onClick: handleEdit,
       },
       {
+        label: 'Hide',
+        onClick: handleHideCharacter,
+      },
+      {
         label: '---',
         variant: 'separator',
       },
@@ -104,7 +125,7 @@ export const useServerIconMenu = (entity: Entity) => {
         onClick: handleDelete,
       },
     ] as ContextMenuItem[];
-  }, [entity.item?.name, handleEdit, handleDelete]);
+  }, [entity.item?.name, handleEdit, handleHideCharacter, handleDelete]);
 
   const handleContextMenu = useCallback(
     (e: React.MouseEvent) => {

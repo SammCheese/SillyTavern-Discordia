@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useReducer, useRef } from 'react';
 import { getRecentChats, invalidateEntityCache } from '../services/chatService';
 import { DISCORDIA_EVENTS } from '../events/eventTypes';
+import { getDiscordiaSettings } from '../services/extensionSettingService';
 
 const { getGroupPastChats } = await imports('@scripts/groupChats');
 const { getEntitiesList, eventSource, event_types, getPastCharacterChats } =
@@ -45,8 +46,14 @@ const sidebarReducer = (
     case 'REFRESH_FAILURE':
       dislog.error('Failed to refresh sidebar chats:', action.error);
       return { ...state, isLoadingChats: false };
-    case 'SET_ENTITIES':
-      return { ...state, entities: action.entities };
+    case 'SET_ENTITIES': {
+      const hiddenCharacters = getDiscordiaSettings().hiddenCharacters;
+      const filteredEntities = action.entities.filter(
+        (entity) =>
+          !hiddenCharacters.includes(entity.item?.avatar?.toString() || ''),
+      );
+      return { ...state, entities: filteredEntities };
+    }
     case 'SET_ICONS':
       return { ...state, icons: action.icons };
     case 'SET_INITIAL_LOAD':
@@ -111,7 +118,13 @@ export const useSidebarState = () => {
     dispatch({ type: 'REFRESH_START' });
     try {
       const recentChats = await getRecentChats();
-      dispatch({ type: 'REFRESH_SUCCESS', recentChats });
+      const hiddenCharacters = getDiscordiaSettings().hiddenCharacters;
+      const filteredRecentChats = recentChats.filter((chat: Chat) => {
+        return !hiddenCharacters.some((avatar) =>
+          chat?.avatar?.includes(avatar),
+        );
+      });
+      dispatch({ type: 'REFRESH_SUCCESS', recentChats: filteredRecentChats });
     } catch (error) {
       dispatch({ type: 'REFRESH_FAILURE', error: error as Error });
       dislog.error('Failed to refresh recent chats:', error);
@@ -252,6 +265,7 @@ export const useSidebarState = () => {
     let touchStartX = 0;
     let touchEndX = 0;
     let lastMove = 0;
+
     const onPointerDown = (e) => {
       touchStartX = e.clientX ?? 0;
     };
