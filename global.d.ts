@@ -5,8 +5,7 @@ import type {
   DiscordiaAPIVersionRange,
 } from './src/apis/extensionAPI';
 
-import type * as Scripts from './types/script-map';
-import type * as SillyScript from '../../../../script';
+import type { STModules } from './src/types/st-modules';
 
 declare module '*.webm' {
   const src: string;
@@ -27,11 +26,12 @@ type Dislog = {
 };
 
 declare global {
-  type ScriptKeys = keyof typeof Scripts;
-  function imports(mod: '@script'): Promise<typeof SillyScript>;
-  function imports<K extends ScriptKeys>(
-    mod: `@scripts/${K}`,
-  ): Promise<(typeof Scripts)[K]>;
+  export async function imports<K extends keyof STModules>(
+    mod: K,
+  ): Promise<STModules[K]>;
+  export async function imports<T = unknown>(
+    mod: string & Record<never, never>,
+  ): Promise<T>;
 
   var dislog: Dislog;
 
