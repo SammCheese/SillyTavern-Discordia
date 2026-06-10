@@ -1,39 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import type { STModules } from './types/st-modules';
 
-let isLocalCache = false;
-let stRootCache = '/';
+let PATH_MAP: Record<string, string> | null = null;
 let pathsInitialized = false;
-
-// Convert the '@scripts/scriptName' into the file path.
-const resolveExpectedFileName = (mod: string): string => {
-  if (mod === '@script') return '../script.js';
-
-  if (mod.startsWith('@scripts/')) {
-    let name = mod.slice(9); // remove '@scripts/'
-
-    // map irregular names
-    const irregularities: Record<string, string> = {
-      textGenSettings: 'textgen-settings.js',
-      rossMods: 'RossAscends-mods.js',
-      samplerSelect: 'samplerSelect.js',
-    };
-
-    if (irregularities[name]) return irregularities[name]!;
-
-    // convert to script name (e.g. groupChats -> group-chats.js)
-    name = name.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase();
-
-    if (!name.endsWith('.js')) name += '.js';
-    return name;
-  }
-
-  return mod;
-};
 
 // The dots in the paths are relative to the location of the dist folder
 // So we put this import into the top-level src folder to match the relative paths
-const getPath = (mod: string, isLocal: boolean, stRoot: string): string => {
+
+const getPath = (mod: string, isLocal: boolean): string => {
   if (isLocal) {
     // Special cast for e.g. ../script.js
     if (mod.startsWith('../')) {
@@ -41,66 +14,67 @@ const getPath = (mod: string, isLocal: boolean, stRoot: string): string => {
     }
     return `../../../../../../public/scripts/${mod}`;
   }
-
-  if (mod.startsWith('../')) {
-    return stRoot + mod.slice(3);
-  }
-  return stRoot + 'scripts/' + mod;
+  return `../../../../../${mod}`;
 };
 
 const initializePaths = async () => {
   if (pathsInitialized) return;
 
-  const url = new URL(import.meta.url);
-  const scriptsIndex = url.pathname.indexOf('/scripts/');
-  isLocalCache = scriptsIndex === -1;
-  stRootCache = '/';
+  let isLocal = false;
 
-  if (!isLocalCache) {
-    stRootCache = url.pathname.substring(0, scriptsIndex + 1);
-  } else {
-    try {
-      const testPath = `../../../../../../script.js`;
-      const testImport = await import(/* @vite-ignore */ testPath);
+  try {
+    const testPath = `../../../../../../script.js`;
+    const testImport = await import(/* @vite-ignore */ testPath);
 
-      if (testImport && Object.keys(testImport).length > 0) {
-        isLocalCache = false;
-        stRootCache = new URL('../../../../../../', url.href).pathname;
-      }
-    } catch {
-      isLocalCache = true;
+    if (!testImport && !Object.keys(testImport).length) {
+      isLocal = true;
     }
+  } catch {
+    isLocal = true;
   }
 
+  PATH_MAP = {
+    '@script': getPath('../script.js', isLocal),
+    '@scripts/groupChats': getPath('group-chats.js', isLocal),
+    '@scripts/utils': getPath('utils.js', isLocal),
+    '@scripts/welcomeScreen': getPath('welcome-screen.js', isLocal),
+    '@scripts/personas': getPath('personas.js', isLocal),
+    '@scripts/chats': getPath('chats.js', isLocal),
+    '@scripts/powerUser': getPath('power-user.js', isLocal),
+    '@scripts/extensions': getPath('extensions.js', isLocal),
+    '@scripts/worldInfo': getPath('world-info.js', isLocal),
+    '@scripts/naiSettings': getPath('nai-settings.js', isLocal),
+    '@scripts/openai': getPath('openai.js', isLocal),
+    '@scripts/kaiSettings': getPath('kai-settings.js', isLocal),
+    '@scripts/horde': getPath('horde.js', isLocal),
+    '@scripts/textGenSettings': getPath('textgen-settings.js', isLocal),
+    '@scripts/presetManager': getPath('preset-manager.js', isLocal),
+    '@scripts/secrets': getPath('secrets.js', isLocal),
+    '@scripts/samplerSelect': getPath('samplerSelect.js', isLocal),
+    '@scripts/sysprompt': getPath('sysprompt.js', isLocal),
+    '@scripts/tags': getPath('tags.js', isLocal),
+    '@scripts/rossMods': getPath('RossAscends-mods.js', isLocal),
+    '@scripts/user': getPath('user.js', isLocal),
+    '@scripts/i18n': getPath('i18n.js', isLocal),
+  };
+
   pathsInitialized = true;
-  dislog.important(
-    `Running as ${isLocalCache ? 'local' : 'global'} extension.`,
-  );
+  dislog.important(`Running as ${isLocal ? 'local' : 'global'} extension.`);
 };
 
-export async function imports<K extends keyof STModules>(
-  mod: K,
-): Promise<STModules[K]>;
-export async function imports<T = any>(
-  mod: string & Record<never, never>,
-): Promise<T>;
-export async function imports(mod: string): Promise<any> {
-  if (!pathsInitialized) {
+export const imports = async <T = any>(mod: string): Promise<T> => {
+  if (!pathsInitialized || PATH_MAP === null) {
     await initializePaths();
   }
 
   try {
-    const fileName = resolveExpectedFileName(mod);
-    const resolvedPath = getPath(fileName, isLocalCache, stRootCache);
-
+    const resolvedPath = PATH_MAP![mod] || mod;
     const res = await import(/* @vite-ignore */ resolvedPath);
-    return res;
+    return res as T;
   } catch (error) {
-    const fileName = resolveExpectedFileName(mod);
-    const resolvedPath = getPath(fileName, isLocalCache, stRootCache);
-    dislog.error(`Error importing ${mod} (${resolvedPath}):`, error);
-    return {};
+    dislog.error(`Error importing ${mod} (${PATH_MAP![mod]}):`, error);
+    return {} as T;
   }
-}
+};
 
 export default imports;

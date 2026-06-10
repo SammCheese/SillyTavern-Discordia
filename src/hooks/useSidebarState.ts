@@ -28,8 +28,6 @@ const PROFILE_MENU_CONFIG = [
   { name: 'Account', id: '#ai-config-button' },
 ];
 
-const ICON_EXCLUSION_LIST = ['#backgrounds-button'];
-
 const sidebarReducer = (
   state: SidebarState,
   action: SidebarAction,
@@ -212,9 +210,7 @@ export const useSidebarState = () => {
   const processMenuIcons = useCallback(() => {
     const settingsHolder = $('#top-settings-holder');
     if (!settingsHolder.length) return;
-    const children = settingsHolder
-      .children()
-      .not(ICON_EXCLUSION_LIST.join(', '));
+    const children = settingsHolder.children();
 
     const icons: Icon[] = [];
     children.each((_, el) => {
@@ -263,6 +259,51 @@ export const useSidebarState = () => {
     eventSource.on(DISCORDIA_EVENTS.HOME_BUTTON_CLICKED, showRecentChats);
     eventSource.on(DISCORDIA_EVENTS.CHAT_UPDATE, handleChatRefresh);
 
+    // Swipe Listeners
+    const THRESHOLD = 100;
+    const body = $('body');
+    let touchStartX = 0;
+    let touchEndX = 0;
+    let lastMove = 0;
+
+    const onPointerDown = (e) => {
+      touchStartX = e.clientX ?? 0;
+    };
+    const onPointerMove = (e) => {
+      const now = performance.now();
+      if (now - lastMove < 16) return;
+      lastMove = now;
+      touchEndX = e.clientX ?? 0;
+    };
+    const onTouchStart = (e) => {
+      touchStartX = e.originalEvent?.touches[0]?.clientX ?? 0;
+    };
+    const onTouchMove = (e) => {
+      const now = performance.now();
+      if (now - lastMove < 16) return;
+      lastMove = now;
+      touchEndX = e.originalEvent?.touches[0]?.clientX ?? 0;
+    };
+
+    const onPointerUp = () => {
+      if (touchStartX === 0 || touchEndX === 0) return;
+
+      if (touchEndX > touchStartX + THRESHOLD) setOpen(true);
+      else if (touchEndX < touchStartX - THRESHOLD) {
+        if (window.innerWidth <= 1000) setOpen(false);
+      }
+      touchStartX = 0;
+      touchEndX = 0;
+    };
+
+    if (body) {
+      body.on('pointerdown', onPointerDown);
+      body.on('pointermove', onPointerMove);
+      body.on('touchstart', onTouchStart);
+      body.on('touchmove', onTouchMove);
+      body.on('touchend pointerup', onPointerUp);
+    }
+
     return () => {
       eventSource.removeListener(event_types.APP_READY, handleFullRefresh);
       eventSource.removeListener(event_types.CHAT_CHANGED, handleChatRefresh);
@@ -292,6 +333,14 @@ export const useSidebarState = () => {
         DISCORDIA_EVENTS.CHAT_UPDATE,
         handleChatRefresh,
       );
+
+      if (body) {
+        body.off('pointerdown', onPointerDown);
+        body.off('pointermove', onPointerMove);
+        body.off('touchstart', onTouchStart);
+        body.off('touchmove', onTouchMove);
+        body.off('touchend pointerup', onPointerUp);
+      }
     };
   }, [
     handleFullRefresh,

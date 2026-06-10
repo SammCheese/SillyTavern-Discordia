@@ -21,6 +21,9 @@ const ExtensionSettings = lazy(
 const WorldInfoSettings = lazy(
   () => import('../../pages/settings/worldinfo/WorldInfoSettings'),
 );
+const AppearanceSettings = lazy(
+  () => import('../../pages/settings/appearance/AppearanceSettings'),
+);
 const PersonaSettings = lazy(
   () => import('../../pages/settings/persona/PersonaSettings'),
 );
@@ -91,6 +94,9 @@ const ChannelBar = () => {
           break;
         case '#WI-SP-button':
           openPage(<WorldInfoSettings />);
+          break;
+        case '#backgrounds-button':
+          openPage(<AppearanceSettings />);
           break;
         case '#persona-management-button':
           openPage(<PersonaSettings />);

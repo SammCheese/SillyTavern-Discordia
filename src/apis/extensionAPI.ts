@@ -208,7 +208,6 @@ const readyPromise = new Promise<void>((resolve) => {
 
 const getScriptRuntime = () => {
   if (!scriptRuntimePromise) {
-    // @ts-expect-error -  cant really type this
     scriptRuntimePromise = imports('@script');
   }
   return scriptRuntimePromise;
@@ -325,7 +324,7 @@ const emit = (event: DiscordiaEventName, payload?: unknown) => {
   eventTarget.dispatchEvent(new CustomEvent(event, { detail: payload }));
 
   if (discordiaEventNames.has(event)) {
-    getScriptRuntime()!
+    getScriptRuntime()
       .then((script) => {
         script.eventSource?.emit?.(event, payload);
       })
