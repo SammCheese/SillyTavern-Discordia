@@ -48,6 +48,7 @@ const SettingsRow = ({ settings, values, onChange }: SettingsRowProps) => {
             max={setting.max}
             step={setting.step}
             onChange={(v) => onChangeWrapper(setting.id, v)}
+            tooltip={setting.tooltip}
           />
         ))}
       </div>

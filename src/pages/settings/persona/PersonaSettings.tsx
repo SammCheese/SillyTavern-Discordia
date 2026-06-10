@@ -9,6 +9,7 @@ import { DISCORDIA_EVENTS } from '../../../events/eventTypes';
 const SettingsFrame = lazy(() => import('../base/Base'));
 
 const { eventSource } = await imports('@script');
+const { user_avatar } = await imports('@scripts/personas');
 
 type SillyPersona = Record<string, string>;
 type SillyPersonaDescription = Record<
@@ -38,10 +39,11 @@ const PersonaSettings = () => {
     }));
   });
   const [selectedPersona, setSelectedPersona] = useState<string>(
-    SillyTavern.getContext().powerUserSettings.default_persona || '',
+    user_avatar || 'user-default.png',
   );
   const [defaultPersona, setDefaultPersona] = useState<string>(
-    SillyTavern.getContext().powerUserSettings.default_persona || '',
+    SillyTavern.getContext().powerUserSettings.default_persona ||
+      'user-default.png',
   );
   const [avatarRefreshNonce, setAvatarRefreshNonce] = useState(() =>
     Date.now(),

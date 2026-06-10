@@ -9,8 +9,11 @@ import { getChatCompletionStatus } from '../../services/chatCompletion';
 
 const { saveSettingsDebounced, setOnlineStatus } = await imports('@script');
 const { getSecretLabelById } = await imports('@scripts/secrets');
-const { chat_completion_sources, oai_settings } =
-  await imports('@scripts/openai');
+const {
+  chat_completion_sources,
+  oai_settings,
+  custom_prompt_post_processing_types,
+} = await imports('@scripts/openai');
 const { getContext } = SillyTavern;
 
 const ChatCompletionSettings = () => {
@@ -29,6 +32,41 @@ const ChatCompletionSettings = () => {
         value: entry,
         label: entry,
       })),
+    [],
+  );
+
+  const postProcessingOptions = useMemo(
+    () => [
+      { value: 'None', label: 'None' },
+      {
+        value: custom_prompt_post_processing_types.MERGE_TOOLS,
+        label: 'Merge consecutive roles (with tools)',
+      },
+      {
+        value: custom_prompt_post_processing_types.SEMI_TOOLS,
+        label: 'Semi-strict (alternating roles; with tools)',
+      },
+      {
+        value: custom_prompt_post_processing_types.STRICT_TOOLS,
+        label: 'Strict (user first, alternating roles; with tools)',
+      },
+      {
+        value: custom_prompt_post_processing_types.MERGE,
+        label: 'Merge consecutive roles (no tools)',
+      },
+      {
+        value: custom_prompt_post_processing_types.SEMI,
+        label: 'Semi-strict (alternating roles; no tools)',
+      },
+      {
+        value: custom_prompt_post_processing_types.STRICT,
+        label: 'Strict (user first, alternating roles; no tools)',
+      },
+      {
+        value: custom_prompt_post_processing_types.SINGLE,
+        label: 'Single user message (no tools)',
+      },
+    ],
     [],
   );
 
@@ -80,6 +118,11 @@ const ChatCompletionSettings = () => {
     updateCurrentProfile({ api: value as string });
     updateGlobalSetting('chat_completion_source', value);
     setConnectionStatus(undefined);
+  };
+
+  const handleCustomPromptPostProcessingChange = (value: string | number) => {
+    updateCurrentProfile({ 'prompt-post-processing': value as string });
+    updateGlobalSetting('custom_prompt_post_processing', value);
   };
 
   const handleApiUrlChange = (value: string) => {
@@ -209,6 +252,15 @@ const ChatCompletionSettings = () => {
         type="password"
         disabled={true}
       />
+
+      <div className="">
+        <h3>Prompt Post-Processing</h3>
+        <Select
+          options={postProcessingOptions}
+          onChange={handleCustomPromptPostProcessingChange}
+          value={openAISettings.custom_prompt_post_processing || 'None'}
+        />
+      </div>
 
       <div className="flex flex-col gap-2">
         {source === chat_completion_sources.OPENAI && (

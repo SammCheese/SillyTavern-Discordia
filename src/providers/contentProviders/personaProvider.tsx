@@ -19,8 +19,10 @@ export const PersonaContext = createContext<{
   setPersona: () => {},
 });
 
-const { eventSource, event_types, getThumbnailUrl } = await imports('@script');
-const { getUserAvatars, setUserAvatar } = await imports('@scripts/personas');
+const { eventSource, event_types, getThumbnailUrl, saveSettingsDebounced } =
+  await imports('@script');
+const { getUserAvatars, setUserAvatar, user_avatar } =
+  await imports('@scripts/personas');
 const { power_user } = await imports('@scripts/powerUser');
 
 interface PersonaProviderProps {
@@ -30,20 +32,28 @@ interface PersonaProviderProps {
 export const PersonaProvider = ({ children }: PersonaProviderProps) => {
   const [personas, setPersonas] = useState<Persona[]>([]);
   const [currentPersona, setCurrentPersona] = useState<Persona | null>(() => {
+    const avatar = user_avatar || 'user-default.png';
+    const personaName =
+      SillyTavern.getContext().powerUserSettings.personas?.[avatar] || avatar;
     return {
-      name: SillyTavern.getContext().name1 || 'Unknown',
-      avatar: 'user-default.png',
-      avatarURL: getThumbnailUrl('persona', 'user-default.png'),
+      name: personaName || 'Unknown',
+      avatar,
+      avatarURL: getThumbnailUrl('persona', avatar),
     } as Persona;
   });
 
   const handlePersonaUpdate = useCallback(() => {
-    const persona = SillyTavern.getContext().name1;
-    setCurrentPersona(personas.find((p) => p.name === persona) || null);
+    const personaName = SillyTavern.getContext().name1;
+    const persona = personas.find((p) => p.name === personaName);
+    setCurrentPersona(persona || null);
+    (SillyTavern.getContext().powerUserSettings.default_persona as
+      | string
+      | null) = persona?.avatar || 'user-default.png';
+    saveSettingsDebounced();
   }, [personas]);
 
   const setPersona = useCallback((persona: Persona) => {
-    setUserAvatar(persona.avatar, { toastPersonaNameChange: true })
+    setUserAvatar(persona.avatar, { toastPersonaNameChange: false })
       .then(() => {
         setCurrentPersona(persona);
       })

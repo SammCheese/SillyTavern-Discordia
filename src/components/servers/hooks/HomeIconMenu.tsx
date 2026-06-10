@@ -3,10 +3,26 @@ import { useContextMenu } from '../../../providers/contextMenuProvider';
 import { useModal } from '../../../providers/modalProvider';
 import CharacterModal from '../../../modals/Character/CharacterModal';
 import type { ContextMenuItem } from '../../common/ContextMenuEntry/ContextMenuEntry';
+import { DISCORDIA_EVENTS } from '../../../events/eventTypes';
+import {
+  getDiscordiaSettings,
+  updateDiscordiaSettings,
+} from '../../../services/extensionSettingService';
+
+const { eventSource } = await imports('@script');
 
 export const useHomeIconMenu = () => {
   const { showContextMenu } = useContextMenu();
   const { openModal } = useModal();
+
+  const unhideAllCharacters = useCallback(() => {
+    const hiddenCharacters = getDiscordiaSettings().hiddenCharacters;
+    if (hiddenCharacters.length === 0) return;
+
+    updateDiscordiaSettings({ hiddenCharacters: [] });
+
+    eventSource.emit(DISCORDIA_EVENTS.ENTITY_CHANGED);
+  }, []);
 
   const menuOptions = useMemo(() => {
     return [
@@ -16,8 +32,12 @@ export const useHomeIconMenu = () => {
           openModal(<CharacterModal type="create" />);
         },
       },
+      {
+        label: 'Unhide Characters',
+        onClick: unhideAllCharacters,
+      },
     ] as ContextMenuItem[];
-  }, [openModal]);
+  }, [openModal, unhideAllCharacters]);
 
   const handleContextMenu = useCallback(
     (e: React.MouseEvent) => {

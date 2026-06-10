@@ -1,0 +1,1 @@
+import{i as t}from"./import.js";const{saveSettingsDebounced:e}=await t("@script"),i={hiddenCharacters:[]},n=()=>{const t=SillyTavern.getContext().extensionSettings?.discordia||i;return{...i,...t}},s=t=>{const n={...SillyTavern.getContext().extensionSettings?.discordia||i,...t};SillyTavern.getContext().extensionSettings.discordia=n,e()};export{n as g,s as u};

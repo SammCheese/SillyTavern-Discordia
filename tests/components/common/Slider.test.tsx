@@ -31,6 +31,7 @@ describe('Slider', () => {
 
     const numberInput = screen.getByRole('spinbutton') as HTMLInputElement;
     fireEvent.change(numberInput, { target: { value: '3' } });
+    fireEvent.blur(numberInput);
 
     expect(numberInput.value).toBe('10');
     expect(onChange).toHaveBeenCalledWith(10);
@@ -42,7 +43,9 @@ describe('Slider', () => {
     render(<Slider min={0} max={50} step={1} value={30} onChange={onChange} />);
 
     const rangeInput = screen.getByRole('slider') as HTMLInputElement;
+    fireEvent.focus(rangeInput);
     fireEvent.change(rangeInput, { target: { value: '77' } });
+    fireEvent.pointerUp(rangeInput);
 
     expect(rangeInput.value).toBe('50');
     expect(onChange).toHaveBeenCalledWith(50);
