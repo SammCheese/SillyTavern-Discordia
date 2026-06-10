@@ -5,6 +5,7 @@ export type SamplerConfig = {
   min?: number;
   max?: number | null;
   step?: number;
+  tooltip?: string;
 };
 
 export const textgen_settings_schema = (unlocked: boolean) => ({
@@ -15,8 +16,8 @@ export const textgen_settings_schema = (unlocked: boolean) => ({
         name: 'Response (tokens)',
         type: 'range',
         min: 16,
-        max: 2048,
-        step: 1,
+        max: unlocked ? 16 * 1024 : 2048,
+        step: 128,
       },
       {
         id: 'max_context',
@@ -24,7 +25,7 @@ export const textgen_settings_schema = (unlocked: boolean) => ({
         type: 'range',
         min: 512,
         max: unlocked ? 512 * 1024 : 8192,
-        step: 64,
+        step: 128,
       },
       {
         id: 'streaming',

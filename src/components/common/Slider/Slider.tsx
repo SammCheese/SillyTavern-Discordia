@@ -11,28 +11,36 @@ interface SliderProps {
 const _ = window._;
 
 const Slider = ({ min, max, step, value, onChange }: SliderProps) => {
-  const [val, setVal] = useState<number>(value || 0);
+  const [, setVal] = useState<number>(value || 0);
+  const [localValue, setLocalValue] = useState<string>(String(value || 0));
 
   const debouncedOnChange = useMemo(
     () =>
       _.debounce((value: number) => {
         onChange?.(value);
-      }, 300),
+      }, 1500),
     [onChange],
   );
 
-  const handleChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
+  const doLocalChange = useCallback(
+    (e) => {
       if (isNaN(Number(e.target.value))) return;
-      let newValue: number = Number(e.target.value);
-
-      if (min !== undefined && Number(e.target.value) < min) newValue = min;
-      if (max !== undefined && Number(e.target.value) > max) newValue = max;
-      setVal(newValue);
-      debouncedOnChange(newValue);
+      setLocalValue(e.target.value);
     },
-    [debouncedOnChange, max, min],
+    [setLocalValue],
   );
+
+  const handleChange = useCallback(() => {
+    if (isNaN(Number(localValue))) return;
+    let newValue: number = Number(localValue);
+
+    if (min !== undefined && Number(localValue) < min) newValue = min;
+    if (max !== undefined && Number(localValue) > max) newValue = max;
+
+    setVal(newValue);
+    setLocalValue(String(newValue));
+    debouncedOnChange(newValue);
+  }, [debouncedOnChange, localValue, max, min]);
 
   return (
     <div className="flex flex-col gap-2">
@@ -43,16 +51,19 @@ const Slider = ({ min, max, step, value, onChange }: SliderProps) => {
           min={min}
           max={max}
           step={step}
-          value={val}
-          onChange={handleChange}
+          value={localValue}
+          onChange={doLocalChange}
+          onPointerUp={handleChange}
         />
 
         <div className="w-full text-center">
           <input
             type="number"
             className="w-full bg-base-discordia-lighter text-white text-center rounded-md p-1 border border-gray-600"
-            value={val}
-            onChange={handleChange}
+            value={localValue}
+            onChange={doLocalChange}
+            onInput={doLocalChange}
+            onBlur={handleChange}
           />
         </div>
       </div>

@@ -345,8 +345,58 @@ const AdvancedFormatting = ({ mode }: AdvancedFormattingProps) => {
     <div className="flex flex-col gap-4">
       {warningNotice}
 
+      <Accordion
+        title={
+          <SectionTitle
+            title="System Prompt"
+            enabled={enableSystemPrompt}
+            onClick={() =>
+              applyValue(
+                'sysprompt_enabled',
+                '#sysprompt_enabled',
+                !enableSystemPrompt,
+              )
+            }
+          />
+        }
+        isOpen={true}
+      >
+        <div className="flex flex-col gap-4">
+          <Select
+            options={syspromptOptions}
+            value={String(values.sysprompt_select ?? '')}
+            onChange={(value) =>
+              applyValue('sysprompt_select', '#sysprompt_select', String(value))
+            }
+          />
+          {renderPresetActions('sysprompt')}
+          <Input
+            label="Prompt Content"
+            growHeight
+            maxHeight={300}
+            value={String(values.sysprompt_content ?? '')}
+            onChange={(value) =>
+              applyValue('sysprompt_content', '#sysprompt_content', value)
+            }
+          />
+          <Input
+            label="Post-History Instructions"
+            growHeight
+            maxHeight={300}
+            value={String(values.sysprompt_post_history ?? '')}
+            onChange={(value) =>
+              applyValue(
+                'sysprompt_post_history',
+                '#sysprompt_post_history',
+                value,
+              )
+            }
+          />
+        </div>
+      </Accordion>
+
       {!isChatCompletion && (
-        <Accordion title="Context Template" isOpen={true}>
+        <Accordion title="Context Template" isOpen={false}>
           <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-2">
               <Select
@@ -529,7 +579,7 @@ const AdvancedFormatting = ({ mode }: AdvancedFormattingProps) => {
       )}
 
       {!isChatCompletion && (
-        <Accordion title="Instruct Template" isOpen={true}>
+        <Accordion title="Instruct Template" isOpen={false}>
           <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-2">
               <Select
@@ -853,56 +903,6 @@ const AdvancedFormatting = ({ mode }: AdvancedFormattingProps) => {
           </div>
         </Accordion>
       )}
-
-      <Accordion
-        title={
-          <SectionTitle
-            title="System Prompt"
-            enabled={enableSystemPrompt}
-            onClick={() =>
-              applyValue(
-                'sysprompt_enabled',
-                '#sysprompt_enabled',
-                !enableSystemPrompt,
-              )
-            }
-          />
-        }
-        isOpen={true}
-      >
-        <div className="flex flex-col gap-4">
-          <Select
-            options={syspromptOptions}
-            value={String(values.sysprompt_select ?? '')}
-            onChange={(value) =>
-              applyValue('sysprompt_select', '#sysprompt_select', String(value))
-            }
-          />
-          {renderPresetActions('sysprompt')}
-          <Input
-            label="Prompt Content"
-            growHeight
-            maxHeight={300}
-            value={String(values.sysprompt_content ?? '')}
-            onChange={(value) =>
-              applyValue('sysprompt_content', '#sysprompt_content', value)
-            }
-          />
-          <Input
-            label="Post-History Instructions"
-            growHeight
-            maxHeight={300}
-            value={String(values.sysprompt_post_history ?? '')}
-            onChange={(value) =>
-              applyValue(
-                'sysprompt_post_history',
-                '#sysprompt_post_history',
-                value,
-              )
-            }
-          />
-        </div>
-      </Accordion>
 
       <Accordion title="Custom Stopping Strings" isOpen={false}>
         <div className="flex flex-col gap-3">
