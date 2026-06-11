@@ -7,6 +7,7 @@ const {
   eventSource,
   event_types,
 } = await imports('@script');
+const { isMobile } = await imports('@scripts/rossMods');
 
 type BridgeMessage = {
   id?: number | string;
@@ -175,6 +176,7 @@ const MessageEditingBridge = (message?: BridgeMessage) => {
     (activeMessageId: number) => {
       const banner = $(`#${BANNER_ID}`);
       const inputField = $('textarea#send_textarea');
+      const isMobileDevice = isMobile();
 
       inputField
         .off(`input${BANNER_EVENTS_NS}`)
@@ -232,6 +234,7 @@ const MessageEditingBridge = (message?: BridgeMessage) => {
       };
 
       const onCaptureKeydown: EventListener = (event) => {
+        if (isMobileDevice) return;
         const keyEvent = event as KeyboardEvent;
         const isPlainEnter =
           keyEvent.key === 'Enter' &&

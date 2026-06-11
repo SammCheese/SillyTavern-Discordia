@@ -47,7 +47,9 @@ export const textgen_settings_schema = (unlocked: boolean) => ({
         type: 'range',
         min: 0.0,
         max: 5.0,
-        step: 0.01,
+        step: 0.1,
+        tooltip:
+          'Lower values make output more predictable, higher values make it more random.',
       },
       {
         id: 'top_k',
@@ -56,6 +58,8 @@ export const textgen_settings_schema = (unlocked: boolean) => ({
         min: -1,
         max: 200,
         step: 1,
+        tooltip:
+          'Selects from the top K most likely next tokens. Set to 0 or -1 to disable.',
       },
       {
         id: 'top_p',
@@ -64,6 +68,8 @@ export const textgen_settings_schema = (unlocked: boolean) => ({
         min: 0,
         max: 1,
         step: 0.01,
+        tooltip:
+          'Selects the smallest set of tokens whose cumulative probability exceeds the threshold P. Set to 1 to disable.',
       },
       {
         id: 'typical_p',
@@ -72,6 +78,8 @@ export const textgen_settings_schema = (unlocked: boolean) => ({
         min: 0,
         max: 1,
         step: 0.01,
+        tooltip:
+          'Sets the typicality threshold for sampling. Lower values make output more predictable, higher values make it more random.',
       },
       {
         id: 'min_p',
@@ -79,7 +87,9 @@ export const textgen_settings_schema = (unlocked: boolean) => ({
         type: 'range',
         min: 0,
         max: 1,
-        step: 0.001,
+        step: 0.01,
+        tooltip:
+          'Sets the minimum probability threshold for sampling. Set to 0 to disable.',
       },
       {
         id: 'top_a',
@@ -88,6 +98,8 @@ export const textgen_settings_schema = (unlocked: boolean) => ({
         min: 0,
         max: 1,
         step: 0.01,
+        tooltip:
+          'Sets the Token selection threshold based on the square of the highest token probability. Set to 0 to disable.',
       },
       {
         id: 'tfs',
@@ -96,6 +108,8 @@ export const textgen_settings_schema = (unlocked: boolean) => ({
         min: 0,
         max: 1,
         step: 0.001,
+        tooltip:
+          'Tail Free Sampling. Retains tokens from the tail of the distribution based on the relative decrease in token probabilities. Set to 0 to disable.',
       },
       {
         id: 'epsilon_cutoff',
@@ -104,6 +118,8 @@ export const textgen_settings_schema = (unlocked: boolean) => ({
         min: 0,
         max: 9,
         step: 0.01,
+        tooltip:
+          'Sets the cutoff probability for the tokens to drop out of the sampling pool. Set to 0 to disable.',
       },
       {
         id: 'eta_cutoff',
@@ -112,6 +128,8 @@ export const textgen_settings_schema = (unlocked: boolean) => ({
         min: 0,
         max: 20,
         step: 0.01,
+        tooltip:
+          'Sets the cutoff probability for the tokens to drop out of the sampling pool. Set to 0 to disable.',
       },
     ] as SamplerConfig[],
     Penalties: [
@@ -235,6 +253,8 @@ export const textgen_settings_schema = (unlocked: boolean) => ({
         min: 0,
         max: 5,
         step: 0.01,
+        tooltip:
+          'The strength of the DRY penalty. Higher values increase the penalty for repeated tokens, making the output more diverse. Set to 0 to disable DRY.',
       },
       {
         id: 'dry_base',
@@ -269,6 +289,8 @@ export const textgen_settings_schema = (unlocked: boolean) => ({
         min: 0,
         max: 0.5,
         step: 0.01,
+        tooltip:
+          'Tokens with a probability above this threshold will be excluded from the sampling pool. Set to 0 to disable XTC.',
       },
       {
         id: 'xtc_probability',
@@ -277,6 +299,7 @@ export const textgen_settings_schema = (unlocked: boolean) => ({
         min: 0,
         max: 1,
         step: 0.01,
+        tooltip: 'The probability with which to exclude the top choices.',
       },
     ] as SamplerConfig[],
     Mirostat: [
@@ -313,6 +336,8 @@ export const textgen_settings_schema = (unlocked: boolean) => ({
         min: -0.01,
         max: 1,
         step: 0.01,
+        tooltip:
+          'Sets a specific Token Selection Probability average over time. e.g. 0.5 attempts to target tokens that are around 50% probably. Set to -0.01 to disable Adaptive-P.',
       },
       {
         id: 'adaptive_decay',
@@ -321,6 +346,8 @@ export const textgen_settings_schema = (unlocked: boolean) => ({
         min: 0,
         max: 0.99,
         step: 0.01,
+        tooltip:
+          'The decay factor for the moving average of token probabilities in Adaptive-P. Higher values give more weight to recent tokens.',
       },
     ] as SamplerConfig[],
     'Smooth Sampling': [
@@ -331,6 +358,8 @@ export const textgen_settings_schema = (unlocked: boolean) => ({
         min: 0,
         max: 10,
         step: 0.01,
+        tooltip:
+          'Adjusts the distribution. Lower values make it more creative. 0.2 - 0.3 is the sweetspot.',
       },
       {
         id: 'smoothing_curve',
@@ -339,6 +368,8 @@ export const textgen_settings_schema = (unlocked: boolean) => ({
         min: 1,
         max: 10,
         step: 0.01,
+        tooltip:
+          'The shape of the smoothing curve. Higher values make the smoothing more. Set to 1 to disable curve shaping.',
       },
     ] as SamplerConfig[],
     Generation: [

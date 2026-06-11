@@ -27,7 +27,7 @@ const SamplerSlider = ({
         <label className="mb-2 text-sm font-medium text-center">{label}</label>
         {tooltip && (
           <Tooltip text={tooltip}>
-            <i className="fa-solid fa-circle-question text-gray-400" />
+            <i className="fa-solid fa-circle-question text-gray-400 self-baseline" />
           </Tooltip>
         )}
       </div>
