@@ -1,6 +1,6 @@
 // @ts-expect-error Video Import
 import video from '../../assets/cord.webm';
-import { disableDiscordia } from '../utils/utils';
+import { disableDiscordia } from '../utils/discordiaUtils';
 
 const splashTexts = [
   'Gathering your Characters...',

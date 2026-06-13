@@ -1,5 +1,3 @@
-import { unpatchAll } from '../patches';
-
 const {
   getThumbnailUrl,
   system_avatar,
@@ -138,40 +136,6 @@ export const makeAvatar = ({
   if (!character) return system_avatar;
 
   return getThumbnailUrl('avatar', character.avatar || '');
-};
-
-export const disableDiscordia = async (permanent = false) => {
-  // First attempt to disable the extension the normal way
-  try {
-    if (permanent) {
-      const settings = SillyTavern.getContext().extensionSettings;
-
-      (SillyTavern.getContext().extensionSettings
-        .disabledExtensions as string[]) = [
-        ...(settings.disabledExtensions || []),
-        'SillyTavern-Discordia',
-      ];
-
-      await saveSettingsDebounced();
-    }
-
-    // We cant know when the settings have been saved. We'll unpatch and launch the normal SillyTavern UI.
-
-    await unpatchAll();
-    // Remove the Stylesheets to prevent UI conflicts
-    document.getElementById('third-party_SillyTavern-Discordia-css')?.remove();
-    // Remove the root container to unmount React
-    document.getElementById('discordia-root')?.remove();
-
-    // Remove preload elements
-    document
-      .querySelectorAll('link[href*="SillyTavern-Discordia"]')
-      .forEach((link) => {
-        link.remove();
-      });
-  } catch (error) {
-    dislog.error('Error disabling Discordia', error);
-  }
 };
 
 const reqestIdleCallbackFn =
