@@ -42,13 +42,14 @@ export const PersonaProvider = ({ children }: PersonaProviderProps) => {
     } as Persona;
   });
 
-  const handlePersonaUpdate = useCallback(() => {
-    const personaName = SillyTavern.getContext().name1;
-    const persona = personas.find((p) => p.name === personaName);
+  const handlePersonaUpdate = useCallback(async () => {
+    const { user_avatar } = await imports('@scripts/personas');
+    const persona = personas.find((p) => p.avatar === user_avatar);
     setCurrentPersona(persona || null);
     (SillyTavern.getContext().powerUserSettings.default_persona as
       | string
       | null) = persona?.avatar || 'user-default.png';
+
     saveSettingsDebounced();
   }, [personas]);
 
