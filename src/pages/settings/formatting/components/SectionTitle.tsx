@@ -20,7 +20,7 @@ const SectionTitle = ({ title, onClick, enabled }: SectionTitleProps) => {
     <div className="flex items-center gap-2">
       <IconButton
         faIcon="fa-solid fa-power-off"
-        color={enabled ? '#f87171' : '#4ade80'}
+        color={enabled ? '#4ade80' : '#f87171'}
         onClick={handleToggle}
       />
       <span

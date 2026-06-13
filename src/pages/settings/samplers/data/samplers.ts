@@ -401,6 +401,11 @@ export const textgen_settings_schema = (unlocked: boolean) => ({
     ] as SamplerConfig[],
     Advanced: [
       {
+        id: 'include_reasoning',
+        name: 'Request Model Reasoning',
+        type: 'boolean',
+      },
+      {
         id: 'nsigma',
         name: 'Top nsigma',
         type: 'range',
