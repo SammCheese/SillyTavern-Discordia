@@ -112,6 +112,15 @@ const AdvancedFormatting = ({ mode }: AdvancedFormattingProps) => {
       sysprompt_select: readValue('#sysprompt_select'),
       sysprompt_content: readValue('#sysprompt_content'),
       sysprompt_post_history: readValue('#sysprompt_post_history'),
+      main_prompt_quick_edit_textarea: readValue(
+        '#main_prompt_quick_edit_textarea',
+      ),
+      nsfw_prompt_quick_edit_textarea: readValue(
+        '#nsfw_prompt_quick_edit_textarea',
+      ),
+      jailbreak_prompt_quick_edit_textarea: readValue(
+        '#jailbreak_prompt_quick_edit_textarea',
+      ),
 
       custom_stopping_strings: readValue('#custom_stopping_strings'),
       custom_stopping_strings_macro: Boolean(
@@ -213,6 +222,9 @@ const AdvancedFormatting = ({ mode }: AdvancedFormattingProps) => {
       '#sysprompt_select',
       '#sysprompt_content',
       '#sysprompt_post_history',
+      '#main_prompt_quick_edit_textarea',
+      '#nsfw_prompt_quick_edit_textarea',
+      '#jailbreak_prompt_quick_edit_textarea',
       '#custom_stopping_strings',
       '#custom_stopping_strings_macro',
       '#tokenizer',
@@ -362,36 +374,88 @@ const AdvancedFormatting = ({ mode }: AdvancedFormattingProps) => {
         isOpen={true}
       >
         <div className="flex flex-col gap-4">
-          <Select
-            options={syspromptOptions}
-            value={String(values.sysprompt_select ?? '')}
-            onChange={(value) =>
-              applyValue('sysprompt_select', '#sysprompt_select', String(value))
-            }
-          />
-          {renderPresetActions('sysprompt')}
-          <Input
-            label="Prompt Content"
-            growHeight
-            maxHeight={300}
-            value={String(values.sysprompt_content ?? '')}
-            onChange={(value) =>
-              applyValue('sysprompt_content', '#sysprompt_content', value)
-            }
-          />
-          <Input
-            label="Post-History Instructions"
-            growHeight
-            maxHeight={300}
-            value={String(values.sysprompt_post_history ?? '')}
-            onChange={(value) =>
-              applyValue(
-                'sysprompt_post_history',
-                '#sysprompt_post_history',
-                value,
-              )
-            }
-          />
+          {!isChatCompletion ? (
+            <>
+              <Select
+                options={syspromptOptions}
+                value={String(values.sysprompt_select ?? '')}
+                onChange={(value) =>
+                  applyValue(
+                    'sysprompt_select',
+                    '#sysprompt_select',
+                    String(value),
+                  )
+                }
+              />
+              {renderPresetActions('sysprompt')}
+              <Input
+                label="Prompt Content"
+                growHeight
+                maxHeight={300}
+                value={String(values.sysprompt_content ?? '')}
+                onChange={(value) =>
+                  applyValue('sysprompt_content', '#sysprompt_content', value)
+                }
+              />
+              <Input
+                label="Post-History Instructions"
+                growHeight
+                maxHeight={300}
+                value={String(values.sysprompt_post_history ?? '')}
+                onChange={(value) =>
+                  applyValue(
+                    'sysprompt_post_history',
+                    '#sysprompt_post_history',
+                    value,
+                  )
+                }
+              />
+            </>
+          ) : (
+            <>
+              <Input
+                label="System Prompt"
+                growHeight
+                maxHeight={300}
+                value={String(values.main_prompt_quick_edit_textarea ?? '')}
+                onChange={(value) =>
+                  applyValue(
+                    'main_prompt_quick_edit_textarea',
+                    '#main_prompt_quick_edit_textarea',
+                    value,
+                  )
+                }
+              />
+              <Input
+                label="Auxiliary Prompt"
+                growHeight
+                maxHeight={300}
+                value={String(values.nsfw_prompt_quick_edit_textarea ?? '')}
+                onChange={(value) =>
+                  applyValue(
+                    'nsfw_prompt_quick_edit_textarea',
+                    '#nsfw_prompt_quick_edit_textarea',
+                    value,
+                  )
+                }
+              />
+              <Input
+                label="Post-History Instructions"
+                growHeight
+                maxHeight={300}
+                value={String(
+                  values.jailbreak_prompt_quick_edit_textarea ?? '',
+                )}
+                onChange={(value) =>
+                  applyValue(
+                    'jailbreak_prompt_quick_edit_textarea',
+                    '#jailbreak_prompt_quick_edit_textarea',
+                    value,
+                  )
+                }
+              />
+            </>
+          )}
         </div>
       </Accordion>
 
@@ -579,7 +643,22 @@ const AdvancedFormatting = ({ mode }: AdvancedFormattingProps) => {
       )}
 
       {!isChatCompletion && (
-        <Accordion title="Instruct Template" isOpen={false}>
+        <Accordion
+          title={
+            <SectionTitle
+              title="Instruct Template"
+              enabled={values.instruct_enabled as boolean}
+              onClick={() =>
+                applyValue(
+                  'instruct_enabled',
+                  '#instruct_enabled',
+                  values.instruct_enabled ? false : true,
+                )
+              }
+            />
+          }
+          isOpen={false}
+        >
           <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-2">
               <Select
@@ -613,13 +692,6 @@ const AdvancedFormatting = ({ mode }: AdvancedFormattingProps) => {
                     '#instruct_bind_to_context',
                     value,
                   )
-                }
-              />
-              <Checkbox
-                label="Enable instruct mode"
-                checked={Boolean(values.instruct_enabled)}
-                onChange={(value) =>
-                  applyValue('instruct_enabled', '#instruct_enabled', value)
                 }
               />
             </div>

@@ -32,6 +32,23 @@ const ServerIcon = ({
     return entity.item?.fav || false;
   }, [entity.item?.fav]);
 
+  const handleDragStart = useCallback(
+    (e: React.DragEvent) => {
+      e.dataTransfer.setData('text/plain', String(entity.id));
+    },
+    [entity.id],
+  );
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    //const draggedEntityId = e.dataTransfer.getData('text/plain');
+  }, []);
+
   return (
     <Tooltip
       text={entity.item?.name || 'Character'}
@@ -55,11 +72,16 @@ const ServerIcon = ({
         <div
           className="cursor-pointer w-full h-fit flex justify-center items-center"
           title={entity.item?.name || 'Character'}
+          draggable={true}
+          onDragStart={handleDragStart}
+          onDragOver={handleDragOver}
+          onDrop={handleDrop}
         >
           {entity.type === 'group' ? (
             <GroupAvatar groupItem={entity.item} rounded={true} />
           ) : (
             <img
+              draggable={false}
               loading="lazy"
               alt={entity.item?.name || 'Character'}
               className={`rounded-xl h-12 w-12 object-cover transition-all ${

@@ -16,26 +16,30 @@ export type Patch = {
   antipatch?: () => void;
 };
 
-const patches: Patch[] = [
+export const patches: Patch[] = [
   {
-    name: 'hideTopBar',
+    name: 'ui-hideTopBar',
     run: () => $('#top-bar').hide(),
     antipatch: () => $('#top-bar').show(),
   },
   {
-    name: 'hideTopSettingsHolder',
+    name: 'ui-hideTopSettingsHolder',
     run: () => $('#top-settings-holder').hide(),
     antipatch: () => $('#top-settings-holder').show(),
   },
   { name: 'hijackJquery', run: hijackJquery },
-  { name: 'overrideSpinner', run: overrideSpinner, antipatch: unpatchSpinner },
   {
-    name: 'angleSendButton',
+    name: 'ui-overrideSpinner',
+    run: overrideSpinner,
+    antipatch: unpatchSpinner,
+  },
+  {
+    name: 'ui-angleSendButton',
     run: angleSendButton,
     antipatch: unangleSendButton,
   },
   {
-    name: 'combineChatMenu',
+    name: 'ui-combineChatMenu',
     run: combineChatMenu,
     antipatch: unpatchCombinedChatMenu,
   },
@@ -45,7 +49,7 @@ const patches: Patch[] = [
 const appliedPatches = new Set<string>();
 let patchingActive = false;
 
-const applyPatch = (patch: Patch) => {
+export const applyPatch = (patch: Patch) => {
   if (appliedPatches.has(patch.name)) {
     return;
   }
@@ -59,7 +63,7 @@ const applyPatch = (patch: Patch) => {
   }
 };
 
-const revertPatch = (patch: Patch) => {
+export const revertPatch = (patch: Patch) => {
   if (!appliedPatches.has(patch.name)) {
     return;
   }

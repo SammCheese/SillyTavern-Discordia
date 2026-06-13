@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useContextMenu } from '../../../providers/contextMenuProvider';
 import { logout } from '../../../utils/userUtils';
 import type { ContextMenuItem } from '../../common/ContextMenuEntry/ContextMenuEntry';
+import { hideDiscordia } from '../../../utils/discordiaUtils';
 
 export const useProfileContextMenu = () => {
   const { showContextMenu } = useContextMenu();
@@ -53,6 +54,14 @@ export const useProfileContextMenu = () => {
       {
         label: fullScreenLabel,
         onClick: handleFullscreen,
+      },
+      {
+        label: 'Restore SillyTavernUI',
+        onClick: hideDiscordia,
+      },
+      {
+        label: '---',
+        variant: 'separator',
       },
       {
         label: 'Log Out',

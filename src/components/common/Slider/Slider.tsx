@@ -61,6 +61,9 @@ const Slider = ({ min, max, step, value, onChange }: SliderProps) => {
             type="number"
             className="w-full bg-base-discordia-lighter text-white text-center rounded-md p-1 border border-gray-600"
             value={localValue}
+            step={step}
+            max={max}
+            min={min}
             onChange={doLocalChange}
             onInput={doLocalChange}
             onBlur={handleChange}

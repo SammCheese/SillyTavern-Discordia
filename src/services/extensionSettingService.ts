@@ -2,10 +2,23 @@ const { saveSettingsDebounced } = await imports('@script');
 
 export interface DiscordiaSettings {
   hiddenCharacters: string[];
+  sidebar: {
+    characterOrders: string[];
+    folders: Folder[];
+  };
 }
+
+type Folder = {
+  name: string;
+  characterIds: string[];
+};
 
 const DEFAULT_DISCORDIA_SETTINGS: DiscordiaSettings = {
   hiddenCharacters: [],
+  sidebar: {
+    characterOrders: [],
+    folders: [],
+  },
 };
 
 export const getDiscordiaSettings = (): DiscordiaSettings => {
