@@ -49,7 +49,7 @@ export const textgen_settings_schema = (unlocked: boolean) => ({
         max: 5.0,
         step: 0.1,
         tooltip:
-          'Lower values make output more predictable, higher values make it more random.',
+          'Controls the randomness of the output. Lower values make the output more deterministic, while higher values increase randomness. 1.0 for default values',
       },
       {
         id: 'top_k',
@@ -79,7 +79,7 @@ export const textgen_settings_schema = (unlocked: boolean) => ({
         max: 1,
         step: 0.01,
         tooltip:
-          'Sets the typicality threshold for sampling. Lower values make output more predictable, higher values make it more random.',
+          'Sets the typicality threshold for sampling. Set to 1 to disable.',
       },
       {
         id: 'min_p',
@@ -109,7 +109,7 @@ export const textgen_settings_schema = (unlocked: boolean) => ({
         max: 1,
         step: 0.001,
         tooltip:
-          'Tail Free Sampling. Retains tokens from the tail of the distribution based on the relative decrease in token probabilities. Set to 0 to disable.',
+          'Tail Free Sampling. Retains tokens from the tail of the distribution based on the relative decrease in token probabilities. Set to 1 to disable.',
       },
       {
         id: 'epsilon_cutoff',
@@ -290,7 +290,7 @@ export const textgen_settings_schema = (unlocked: boolean) => ({
         max: 0.5,
         step: 0.01,
         tooltip:
-          'Tokens with a probability above this threshold will be excluded from the sampling pool. Set to 0 to disable XTC.',
+          'Tokens with a probability above this threshold will be excluded from the sampling pool.',
       },
       {
         id: 'xtc_probability',
@@ -299,7 +299,8 @@ export const textgen_settings_schema = (unlocked: boolean) => ({
         min: 0,
         max: 1,
         step: 0.01,
-        tooltip: 'The probability with which to exclude the top choices.',
+        tooltip:
+          'The probability with which to exclude the top choices  Set to 0 to disable XTC.',
       },
     ] as SamplerConfig[],
     Mirostat: [
@@ -337,7 +338,7 @@ export const textgen_settings_schema = (unlocked: boolean) => ({
         max: 1,
         step: 0.01,
         tooltip:
-          'Sets a specific Token Selection Probability average over time. e.g. 0.5 attempts to target tokens that are around 50% probably. Set to -0.01 to disable Adaptive-P.',
+          'Sets the target token probability the model will prefer. Lower values make the output more creative. 0.5 is default. Set to -0.01 to disable Adaptive-P.',
       },
       {
         id: 'adaptive_decay',
@@ -347,7 +348,7 @@ export const textgen_settings_schema = (unlocked: boolean) => ({
         max: 0.99,
         step: 0.01,
         tooltip:
-          'The decay factor for the moving average of token probabilities in Adaptive-P. Higher values give more weight to recent tokens.',
+          'The influence of historical token probabilities on the current one. 0.9 is default.',
       },
     ] as SamplerConfig[],
     'Smooth Sampling': [
