@@ -1,4 +1,5 @@
 import { memo, useCallback, type ReactNode } from 'react';
+import ErrorBoundary from '../components/common/ErrorBoundary/ErrorBoundary';
 
 interface OpenPageProps {
   children: ReactNode;
@@ -37,7 +38,7 @@ const OpenPage = ({ children, isVisible, onClose }: OpenPageProps) => {
           w-full h-full flex justify-center items-center pointer-events-auto
         `}
       >
-        {children}
+        <ErrorBoundary>{children}</ErrorBoundary>
       </div>
     </div>
   );

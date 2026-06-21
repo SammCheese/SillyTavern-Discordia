@@ -64,6 +64,16 @@ export function isValidImageUrl(url) {
   );
 }
 
+export function triggerNativeButton(selector, syncFromNativeState = () => {}) {
+  const button = document.querySelector(selector);
+  if (button) {
+    button.click();
+  } else {
+    dislog.warn(`Button with selector "${selector}" not found.`);
+  }
+  window.setTimeout(syncFromNativeState, 0);
+}
+
 export const selectCharacter = async (char_id: number, chat_id?: string) => {
   try {
     await selectCharacterById(char_id);

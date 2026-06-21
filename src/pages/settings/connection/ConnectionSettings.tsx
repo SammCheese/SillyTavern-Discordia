@@ -5,11 +5,13 @@ import {
   useConnectionManager,
   type MainAPIValues,
 } from './hooks/connectionManager';
-import ChatCompletion from './apis/ChatCompletion/ChatCompletion';
 
 const SettingsFrame = lazy(() => import('../base/Base'));
 const TextGenerationSettings = lazy(
   () => import('./apis/TextCompletion/TextCompletion'),
+);
+const ChatCompletion = lazy(
+  () => import('./apis/ChatCompletion/ChatCompletion'),
 );
 
 const { CONNECT_API_MAP } = await imports('@script');
