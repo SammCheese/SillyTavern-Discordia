@@ -258,6 +258,7 @@ export const useSidebarState = () => {
     eventSource.on(DISCORDIA_EVENTS.ENTITY_CHANGED, refreshCharacters);
     eventSource.on(DISCORDIA_EVENTS.HOME_BUTTON_CLICKED, showRecentChats);
     eventSource.on(DISCORDIA_EVENTS.CHAT_UPDATE, handleChatRefresh);
+    eventSource.on(DISCORDIA_EVENTS.RECENTS_REFRESH, refreshRecentChats);
 
     // Swipe Listeners
     const THRESHOLD = 100;
@@ -333,6 +334,10 @@ export const useSidebarState = () => {
         DISCORDIA_EVENTS.CHAT_UPDATE,
         handleChatRefresh,
       );
+      eventSource.removeListener(
+        DISCORDIA_EVENTS.RECENTS_REFRESH,
+        refreshRecentChats,
+      );
 
       if (body) {
         body.off('pointerdown', onPointerDown);
@@ -349,6 +354,7 @@ export const useSidebarState = () => {
     refreshCharacters,
     setOpen,
     showRecentChats,
+    refreshRecentChats,
   ]);
 
   return {

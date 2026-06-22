@@ -74,14 +74,17 @@ export function triggerNativeButton(selector, syncFromNativeState = () => {}) {
   window.setTimeout(syncFromNativeState, 0);
 }
 
-export const selectCharacter = async (char_id: number, chat_id?: string) => {
+export const selectCharacter = async (
+  char_index: number,
+  chat_name?: string,
+) => {
   try {
-    await selectCharacterById(char_id);
-    setActiveCharacter(char_id);
+    await selectCharacterById(char_index);
+    setActiveCharacter(char_index);
     saveSettingsDebounced();
-    if (getCurrentChatId() === chat_id || !chat_id) return;
+    if (getCurrentChatId() === chat_name || !chat_name) return;
 
-    await openCharacterChat(chat_id);
+    await openCharacterChat(chat_name);
   } catch (error) {
     dislog.error('Error selecting character:', error);
   }
@@ -89,11 +92,11 @@ export const selectCharacter = async (char_id: number, chat_id?: string) => {
 
 export const selectGroup = async ({
   group,
-  chat_id,
+  chat_name,
   id,
 }: {
   group?: Entity;
-  chat_id?: string | undefined;
+  chat_name?: string | undefined;
   id?: string | null | undefined;
 }) => {
   try {
@@ -106,9 +109,9 @@ export const selectGroup = async ({
     await openGroupById(groupId);
     setActiveGroup(groupId);
     saveSettingsDebounced();
-    if (!chat_id || getCurrentChatId() === chat_id) return;
+    if (!chat_name || getCurrentChatId() === chat_name) return;
 
-    await openGroupChat(groupId, chat_id);
+    await openGroupChat(groupId, chat_name);
   } catch (error) {
     dislog.error('Error selecting group:', error);
   }

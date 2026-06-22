@@ -37,6 +37,7 @@ declare global {
 
   interface Window {
     discordia: {
+      __root?: import('react-dom/client').Root;
       extensionTemplates?: JQuery<Element>[];
       backups: {
         originalLoadSpinner?: JQuery<HTMLElement>;

@@ -26,6 +26,7 @@ const EXTENSION_NAME_NEGLECT_SET = new Set([
 
 const OWNER_ATTR = 'data-discordia-settings-owner';
 
+const LATELOADER_DEADLINE_MS = 120000;
 const LATELOADER_LEEWAY_MS = 40000;
 const DEBOUNCE_DELAY_MS = 300;
 const MAX_CACHE_SIZE = 500;
@@ -38,6 +39,13 @@ let activeOwner: string | null = null;
 
 type RestoreFn = () => void;
 const restoreFns: RestoreFn[] = [];
+
+let observer: MutationObserver | null = null;
+
+export const relocate = (fn: () => void) => {
+  fn();
+  observer?.takeRecords();
+};
 
 const getContainers = (): HTMLElement[] => {
   if (cachedContainers.length < TARGET_CONTAINER_IDS.length) {
@@ -507,6 +515,8 @@ export const hijackJquery = () => {
     };
 
     const scheduleCleanup = () => {
+      if (Date.now() - timerStart > LATELOADER_DEADLINE_MS)
+        return restoreOriginals();
       if (cleanupTimer) clearTimeout(cleanupTimer);
       cleanupTimer = window.setTimeout(restoreOriginals, LATELOADER_LEEWAY_MS);
     };
@@ -568,97 +578,19 @@ const resolveAllOwnership = (containers: HTMLElement[]): void => {
   }
 };
 
-function* extensionCloningGenerator(
+function* extensionTemplateGenerator(
   containers: HTMLElement[],
 ): Generator<JQuery<Element>, void, unknown> {
-  const allChildren = containers.flatMap((container) =>
-    Array.from(container.children),
-  );
-
-  dislog.debug(
-    'Hijack: Cloning',
-    allChildren.length,
-    'direct children from containers',
-  );
-
+  const allChildren = containers.flatMap((c) => Array.from(c.children));
   for (const elem of allChildren) {
-    try {
-      const original = $(elem) as JQuery<HTMLElement>;
-      getOwner(original);
-      const clone = original.clone(true, true) as JQuery<HTMLElement>;
-
-      const interactiveSelector =
-        'input, select, textarea, button, a, label, [contenteditable="true"]';
-
-      const nodeMap = new WeakMap<Element, Element>();
-      const originalInputs = original.find(interactiveSelector).toArray();
-      const cloneInputs = clone.find(interactiveSelector).toArray();
-
-      for (let i = 0; i < cloneInputs.length; i++) {
-        if (originalInputs[i] && cloneInputs[i]) {
-          nodeMap.set(cloneInputs[i] as Element, originalInputs[i] as Element);
-        }
-      }
-
-      clone.on('discordia-sync', function () {
-        cloneInputs.forEach((cloneElem) => {
-          const originalElem = nodeMap.get(cloneElem as Element);
-          if (!originalElem) return;
-
-          const cloneInput = cloneElem as HTMLInputElement;
-          const originalInput = originalElem as HTMLInputElement;
-
-          if (cloneInput.type === 'checkbox' || cloneInput.type === 'radio') {
-            if (cloneInput.checked !== originalInput.checked) {
-              cloneInput.checked = originalInput.checked;
-            }
-          } else {
-            if (cloneInput.value !== originalInput.value) {
-              cloneInput.value = originalInput.value;
-            }
-          }
-        });
-      });
-
-      clone.on('input change click', interactiveSelector, function (e) {
-        const targetOriginal = nodeMap.get(this);
-        if (!targetOriginal) return;
-
-        if (e.type === 'click') {
-          $(targetOriginal).trigger('click');
-          return;
-        }
-
-        if (this.type === 'checkbox' || this.type === 'radio') {
-          const checked = (this as HTMLInputElement).checked;
-          if ((targetOriginal as HTMLInputElement).checked !== checked) {
-            (targetOriginal as HTMLInputElement).checked = checked;
-            $(targetOriginal).trigger(e.type);
-          }
-        } else {
-          const value = (
-            this as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-          ).value;
-          if ((targetOriginal as HTMLInputElement).value !== value) {
-            (targetOriginal as HTMLInputElement).value = value;
-            $(targetOriginal).trigger(e.type);
-          }
-        }
-      });
-
-      clone.find('.inline-drawer-content').css('display', 'block');
-
-      yield clone;
-    } catch (e) {
-      dislog.warn('Hijack: clone failed, using fallback:', e);
-      yield $(elem.cloneNode(true) as Element);
-    }
+    const $elem = $(elem) as JQuery<HTMLElement>;
+    getOwner($elem);
+    yield $elem;
   }
 }
 
 export const poolDOMExtensions = async () => {
   const { eventSource, event_types } = await importPromise;
-  let observer: MutationObserver | null = null;
   let debounceTimer: number | null = null;
   let hasObservedNewNodes = false;
   let hasCapturedOnce = false;
@@ -674,10 +606,19 @@ export const poolDOMExtensions = async () => {
 
       resolveAllOwnership(containers);
 
-      const generator = extensionCloningGenerator(containers);
-      const cloned = await runTaskInIdle(generator);
-
-      window.discordia.extensionTemplates = cloned;
+      const generator = extensionTemplateGenerator(containers);
+      const fresh = await runTaskInIdle(generator);
+      const freshOwners = new Set(
+        fresh.map((t) => getOwner(t as JQuery<HTMLElement>) ?? ''),
+      );
+      const retained = (window.discordia.extensionTemplates ?? []).filter(
+        (prev) => {
+          const node = prev[0];
+          const owner = node ? getElementOwner(node) : null;
+          return node?.isConnected && owner && !freshOwners.has(owner);
+        },
+      );
+      window.discordia.extensionTemplates = [...fresh, ...retained];
       hasCapturedOnce = true;
       hasObservedNewNodes = false;
 

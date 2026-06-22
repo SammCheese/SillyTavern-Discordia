@@ -1,3 +1,5 @@
+import { restoreChatMenu, toggleCombinedChatMenu } from './overrides';
+
 export const unangleSendButton = () => {
   try {
     const rightSendForm = $('#rightSendForm');
@@ -25,19 +27,16 @@ export const unpatchSpinner = () => {
 
 export const unpatchCombinedChatMenu = () => {
   try {
-    const menu = $('#extras_menu_button');
-    if (menu.length) {
-      const optionsMenu = menu
-        .find('#options')
-        .removeClass('font-family-reset');
-      const extensionsMenu = menu
-        .find('#extensionsMenu')
-        .removeClass('font-family-reset');
-      menu.remove();
-      const parent = $('#leftSendForm');
-      parent.empty();
-      parent.append(optionsMenu, extensionsMenu);
-    }
+    restoreChatMenu();
+
+    $('#options').removeClass('font-family-reset');
+    $('#extensionsMenu').removeClass('font-family-reset');
+    $('#extensionsMenuButton').show();
+    $('#options_button').show();
+
+    $('#extras_menu_button').remove();
+
+    window.removeEventListener('click', toggleCombinedChatMenu);
   } catch (error) {
     dislog.error('Failed to Undo Combined Chat Menu Patch:', error);
   }

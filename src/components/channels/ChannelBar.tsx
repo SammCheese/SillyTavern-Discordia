@@ -54,9 +54,7 @@ const ChannelRow = ({
   const chat = chats[index]!;
 
   const isSelected = useMemo(
-    () =>
-      currentChatId === (chat.file_id ?? chat.file_name) ||
-      isSelectedChat(chat),
+    () => currentChatId === chat.file_id || isSelectedChat(chat),
     [chat, currentChatId, isSelectedChat],
   );
   const avatar = useMemo(() => makeAvatar({ chat }), [chat, makeAvatar]);
@@ -216,8 +214,7 @@ const ChannelBar = () => {
                   key={chat.file_id || index}
                   onClick={handleChannelClick}
                   isSelected={
-                    currentChatId === (chat.file_id ?? chat.file_name) ||
-                    isSelectedChat(chat)
+                    currentChatId === chat.file_id || isSelectedChat(chat)
                   }
                   avatar={makeAvatar({ chat })}
                 />

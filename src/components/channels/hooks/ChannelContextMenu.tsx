@@ -23,26 +23,32 @@ export const useChannelContextMenu = (chat: Chat) => {
     const { characters, characterId, groupId } = SillyTavern.getContext();
 
     if (!chat) return;
+
     try {
+      // If the chat is a group chat
       if (groupId !== null && !characterId) {
         await closeCurrentChat();
 
-        // fucking name inconsistencies
-        await deleteGroupChatByName(groupId, chat.file_name);
+        // Delete the groupchat and go back to the last opened chat
+        await deleteGroupChatByName(groupId, chat.file_id);
+        // If the chat is a character chat
       } else {
         let charId = chat.char_id ?? characterId;
         if (!charId) {
           charId = characters.findIndex((c) => c.avatar === chat.avatar);
         }
         if (charId === undefined || charId === -1) return;
-
         await closeCurrentChat();
-        await deleteCharacterChatByName(charId.toString(), chat.file_id);
+
+        await deleteCharacterChatByName(
+          charId.toString(),
+          chat.file_name.replace('.jsonl', ''),
+        );
       }
     } catch (error) {
       dislog.error('Error deleting chat:', error);
     } finally {
-      eventSource.emit(DISCORDIA_EVENTS.HOME_BUTTON_CLICKED);
+      eventSource.emit(DISCORDIA_EVENTS.RECENTS_REFRESH);
     }
   }, [chat]);
 
@@ -50,14 +56,14 @@ export const useChannelContextMenu = (chat: Chat) => {
     if (!chat) return;
 
     const openAction = () => {
-      // Handle Recent Chats
+      // If the chat is a character chat
       if (chat?.char_id) {
-        return openCharacterChat(chat.char_id);
+        return openCharacterChat(chat.file_id);
       }
 
       const { groupId, characterId } = SillyTavern.getContext();
       if (groupId !== null && !characterId) {
-        return openGroupChat(groupId, chat?.file_name);
+        return openGroupChat(groupId, chat?.file_id);
       }
 
       return openCharacterChat(chat?.file_id);
@@ -74,7 +80,7 @@ export const useChannelContextMenu = (chat: Chat) => {
       confirmText: 'Delete',
       confirmVariant: 'danger',
       cancelText: 'Cancel',
-      description: `Are you sure you want to delete the chat "${chat.file_name}"? This action cannot be undone.`,
+      description: `Are you sure you want to delete the chat "${chat.file_id}"? This action cannot be undone.`,
       onConfirm: async () => {
         await performDelete();
       },
@@ -85,7 +91,7 @@ export const useChannelContextMenu = (chat: Chat) => {
   const handleRename = useCallback(() => {
     openPopup(
       <RenamePopup
-        currentName={chat.file_id}
+        currentName={chat.file_name.replace('.jsonl', '')}
         charId={chat.char_id}
         groupChatId={chat.group}
       />,

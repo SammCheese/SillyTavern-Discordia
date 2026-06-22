@@ -82,7 +82,7 @@ const ExtensionAccordion = memo(function ExtensionAccordion({
         <ExtensionTitle
           title={title}
           disabled={disabled}
-          hasSettings={!!settings}
+          hasSettings={!!settings?.length}
           hasUpdates={currentVersion?.isUpToDate === false}
           onUpdateClick={handleUpdateClick}
           isUpdating={isUpdating}

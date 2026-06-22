@@ -197,7 +197,6 @@ function* extensionProcessorGenerator(
     })();
 
     if (result.elem) {
-      result.elem.removeClass('inline-drawer-content');
       yield { name: result.owner, elem: result.elem };
     }
 

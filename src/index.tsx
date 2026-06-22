@@ -39,6 +39,7 @@ export let rootContainer = document.getElementById(
 let isRemounting = false;
 
 if (rootContainer) {
+  window.discordia.__root?.unmount();
   rootContainer.remove();
   // The root container is already there, that can only happen if we're doing a hotreload
   isRemounting = true;
@@ -56,6 +57,9 @@ const startApp = (safeStart: boolean = false) => {
 
     if (topBar) {
       topBar?.parentNode?.insertBefore(rootContainer, topBar);
+    } else {
+      // Fallback to body if top bar is not found
+      document.body.appendChild(rootContainer);
     }
 
     if (!safeStart && !isRemounting) {
@@ -69,13 +73,14 @@ const startApp = (safeStart: boolean = false) => {
       // Functionality Provider
       PlatformProvider,
       BackHandlerProvider,
+      // Settings Provider
+      SettingsProvider,
       // Data Providers
       SidebarProvider,
       ExtensionProvider,
       PersonaProvider,
-      // Settings Provider
-      SettingsProvider,
       // UI Providers
+      ErrorBoundary,
       PopupProvider,
       PageProvider,
       ModalProvider,
@@ -93,6 +98,8 @@ const startApp = (safeStart: boolean = false) => {
         </Compose>
       </StrictMode>,
     );
+
+    window.discordia.__root = root;
 
     markDiscordiaReady();
   } catch (error) {

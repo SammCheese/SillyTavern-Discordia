@@ -1,4 +1,5 @@
 import { memo, useLayoutEffect, useRef } from 'react';
+import { relocate } from '../../../../patches/settingsHijack';
 
 interface SettingsHostProps {
   settings?: JQuery<HTMLElement> | null | undefined;
@@ -10,25 +11,22 @@ const SettingsHost = ({ settings, disabled }: SettingsHostProps) => {
 
   useLayoutEffect(() => {
     const host = hostRef.current;
-    if (!host) return;
+    const node = settings?.[0];
+    if (!host || !node || disabled) return;
 
-    if (!settings || settings.length === 0 || disabled) {
-      host.replaceChildren();
-      return;
-    }
+    const origin = node.parentElement;
+    const anchor = origin
+      ? document.createComment('settings-host-anchor')
+      : null;
+    if (origin && anchor) origin.insertBefore(anchor, node);
 
-    const node = settings[0];
-    if (!node) return;
-
-    if (node.parentElement !== host) {
-      host.replaceChildren(node);
-      $(node).trigger('discordia-sync');
-    }
+    relocate(() => host.appendChild(node));
 
     return () => {
-      if (host.contains(node)) {
-        host.removeChild(node);
-      }
+      relocate(() => {
+        if (anchor?.parentNode) anchor.parentNode.replaceChild(node, anchor);
+        else if (node.parentNode === host) host.removeChild(node);
+      });
     };
   }, [settings, disabled]);
 
