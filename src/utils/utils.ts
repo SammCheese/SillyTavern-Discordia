@@ -64,14 +64,27 @@ export function isValidImageUrl(url) {
   );
 }
 
-export const selectCharacter = async (char_id: number, chat_id?: string) => {
-  try {
-    await selectCharacterById(char_id);
-    setActiveCharacter(char_id);
-    saveSettingsDebounced();
-    if (getCurrentChatId() === chat_id || !chat_id) return;
+export function triggerNativeButton(selector, syncFromNativeState = () => {}) {
+  const button = document.querySelector(selector);
+  if (button) {
+    button.click();
+  } else {
+    dislog.warn(`Button with selector "${selector}" not found.`);
+  }
+  window.setTimeout(syncFromNativeState, 0);
+}
 
-    await openCharacterChat(chat_id);
+export const selectCharacter = async (
+  char_index: number,
+  chat_name?: string,
+) => {
+  try {
+    await selectCharacterById(char_index);
+    setActiveCharacter(char_index);
+    saveSettingsDebounced();
+    if (getCurrentChatId() === chat_name || !chat_name) return;
+
+    await openCharacterChat(chat_name);
   } catch (error) {
     dislog.error('Error selecting character:', error);
   }
@@ -79,11 +92,11 @@ export const selectCharacter = async (char_id: number, chat_id?: string) => {
 
 export const selectGroup = async ({
   group,
-  chat_id,
+  chat_name,
   id,
 }: {
   group?: Entity;
-  chat_id?: string | undefined;
+  chat_name?: string | undefined;
   id?: string | null | undefined;
 }) => {
   try {
@@ -96,9 +109,9 @@ export const selectGroup = async ({
     await openGroupById(groupId);
     setActiveGroup(groupId);
     saveSettingsDebounced();
-    if (!chat_id || getCurrentChatId() === chat_id) return;
+    if (!chat_name || getCurrentChatId() === chat_name) return;
 
-    await openGroupChat(groupId, chat_id);
+    await openGroupChat(groupId, chat_name);
   } catch (error) {
     dislog.error('Error selecting group:', error);
   }

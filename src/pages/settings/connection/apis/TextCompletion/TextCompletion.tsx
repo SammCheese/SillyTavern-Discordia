@@ -17,6 +17,8 @@ const { saveSettingsDebounced, setOnlineStatus } = await imports('@script');
 const { getSecretLabelById } = await imports('@scripts/secrets');
 const { getContext } = SillyTavern;
 
+const _ = SillyTavern.libs.lodash;
+
 const TextGenerationSettings = ({ entries }: TextGenerationSettingsProps) => {
   const { selectedProfile, updateCurrentProfile } = useConnectionManager();
   const [textSettings, setTextSettings] = useState(
@@ -56,25 +58,39 @@ const TextGenerationSettings = ({ entries }: TextGenerationSettingsProps) => {
   const [apiKeyInput, setApiKeyInput] = useState('');
 
   // Handlers
-  const handleTypeChange = (value: string | number) => {
-    updateCurrentProfile({ api: value as string });
-    updateGlobalSetting('type', value);
-  };
+  const handleTypeChange = useCallback(
+    (value: string | number) => {
+      updateCurrentProfile({ api: value as string });
+      updateGlobalSetting('type', value);
+    },
+    [updateCurrentProfile, updateGlobalSetting],
+  );
 
-  const handleApiUrlChange = (value: string) => {
-    setConnectionStatus(undefined);
-    const apitype = selectedProfile?.api || textSettings.type;
-    updateGlobalSetting('server_urls', {
-      ...textSettings.server_urls,
-      [apitype]: value,
-    });
-    updateCurrentProfile({ 'api-url': value });
-  };
+  const handleApiUrlChange = useCallback(
+    (value: string) => {
+      _.debounce(() => {
+        setConnectionStatus(undefined);
+        const apitype = selectedProfile?.api || textSettings.type;
+        updateGlobalSetting('server_urls', {
+          ...textSettings.server_urls,
+          [apitype]: value,
+        });
+        updateCurrentProfile({ 'api-url': value });
+      }, 500)();
+    },
+    [
+      selectedProfile?.api,
+      textSettings.server_urls,
+      textSettings.type,
+      updateCurrentProfile,
+      updateGlobalSetting,
+    ],
+  );
 
-  const handleApiKeyChange = (value: string) => {
+  const handleApiKeyChange = useCallback((value: string) => {
     setApiKeyInput(value);
     //updateCurrentProfile({ 'secret-id': value });
-  };
+  }, []);
 
   const handleConnectClick = async () => {
     // Reset status on new connect attempt
@@ -136,34 +152,34 @@ const TextGenerationSettings = ({ entries }: TextGenerationSettingsProps) => {
         type="text"
       />
 
-      <div className="mt-4">
+      <div className="mt-4 flex flex-col gap-2">
         <Checkbox
           label="Derive Contextsize from Backend"
           checked={deriveContextState}
           onChange={handleDeriveContextClick}
         />
-      </div>
-
-      <div className="flex items-center space-x-4 my-4">
-        <Button label="Connect" onClick={handleConnectClick} />
         <Checkbox
           label="Auto Connect to last Server"
           checked={autoConnectState}
           onChange={handleAutoConnectClick}
         />
       </div>
-      {connectionStatus !== undefined && (
-        <div
-          className={`text-sm font-medium ${connectionStatus ? 'text-green-400' : 'text-red-400'}`}
-        >
-          Server is {connectionStatus ? 'Online!' : 'Offline'}
-          {connectionStatus && (
-            <div className="text-gray-400 text-xs font-normal mt-1">
-              Model: {connectionStatus}
-            </div>
-          )}
-        </div>
-      )}
+
+      <div className="flex items-center space-x-4 my-4">
+        <Button label="Connect" onClick={handleConnectClick} />
+        {connectionStatus !== undefined && (
+          <div
+            className={`text-sm font-medium ${connectionStatus ? 'text-green-400' : 'text-red-400'}`}
+          >
+            Server is {connectionStatus ? 'Online!' : 'Offline'}
+            {connectionStatus && (
+              <div className="text-gray-400 text-xs font-normal mt-1">
+                Model: {connectionStatus}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 };

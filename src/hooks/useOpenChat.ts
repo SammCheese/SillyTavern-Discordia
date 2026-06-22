@@ -11,8 +11,7 @@ export function useOpenChat() {
 
   const isSelectedChat = useCallback((chat: Chat): boolean => {
     try {
-      // file_id is used for character chats, file_name for group chats
-      const name = chat.file_id ?? chat.file_name;
+      const name = chat.file_id;
       return SillyTavern.getContext().chatId === name;
     } catch {
       return false;
@@ -21,6 +20,11 @@ export function useOpenChat() {
 
   const isCurrentlyGenerating = useCallback((): boolean => {
     return isGenerating();
+  }, []);
+
+  const isGroup = useCallback((): boolean => {
+    const { groupId } = SillyTavern.getContext();
+    return groupId !== null;
   }, []);
 
   const isEntityOpen = useCallback((id?: string | number): boolean => {
@@ -72,19 +76,18 @@ export function useOpenChat() {
 
       if (isSelectedChat(chat)) return;
 
-      const targetChatId = chat.file_id ?? chat.file_name ?? null;
+      const targetChatId = chat.file_id ?? null;
 
       const entityOpen = isEntityOpen();
 
       // Entity already open
       if (entityOpen) {
-        const isGroup = chat?.file_id === undefined;
-        if (isGroup) {
+        if (isGroup()) {
           const { groupId } = SillyTavern.getContext();
           runOptimisticOpen(targetChatId, () =>
-            openGroupChat(groupId!, chat.file_name),
+            openGroupChat(groupId!, chat.file_id),
           );
-        } else if (!isGroup) {
+        } else if (!isGroup()) {
           runOptimisticOpen(targetChatId, () =>
             openCharacterChat(chat.file_id),
           );
@@ -99,22 +102,33 @@ export function useOpenChat() {
           runOptimisticOpen(targetChatId, () =>
             selectGroup({
               id: chat.group,
-              chat_id: chat.file_name,
+              chat_name: chat.file_id,
             }),
           );
         } else {
           const charId = chat.char_id;
           if (typeof charId !== 'number') return;
-
+          const charIndex = SillyTavern.getContext().characters.findIndex(
+            (c) => c.avatar === chat.avatar,
+          );
           // Selecting a character with a specific chat
-          runOptimisticOpen(targetChatId, () =>
-            selectCharacter(charId, chat.file_id),
+          runOptimisticOpen(
+            targetChatId,
+            () =>
+              !isCurrentlyGenerating() &&
+              selectCharacter(charIndex, chat.file_id),
           );
         }
         return;
       }
     },
-    [isCurrentlyGenerating, isSelectedChat, isEntityOpen, runOptimisticOpen],
+    [
+      isCurrentlyGenerating,
+      isSelectedChat,
+      isEntityOpen,
+      isGroup,
+      runOptimisticOpen,
+    ],
   );
 
   return { openChat, isSelectedChat, currentChatId, setCurrentChatId } as const;

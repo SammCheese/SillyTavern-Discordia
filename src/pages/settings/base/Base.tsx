@@ -53,7 +53,7 @@ const SettingsFrame = ({
       {header && <div className="px-4 w-full">{header}</div>}
 
       <div
-        className="settings-content w-full flex-1 overflow-auto overflow-x-hidden min-h-0 "
+        className="settings-content w-full flex-1 overflow-x-hidden min-h-0 "
         style={{
           maxWidth: isSmallScreen || noPadding ? '100%' : '800px',
           margin: '0 auto',

@@ -200,6 +200,10 @@ input[type='range'].discordia-slider {
   --character-container-width: 80px;
 }
 
+.settings-container .inline-drawer-content {
+  display: block !important;
+}
+
 #extensionsMenu,
 #options {
   a.interactable {

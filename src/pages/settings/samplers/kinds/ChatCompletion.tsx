@@ -7,6 +7,7 @@ import Divider from '../../../../components/common/Divider/Divider';
 import Input from '../../../../components/common/Input/Input';
 import Select from '../../../../components/common/Select/Select';
 import SamplerSlider from '../components/SamplerSlider';
+import { generationSliders, samplerSliders } from '../data/openaiSamplers';
 
 type SettingValue = unknown;
 type LogitBiasEntry = {
@@ -210,96 +211,6 @@ const ChatCompletionSamplerSettings = () => {
     source === chat_completion_sources.MAKERSUITE ||
     source === chat_completion_sources.VERTEXAI;
 
-  const generationSliders = [
-    {
-      id: 'openai_max_context',
-      label: 'Context Size (tokens)',
-      min: 512,
-      max: maxContextCap,
-      step: 1,
-    },
-    {
-      id: 'openai_max_tokens',
-      label: 'Max Response Length (tokens)',
-      min: 1,
-      max: 128000,
-      step: 1,
-    },
-    {
-      id: 'n',
-      label: 'Multiple swipes per generation',
-      min: 1,
-      max: 32,
-      step: 1,
-    },
-    {
-      id: 'seed',
-      label: 'Seed',
-      min: -1,
-      max: 999999999,
-      step: 1,
-    },
-  ];
-
-  const samplerSliders = [
-    {
-      id: 'temp_openai',
-      label: 'Temperature',
-      min: 0,
-      max: 2,
-      step: 0.01,
-    },
-    {
-      id: 'freq_pen_openai',
-      label: 'Frequency Penalty',
-      min: -2,
-      max: 2,
-      step: 0.01,
-    },
-    {
-      id: 'pres_pen_openai',
-      label: 'Presence Penalty',
-      min: -2,
-      max: 2,
-      step: 0.01,
-    },
-    {
-      id: 'top_p_openai',
-      label: 'Top P',
-      min: 0,
-      max: 1,
-      step: 0.01,
-    },
-    {
-      id: 'top_k_openai',
-      label: 'Top K',
-      min: 0,
-      max: 500,
-      step: 1,
-    },
-    {
-      id: 'top_a_openai',
-      label: 'Top A',
-      min: 0,
-      max: 1,
-      step: 0.01,
-    },
-    {
-      id: 'min_p_openai',
-      label: 'Min P',
-      min: 0,
-      max: 1,
-      step: 0.01,
-    },
-    {
-      id: 'repetition_penalty_openai',
-      label: 'Repetition Penalty',
-      min: 0,
-      max: 2,
-      step: 0.01,
-    },
-  ];
-
   return (
     <div className="flex flex-col gap-4">
       <div>
@@ -353,7 +264,7 @@ const ChatCompletionSamplerSettings = () => {
       <div className="flex flex-col gap-3">
         <h3 className="text-lg font-semibold">Generation</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 justify-items-center">
-          {generationSliders.map((item) => (
+          {generationSliders(maxContextCap).map((item) => (
             <SamplerSlider
               key={`${item.id}-${String(settings[item.id] ?? '')}`}
               label={item.label}
@@ -514,15 +425,15 @@ const ChatCompletionSamplerSettings = () => {
 
       <Divider />
 
-      <div className="flex flex-col gap-3">
-        <h3 className="text-lg font-semibold">Inline Images</h3>
-        <Checkbox
-          label="Request inline images"
-          checked={Boolean(settings.request_images)}
-          onChange={(value) => applySetting('request_images', value)}
-        />
+      {showRequestImageFields && Boolean(settings.request_images) && (
+        <div className="flex flex-col gap-3">
+          <h3 className="text-lg font-semibold">Inline Images</h3>
+          <Checkbox
+            label="Request inline images"
+            checked={Boolean(settings.request_images)}
+            onChange={(value) => applySetting('request_images', value)}
+          />
 
-        {showRequestImageFields && Boolean(settings.request_images) && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div className="flex flex-col gap-1">
               <label className="text-sm font-medium">Resolution</label>
@@ -563,8 +474,8 @@ const ChatCompletionSamplerSettings = () => {
               />
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       <Divider />
 

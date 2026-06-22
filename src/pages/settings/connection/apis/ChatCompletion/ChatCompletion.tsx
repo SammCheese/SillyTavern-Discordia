@@ -89,7 +89,7 @@ const ChatCompletionSettings = () => {
 
   const statusTitle =
     connectionStatus === undefined
-      ? 'Idle'
+      ? 'Unknown'
       : connectionStatus === false
         ? 'Offline'
         : 'Online';
@@ -253,7 +253,7 @@ const ChatCompletionSettings = () => {
         disabled={true}
       />
 
-      <div className="">
+      <div className="flex flex-col gap-2">
         <h3>Prompt Post-Processing</h3>
         <Select
           options={postProcessingOptions}
@@ -277,26 +277,26 @@ const ChatCompletionSettings = () => {
         />
       </div>
 
-      <div className="flex items-center gap-3 my-2">
+      <div className="flex flex-row items-center gap-3 my-2">
         <Button
           label={isConnecting ? 'Connecting...' : 'Connect'}
           onClick={handleConnectClick}
           disabled={isConnecting}
         />
-      </div>
 
-      {connectionStatus !== undefined && (
-        <div
-          className={`text-sm font-medium rounded-md p-3 bg-black/20 ${statusTone}`}
-        >
-          <p className="font-semibold">Connection: {statusTitle}</p>
-          <p className="text-xs font-normal mt-1 break-all">
-            {connectionStatus === false
-              ? 'Unable to connect to provider.'
-              : connectionStatus}
-          </p>
-        </div>
-      )}
+        {connectionStatus !== undefined && (
+          <div
+            className={`text-sm font-medium rounded-md p-2 bg-black/20 ${statusTone}`}
+          >
+            <p className="font-semibold">Connection: {statusTitle}</p>
+            <p className="text-xs font-normal mt-1 break-all">
+              {connectionStatus === false
+                ? 'Unable to connect to provider.'
+                : connectionStatus}
+            </p>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

@@ -9,8 +9,7 @@ interface RenamePopupProps {
   groupChatId?: string;
 }
 
-const { renameGroupOrCharacterChat, closeCurrentChat } =
-  await imports('@script');
+const { renameGroupOrCharacterChat } = await imports('@script');
 
 const RenamePopup = ({
   currentName,
@@ -22,7 +21,7 @@ const RenamePopup = ({
 
   const handleRename = useCallback(async () => {
     if (newName.trim() && newName !== currentName) {
-      const { characterId, groupId, chatId } = SillyTavern.getContext();
+      const { characterId, groupId } = SillyTavern.getContext();
 
       const groupchat = groupChatId
         ? groupChatId
@@ -38,13 +37,6 @@ const RenamePopup = ({
       if (!newName) return;
 
       try {
-        if (chatId && chatId.includes(currentName)) {
-          const res = await closeCurrentChat();
-          if (!res) {
-            throw new Error('Failed to close current chat for renaming');
-          }
-        }
-
         await renameGroupOrCharacterChat({
           groupId: groupchat,
           characterId: charchat,
