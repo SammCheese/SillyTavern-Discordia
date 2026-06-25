@@ -1,15 +1,16 @@
 import { useCallback, useMemo } from 'react';
 import { useContextMenu } from '../../../providers/contextMenuProvider';
-import { DISCORDIA_EVENTS } from '../../../events/eventTypes';
 import type { ContextMenuItem } from '../../common/ContextMenuEntry/ContextMenuEntry';
 import { usePopup } from '../../../providers/popupProvider';
 import RenamePopup from '../components/RenamePopup';
+import { DISCORDIA_EVENTS } from '../../../events/eventTypes';
 
 const {
   deleteCharacterChatByName,
+  event_types,
   eventSource,
-  closeCurrentChat,
   openCharacterChat,
+  clearChat,
 } = await imports('@script');
 const { deleteGroupChatByName, openGroupChat } = await imports(
   '@scripts/groupChats',
@@ -20,35 +21,49 @@ export const useChannelContextMenu = (chat: Chat) => {
   const { openPopup } = usePopup();
 
   const performDelete = useCallback(async () => {
-    const { characters, characterId, groupId } = SillyTavern.getContext();
+    const { groups, characterId, groupId, chatId } = SillyTavern.getContext();
 
     if (!chat) return;
 
+    let charId =
+      typeof chat.char_id !== 'undefined' ? chat.char_id.toString() : undefined;
+    let groupsId = chat.group
+      ? groups.find((g) => g.id == chat.group)?.id.toString()
+      : undefined;
+    let wasRecents = true;
+
+    // We likely have the character selected
+    if (!charId && !groupsId) {
+      charId =
+        typeof characterId !== 'undefined' ? characterId.toString() : undefined;
+      groupsId = groupId !== null ? groupId.toString() : undefined;
+      wasRecents = false;
+    }
+
+    if (!charId && !groupsId) {
+      dislog.warn('No character or group found for chat deletion');
+      return;
+    }
+
     try {
       // If the chat is a group chat
-      if (groupId !== null && !characterId) {
-        await closeCurrentChat();
-
-        // Delete the groupchat and go back to the last opened chat
-        await deleteGroupChatByName(groupId, chat.file_id);
+      if (groupsId) {
+        await deleteGroupChatByName(groupsId, chat.file_id);
         // If the chat is a character chat
-      } else {
-        let charId = chat.char_id ?? characterId;
-        if (!charId) {
-          charId = characters.findIndex((c) => c.avatar === chat.avatar);
-        }
-        if (charId === undefined || charId === -1) return;
-        await closeCurrentChat();
+      } else if (charId) {
+        await deleteCharacterChatByName(charId, chat.file_id);
+      }
 
-        await deleteCharacterChatByName(
-          charId.toString(),
-          chat.file_name.replace('.jsonl', ''),
-        );
+      if (chatId === chat.file_id) {
+        await clearChat({ clearData: true });
+      }
+
+      await eventSource.emit(event_types.CHAT_DELETED, chat.file_id);
+      if (wasRecents) {
+        await eventSource.emit(DISCORDIA_EVENTS.RECENTS_REFRESH);
       }
     } catch (error) {
       dislog.error('Error deleting chat:', error);
-    } finally {
-      eventSource.emit(DISCORDIA_EVENTS.RECENTS_REFRESH);
     }
   }, [chat]);
 
@@ -91,8 +106,8 @@ export const useChannelContextMenu = (chat: Chat) => {
   const handleRename = useCallback(() => {
     openPopup(
       <RenamePopup
-        currentName={chat.file_name.replace('.jsonl', '')}
-        charId={chat.char_id}
+        currentName={chat.file_id}
+        charChatId={chat.char_id}
         groupChatId={chat.group}
       />,
       {

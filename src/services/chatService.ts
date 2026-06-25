@@ -1,5 +1,13 @@
-const { characters, getRequestHeaders, getThumbnailUrl, system_avatar } =
-  await imports('@script');
+const {
+  characters,
+  getRequestHeaders,
+  getThumbnailUrl,
+  system_avatar,
+  updateRemoteChatName,
+  eventSource,
+  event_types,
+  reloadCurrentChat,
+} = await imports('@script');
 const { groups } = await imports('@scripts/groupChats');
 const { sortMoments, timestampToMoment } = await imports('@scripts/utils');
 
@@ -100,4 +108,87 @@ export async function getRecentChats(entities?: Entity[], amount = 20) {
     }, []);
 
   return dataWithEntities;
+}
+
+const { renameGroupChat } = await imports('@scripts/groupChats');
+const { equalsIgnoreCaseAndAccents } = await imports('@scripts/utils');
+
+/**
+ * Renames a group or character chat.
+ * @param {object} param Parameters for renaming chat
+ * @param {string} [param.characterId] Character ID to rename chat for
+ * @param {string} [param.groupId] Group ID to rename chat for
+ * @param {string} param.oldFileName Old name of the chat (no JSONL extension)
+ * @param {string} param.newFileName New name for the chat (no JSONL extension)
+ */
+export async function renameGroupOrCharacterChatFixed({
+  characterId,
+  groupId,
+  oldFileName,
+  newFileName,
+}) {
+  const { characters, chatId } = SillyTavern.getContext();
+  const body = {
+    is_group: !!groupId,
+    avatar_url: characters[characterId]?.avatar,
+    original_file: `${oldFileName}.jsonl`,
+    renamed_file: `${newFileName.trim()}.jsonl`,
+  };
+
+  if (body.original_file === body.renamed_file) {
+    console.debug('Chat rename cancelled, old and new names are the same');
+    return;
+  }
+  if (equalsIgnoreCaseAndAccents(body.original_file, body.renamed_file)) {
+    toastr.warning(
+      `Name not accepted, as it is the same as before (ignoring case and accents).`,
+      `Rename Chat`,
+    );
+    return;
+  }
+
+  try {
+    const response = await fetch('/api/chats/rename', {
+      method: 'POST',
+      body: JSON.stringify(body),
+      headers: getRequestHeaders(),
+    });
+
+    if (!response.ok) {
+      throw new Error('Unsuccessful request.');
+    }
+
+    const data = await response.json();
+
+    if (data.error) {
+      throw new Error('Server returned an error.');
+    }
+
+    if (data.sanitizedFileName) {
+      newFileName = data.sanitizedFileName;
+    }
+
+    if (groupId) {
+      await renameGroupChat(groupId, oldFileName, newFileName);
+    } else if (characterId) {
+      await updateRemoteChatName(characterId, newFileName);
+    }
+
+    if (chatId === oldFileName) {
+      await reloadCurrentChat();
+    }
+
+    const eventData = {
+      avatarId: body.avatar_url,
+      groupId,
+      oldFileName: body.original_file,
+      newFileName: body.renamed_file,
+    };
+    await eventSource.emit(event_types.CHAT_RENAMED, eventData);
+  } catch {
+    toastr.error(`Failed to rename chat. Please try again.`, `Rename Chat`);
+    throw new Error(
+      `Failed to rename chat from ${oldFileName} to ${newFileName}`,
+    );
+  }
 }

@@ -18,6 +18,11 @@ export function useOpenChat() {
     }
   }, []);
 
+  const refreshCurrentChatId = useCallback(() => {
+    const chatId = SillyTavern.getContext().chatId ?? null;
+    setCurrentChatId(chatId);
+  }, []);
+
   const isCurrentlyGenerating = useCallback((): boolean => {
     return isGenerating();
   }, []);
@@ -131,5 +136,11 @@ export function useOpenChat() {
     ],
   );
 
-  return { openChat, isSelectedChat, currentChatId, setCurrentChatId } as const;
+  return {
+    openChat,
+    isSelectedChat,
+    currentChatId,
+    setCurrentChatId,
+    refreshCurrentChatId,
+  } as const;
 }

@@ -2,18 +2,20 @@ import { memo, useCallback, useState } from 'react';
 import Input from '../../common/Input/Input';
 import Button, { ButtonLook } from '../../common/Button/Button';
 import { usePopup } from '../../../providers/popupProvider';
+import { renameGroupOrCharacterChatFixed } from '../../../services/chatService';
+import { DISCORDIA_EVENTS } from '../../../events/eventTypes';
 
 interface RenamePopupProps {
   currentName: string;
-  charId?: string | number;
+  charChatId?: string | number;
   groupChatId?: string;
 }
 
-const { renameGroupOrCharacterChat } = await imports('@script');
+const { eventSource } = await imports('@script');
 
 const RenamePopup = ({
   currentName,
-  charId,
+  charChatId,
   groupChatId,
 }: RenamePopupProps) => {
   const { closePopup } = usePopup();
@@ -21,28 +23,40 @@ const RenamePopup = ({
 
   const handleRename = useCallback(async () => {
     if (newName.trim() && newName !== currentName) {
-      const { characterId, groupId } = SillyTavern.getContext();
+      const { groups, characterId, groupId } = SillyTavern.getContext();
 
-      const groupchat = groupChatId
-        ? groupChatId
-        : groupId
-          ? groupId.toString()
-          : undefined;
-      const charchat = charId
-        ? charId.toString()
-        : characterId
-          ? characterId.toString()
+      let charId =
+        typeof charChatId !== 'undefined' ? charChatId.toString() : undefined;
+      let groupsId =
+        typeof groupChatId !== 'undefined'
+          ? groups.find((g) => g.id == groupChatId)?.id.toString()
           : undefined;
 
-      if (!newName) return;
+      let wasRecents = true;
+
+      // We likely have the character selected
+      if (!charId && !groupsId) {
+        charId =
+          typeof characterId !== 'undefined'
+            ? characterId.toString()
+            : undefined;
+        groupsId = groupId !== null ? groupId.toString() : undefined;
+        wasRecents = false;
+      }
+
+      if (!newName || (!charId && !groupsId)) return;
 
       try {
-        await renameGroupOrCharacterChat({
-          groupId: groupchat,
-          characterId: charchat,
+        await renameGroupOrCharacterChatFixed({
+          groupId: groupsId,
+          characterId: charId,
           oldFileName: currentName,
           newFileName: newName,
         });
+
+        if (wasRecents) {
+          await eventSource.emit(DISCORDIA_EVENTS.RECENTS_REFRESH);
+        }
       } catch (error) {
         dislog.error('Error renaming chat:', error);
         toastr.error('Failed to rename chat. Please try again.');
@@ -50,7 +64,7 @@ const RenamePopup = ({
         closePopup();
       }
     }
-  }, [newName, currentName, groupChatId, charId, closePopup]);
+  }, [newName, currentName, charChatId, groupChatId, closePopup]);
 
   return (
     <div className="flex flex-col gap-4 w-96">

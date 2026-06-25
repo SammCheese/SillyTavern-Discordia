@@ -25,26 +25,39 @@ const DefaultSettings: Settings = {
     closeChatOnHomeButton: false,
   },
 };
+
 const { saveSettingsDebounced } = await imports('@script');
 
 export const SettingsProvider = ({ children }: SettingsProviderProps) => {
   const [discordiaSettings, setDiscordiaSettings] = useState<Settings>(() => {
     const existingSettings =
       SillyTavern.getContext().extensionSettings.discordia || {};
-    return {
-      ...(existingSettings as Settings),
+
+    const newSettings = {
       ...DefaultSettings,
+      behavior: {
+        ...DefaultSettings.behavior,
+        ...existingSettings.behavior,
+      },
     };
+
+    return newSettings;
   });
 
   const saveSettings = useCallback((settings: Partial<Settings>) => {
     const existingSettings =
       SillyTavern.getContext().extensionSettings.discordia || {};
-    const newSettings = { ...existingSettings, ...settings };
-    setDiscordiaSettings((prev) => ({
-      ...prev,
-      ...settings,
-    }));
+
+    const newSettings = {
+      ...DefaultSettings,
+      behavior: {
+        ...DefaultSettings.behavior,
+        ...existingSettings.behavior,
+        ...settings.behavior,
+      },
+    };
+
+    setDiscordiaSettings(newSettings);
     SillyTavern.getContext().extensionSettings.discordia = newSettings;
     saveSettingsDebounced();
   }, []);

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useReducer, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useReducer, useRef } from 'react';
 import { getRecentChats, invalidateEntityCache } from '../services/chatService';
 import { DISCORDIA_EVENTS } from '../events/eventTypes';
 import { getDiscordiaSettings } from '../services/extensionSettingService';
@@ -114,6 +114,17 @@ export const useSidebarState = () => {
     }
   }, []);
 
+  const refreshContext = useCallback(() => {
+    const { characterId, groupId } = SillyTavern.getContext();
+    if (typeof characterId !== 'undefined' || groupId !== null) {
+      dispatch({ type: 'SET_CONTEXT', context: 'chat' });
+    } else if (state.isLoadingChats && !state.isInitialLoad) {
+      dispatch({ type: 'SET_CONTEXT', context: 'chat' });
+    } else {
+      dispatch({ type: 'SET_CONTEXT', context: 'recent' });
+    }
+  }, [state.isLoadingChats, state.isInitialLoad]);
+
   const refreshRecentChats = useCallback(async () => {
     dispatch({ type: 'REFRESH_START' });
     try {
@@ -203,7 +214,7 @@ export const useSidebarState = () => {
 
   const handleFullRefresh = useCallback(() => {
     refreshCharacters();
-    refreshChats();
+    refreshChats(true);
     refreshRecentChats();
   }, [refreshCharacters, refreshChats, refreshRecentChats]);
 
@@ -233,32 +244,57 @@ export const useSidebarState = () => {
     dispatch({ type: 'SET_ICONS', icons });
   }, []);
 
+  const handleSettingsUpdate = useCallback(() => {
+    if (openRef.current) return;
+    if (window.innerWidth > 1000) {
+      setOpen(true);
+    }
+  }, [setOpen]);
+
+  const EventMap = useMemo(() => {
+    return {
+      [event_types.APP_READY]: handleFullRefresh,
+      [event_types.CHAT_CHANGED]: refreshChats,
+      [event_types.CHAT_DELETED]: refreshChats,
+      [event_types.CHAT_CREATED]: refreshChats,
+      [event_types.CHAT_RENAMED]: refreshChats,
+      [event_types.GROUP_CHAT_DELETED]: refreshChats,
+      [event_types.GROUP_CHAT_CREATED]: refreshChats,
+      [event_types.SETTINGS_UPDATED]: handleSettingsUpdate,
+      [event_types.CHARACTER_EDITED]: refreshCharacters,
+      [event_types.CHARACTER_RENAMED]: refreshCharacters,
+
+      // Our own Events
+      [DISCORDIA_EVENTS.ENTITY_CHANGED]: refreshCharacters,
+      [DISCORDIA_EVENTS.HOME_BUTTON_CLICKED]: showRecentChats,
+      [DISCORDIA_EVENTS.CHAT_UPDATE]: refreshChats,
+      [DISCORDIA_EVENTS.RECENTS_REFRESH]: refreshRecentChats,
+    };
+  }, [
+    handleFullRefresh,
+    refreshChats,
+    refreshCharacters,
+    handleSettingsUpdate,
+    showRecentChats,
+    refreshRecentChats,
+  ]);
+
+  const registerListeners = useCallback(() => {
+    for (const [event, handler] of Object.entries(EventMap)) {
+      eventSource.on(event, handler);
+    }
+  }, [EventMap]);
+
+  const unregisterListeners = useCallback(() => {
+    for (const [event, handler] of Object.entries(EventMap)) {
+      eventSource.removeListener(event, handler);
+    }
+  }, [EventMap]);
+
   useEffect(() => {
     processMenuIcons();
 
-    const handleSettingsUpdate = () => {
-      if (openRef.current) return;
-      if (window.innerWidth > 1000) {
-        setOpen(true);
-      }
-    };
-
-    const handleChatRefresh = () => refreshChats();
-
-    // Event Handling
-    eventSource.on(event_types.APP_READY, handleFullRefresh);
-    eventSource.on(event_types.CHAT_CHANGED, handleChatRefresh);
-    eventSource.on(event_types.CHAT_DELETED, handleChatRefresh);
-    eventSource.on(event_types.CHAT_CREATED, handleChatRefresh);
-    eventSource.on(event_types.SETTINGS_UPDATED, handleSettingsUpdate);
-    eventSource.on(event_types.CHARACTER_EDITED, refreshCharacters);
-    eventSource.on(event_types.CHARACTER_RENAMED, refreshCharacters);
-
-    // Our own Events
-    eventSource.on(DISCORDIA_EVENTS.ENTITY_CHANGED, refreshCharacters);
-    eventSource.on(DISCORDIA_EVENTS.HOME_BUTTON_CLICKED, showRecentChats);
-    eventSource.on(DISCORDIA_EVENTS.CHAT_UPDATE, handleChatRefresh);
-    eventSource.on(DISCORDIA_EVENTS.RECENTS_REFRESH, refreshRecentChats);
+    registerListeners();
 
     // Swipe Listeners
     const THRESHOLD = 100;
@@ -306,38 +342,7 @@ export const useSidebarState = () => {
     }
 
     return () => {
-      eventSource.removeListener(event_types.APP_READY, handleFullRefresh);
-      eventSource.removeListener(event_types.CHAT_CHANGED, handleChatRefresh);
-      eventSource.removeListener(event_types.CHAT_DELETED, handleChatRefresh);
-      eventSource.removeListener(event_types.CHAT_CREATED, handleChatRefresh);
-      eventSource.removeListener(
-        event_types.SETTINGS_UPDATED,
-        handleSettingsUpdate,
-      );
-      eventSource.removeListener(
-        event_types.CHARACTER_EDITED,
-        refreshCharacters,
-      );
-      eventSource.removeListener(
-        event_types.CHARACTER_RENAMED,
-        refreshCharacters,
-      );
-      eventSource.removeListener(
-        DISCORDIA_EVENTS.ENTITY_CHANGED,
-        refreshCharacters,
-      );
-      eventSource.removeListener(
-        DISCORDIA_EVENTS.HOME_BUTTON_CLICKED,
-        showRecentChats,
-      );
-      eventSource.removeListener(
-        DISCORDIA_EVENTS.CHAT_UPDATE,
-        handleChatRefresh,
-      );
-      eventSource.removeListener(
-        DISCORDIA_EVENTS.RECENTS_REFRESH,
-        refreshRecentChats,
-      );
+      unregisterListeners();
 
       if (body) {
         body.off('pointerdown', onPointerDown);
@@ -355,10 +360,13 @@ export const useSidebarState = () => {
     setOpen,
     showRecentChats,
     refreshRecentChats,
+    registerListeners,
+    unregisterListeners,
   ]);
 
   return {
     ...state,
     setOpen,
+    refreshContext,
   };
 };
