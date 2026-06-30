@@ -1,7 +1,7 @@
 import { lazy, memo, useEffect, useMemo } from 'react';
 import type { MainAPIValues } from '../connection/hooks/connectionManager';
 import TextCompletionFormatting from './API/textcompletion/TextCompletionFormatting/TextCompletionFormatting';
-import ChatCompletionFormatting from './API/chatcompletion/ChatCompletionFormatting.tsx/ChatCompletionFormatting';
+import ChatCompletionFormatting from './API/chatcompletion/ChatCompletionFormatting/ChatCompletionFormatting';
 
 const SettingsFrame = lazy(() => import('../base/Base'));
 

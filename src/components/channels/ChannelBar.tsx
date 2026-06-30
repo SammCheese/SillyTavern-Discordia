@@ -1,4 +1,4 @@
-import { lazy, memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { lazy, memo, useCallback, useEffect, useMemo } from 'react';
 import { usePage } from '../../providers/pageProvider';
 import { makeAvatar } from '../../utils/utils';
 import type { RowComponentProps } from 'react-window';
@@ -72,13 +72,25 @@ const ChannelRow = ({
 };
 
 const ChannelBar = () => {
-  const [context, setContext] = useState('recent');
   const { openPage } = usePage();
   const { setSearchQuery } = useSearch();
-  const { openChat, isSelectedChat, currentChatId, setCurrentChatId } =
-    useOpenChat();
-  const { chats, recentChats, isLoadingChats, setOpen, isInitialLoad, icons } =
-    useSidebar();
+  const {
+    openChat,
+    isSelectedChat,
+    currentChatId,
+    setCurrentChatId,
+    refreshCurrentChatId,
+  } = useOpenChat();
+  const {
+    chats,
+    recentChats,
+    isLoadingChats,
+    setOpen,
+    isInitialLoad,
+    icons,
+    refreshContext,
+    context,
+  } = useSidebar();
 
   const handleToolclick = useCallback(
     (icon: Icon) => {
@@ -132,27 +144,48 @@ const ChannelBar = () => {
   );
 
   const chatsMemo = useMemo(() => {
-    return context === 'recent' ? recentChats : chats;
-  }, [chats, recentChats, context]);
+    return context === 'chat' || (isLoadingChats && !isInitialLoad)
+      ? chats
+      : recentChats;
+  }, [context, isLoadingChats, isInitialLoad, chats, recentChats]);
 
   useEffect(() => {
     const handleChatChange = () => {
-      const { characterId, groupId } = SillyTavern.getContext();
-      if (typeof characterId !== 'undefined' || groupId !== null) {
-        setContext('chat');
-      } else {
-        setContext('recent');
-        setCurrentChatId(null);
-      }
+      refreshCurrentChatId();
+      refreshContext();
     };
+
     eventSource.on(event_types.CHAT_CHANGED, handleChatChange);
+    eventSource.on(event_types.CHAT_RENAMED, handleChatChange);
+    eventSource.on(event_types.CHAT_DELETED, handleChatChange);
+    eventSource.on(event_types.CHAT_CREATED, refreshCurrentChatId);
+    eventSource.on(event_types.GROUP_CHAT_DELETED, handleChatChange);
+    eventSource.on(event_types.GROUP_CHAT_CREATED, refreshCurrentChatId);
 
     return () => {
       eventSource.removeListener(event_types.CHAT_CHANGED, handleChatChange);
+      eventSource.removeListener(event_types.CHAT_RENAMED, handleChatChange);
+      eventSource.removeListener(event_types.CHAT_DELETED, handleChatChange);
+      eventSource.removeListener(
+        event_types.CHAT_CREATED,
+        refreshCurrentChatId,
+      );
+      eventSource.removeListener(
+        event_types.GROUP_CHAT_DELETED,
+        handleChatChange,
+      );
+      eventSource.removeListener(
+        event_types.GROUP_CHAT_CREATED,
+        refreshCurrentChatId,
+      );
     };
-  }, [setCurrentChatId]);
+  }, [refreshContext, refreshCurrentChatId, setCurrentChatId]);
 
-  const title = context === 'recent' ? 'Recent Chats' : 'Chats';
+  const title = useMemo(() => {
+    return context === 'chat' || (isLoadingChats && !isInitialLoad)
+      ? 'Chats'
+      : 'Recent Chats';
+  }, [context, isInitialLoad, isLoadingChats]);
 
   return (
     <ErrorBoundary>

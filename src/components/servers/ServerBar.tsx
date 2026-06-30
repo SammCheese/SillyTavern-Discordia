@@ -198,8 +198,6 @@ const ServerBar = () => {
 
         if (!group) return;
 
-        // Prevent sidebar from falling back to recents while IDs are cleared.
-        eventSource.emit(DISCORDIA_EVENTS.CHAT_SWITCH_PENDING);
         runOptimisticEntitySelect(index, () => selectGroup({ group: entity }));
         return;
       }
@@ -207,9 +205,9 @@ const ServerBar = () => {
       const char_id = characters.findIndex(
         (c) => c.avatar === entity?.item?.avatar,
       );
+
       if (char_id === -1) return;
 
-      eventSource.emit(DISCORDIA_EVENTS.CHAT_SWITCH_PENDING);
       runOptimisticEntitySelect(index, () => selectCharacter(char_id));
     },
     [runOptimisticEntitySelect],
@@ -222,8 +220,10 @@ const ServerBar = () => {
 
   useEffect(() => {
     eventSource.on(event_types.CHAT_CHANGED, syncIndex);
+    eventSource.on(event_types.CHAT_DELETED, syncIndex);
     return () => {
       eventSource.removeListener(event_types.CHAT_CHANGED, syncIndex);
+      eventSource.removeListener(event_types.CHAT_DELETED, syncIndex);
     };
   }, [entities, syncIndex]);
 
