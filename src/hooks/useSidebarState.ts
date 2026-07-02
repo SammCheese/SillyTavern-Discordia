@@ -296,33 +296,45 @@ export const useSidebarState = () => {
 
     registerListeners();
 
-    // Swipe Listeners
+    // Swipe listeners.
     const THRESHOLD = 100;
-    const body = $('body');
+    const body = document.body;
     let touchStartX = 0;
     let touchEndX = 0;
     let lastMove = 0;
 
-    const onPointerDown = (e) => {
-      touchStartX = e.clientX ?? 0;
-    };
-    const onPointerMove = (e) => {
+    const trackMove = (clientX: number) => {
       const now = performance.now();
       if (now - lastMove < 16) return;
       lastMove = now;
-      touchEndX = e.clientX ?? 0;
-    };
-    const onTouchStart = (e) => {
-      touchStartX = e.originalEvent?.touches[0]?.clientX ?? 0;
-    };
-    const onTouchMove = (e) => {
-      const now = performance.now();
-      if (now - lastMove < 16) return;
-      lastMove = now;
-      touchEndX = e.originalEvent?.touches[0]?.clientX ?? 0;
+      touchEndX = clientX;
     };
 
-    const onPointerUp = () => {
+    const onPointerMove = (e: PointerEvent) => trackMove(e.clientX ?? 0);
+    const onTouchMove = (e: TouchEvent) =>
+      trackMove(e.touches[0]?.clientX ?? 0);
+
+    const detachMoveListeners = () => {
+      body.removeEventListener('pointermove', onPointerMove);
+      body.removeEventListener('touchmove', onTouchMove);
+    };
+
+    const onPointerDown = (e: PointerEvent) => {
+      touchStartX = e.clientX ?? 0;
+      touchEndX = 0;
+      // eslint-disable-next-line @eslint-react/web-api/no-leaked-event-listener
+      body.addEventListener('pointermove', onPointerMove, { passive: true });
+    };
+
+    const onTouchStart = (e: TouchEvent) => {
+      touchStartX = e.touches[0]?.clientX ?? 0;
+      touchEndX = 0;
+      // eslint-disable-next-line @eslint-react/web-api/no-leaked-event-listener
+      body.addEventListener('touchmove', onTouchMove, { passive: true });
+    };
+
+    const onGestureEnd = () => {
+      detachMoveListeners();
       if (touchStartX === 0 || touchEndX === 0) return;
 
       if (touchEndX > touchStartX + THRESHOLD) setOpen(true);
@@ -333,24 +345,30 @@ export const useSidebarState = () => {
       touchEndX = 0;
     };
 
-    if (body) {
-      body.on('pointerdown', onPointerDown);
-      body.on('pointermove', onPointerMove);
-      body.on('touchstart', onTouchStart);
-      body.on('touchmove', onTouchMove);
-      body.on('touchend pointerup', onPointerUp);
-    }
+    const onPointerCancel = () => {
+      body.removeEventListener('pointermove', onPointerMove);
+    };
+    const onTouchCancel = () => {
+      body.removeEventListener('touchmove', onTouchMove);
+    };
+
+    body.addEventListener('pointerdown', onPointerDown, { passive: true });
+    body.addEventListener('touchstart', onTouchStart, { passive: true });
+    body.addEventListener('pointerup', onGestureEnd, { passive: true });
+    body.addEventListener('touchend', onGestureEnd, { passive: true });
+    body.addEventListener('pointercancel', onPointerCancel, { passive: true });
+    body.addEventListener('touchcancel', onTouchCancel, { passive: true });
 
     return () => {
       unregisterListeners();
 
-      if (body) {
-        body.off('pointerdown', onPointerDown);
-        body.off('pointermove', onPointerMove);
-        body.off('touchstart', onTouchStart);
-        body.off('touchmove', onTouchMove);
-        body.off('touchend pointerup', onPointerUp);
-      }
+      detachMoveListeners();
+      body.removeEventListener('pointerdown', onPointerDown);
+      body.removeEventListener('touchstart', onTouchStart);
+      body.removeEventListener('pointerup', onGestureEnd);
+      body.removeEventListener('touchend', onGestureEnd);
+      body.removeEventListener('pointercancel', onPointerCancel);
+      body.removeEventListener('touchcancel', onTouchCancel);
     };
   }, [
     handleFullRefresh,

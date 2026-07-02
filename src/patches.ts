@@ -9,6 +9,7 @@ import {
   unpatchCombinedChatMenu,
   unpatchSpinner,
 } from './patches/unpatch';
+import { applyLowGfxMode, removeLowGfxMode } from './utils/gfx';
 
 export type Patch = {
   name: string;
@@ -28,6 +29,11 @@ export const patches: Patch[] = [
     antipatch: () => $('#top-settings-holder').show(),
   },
   { name: 'hijackJquery', run: hijackJquery },
+  {
+    name: 'ui-lowGfxMode',
+    run: applyLowGfxMode,
+    antipatch: removeLowGfxMode,
+  },
   {
     name: 'ui-overrideSpinner',
     run: overrideSpinner,

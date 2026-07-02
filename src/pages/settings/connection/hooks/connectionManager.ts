@@ -32,11 +32,7 @@ export interface ConnectionProfile {
   selectedProfile: string;
 }*/
 export type MainAPIValues =
-  | 'kobold'
-  | 'openai'
-  | 'novel'
-  | 'textgenerationwebui'
-  | 'koboldhorde';
+  'kobold' | 'openai' | 'novel' | 'textgenerationwebui' | 'koboldhorde';
 
 const { getContext } = SillyTavern;
 

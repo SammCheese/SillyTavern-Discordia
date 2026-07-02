@@ -57,18 +57,15 @@ const ModalShell = ({
       onClick={handleClick}
       className={`
         fixed w-dvw h-dvh inset-0 z-60 flex items-center justify-center p-4
-        transition-all duration-200 ease-out
-        ${
-          isVisible
-            ? 'bg-black/60 backdrop-blur-[2px] opacity-100'
-            : 'bg-black/0 backdrop-blur-none opacity-0 pointer-events-none'
-        }
+        bg-black/60 backdrop-blur-[2px]
+        transition-opacity duration-200 ease-out
+        ${isVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'}
       `}
       style={{ zIndex }}
     >
       <div
         className={` w-full max-w-lg h-full max-h-[85vh] relative
-          transition-all duration-200 ease-out transform
+          transition-[transform,opacity] duration-200 ease-out transform
           ${
             isVisible
               ? 'scale-100 translate-y-0 opacity-100'

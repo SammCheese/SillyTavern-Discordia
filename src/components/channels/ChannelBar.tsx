@@ -1,18 +1,18 @@
 import { lazy, memo, useCallback, useEffect, useMemo } from 'react';
 import { usePage } from '../../providers/pageProvider';
-import { makeAvatar } from '../../utils/utils';
 import type { RowComponentProps } from 'react-window';
 import { List } from 'react-window';
 import { useSearch } from '../../providers/searchProvider';
 import ErrorBoundary from '../common/ErrorBoundary/ErrorBoundary';
 import { useOpenChat } from '../../hooks/useOpenChat';
 import Skeleton, { SkeletonTheme } from 'react-loading-skeleton';
-import NewChatButton from './NewChatButton';
-import ChannelHeaderEntry from './ChannelHeaderEntry';
-import { useSidebar } from '../../providers/contentProviders/sidebarStateProvider';
+import NewChatButton from './components/NewChatButton';
+import ChannelHeaderEntry from './components/ChannelHeaderEntry';
+import { useSidebarData } from '../../providers/contentProviders/sidebarStateProvider';
+import PlusIcon from './components/PlusIcon';
 
 const Divider = lazy(() => import('../common/Divider/Divider'));
-const ChannelEntry = lazy(() => import('./ChannelEntry'));
+const ChannelEntry = lazy(() => import('./components/ChannelEntry'));
 const SearchBar = lazy(() => import('../common/search/search'));
 
 const ExtensionSettings = lazy(
@@ -43,13 +43,11 @@ const ChannelRow = ({
   currentChatId,
   onClick,
   isSelectedChat,
-  makeAvatar,
 }: RowComponentProps & {
   chats: Chat[];
   currentChatId: string | null;
   onClick: (chat: Chat) => void;
   isSelectedChat: (chat: Chat) => boolean;
-  makeAvatar: (props: { chat: Chat }) => string;
 }) => {
   const chat = chats[index]!;
 
@@ -57,16 +55,10 @@ const ChannelRow = ({
     () => currentChatId === chat.file_id || isSelectedChat(chat),
     [chat, currentChatId, isSelectedChat],
   );
-  const avatar = useMemo(() => makeAvatar({ chat }), [chat, makeAvatar]);
 
   return (
     <div style={style}>
-      <ChannelEntry
-        chat={chat}
-        onClick={onClick}
-        isSelected={isSelected}
-        avatar={avatar}
-      />
+      <ChannelEntry chat={chat} onClick={onClick} isSelected={isSelected} />
     </div>
   );
 };
@@ -90,7 +82,7 @@ const ChannelBar = () => {
     icons,
     refreshContext,
     context,
-  } = useSidebar();
+  } = useSidebarData();
 
   const handleToolclick = useCallback(
     (icon: Icon) => {
@@ -134,7 +126,10 @@ const ChannelBar = () => {
     if (window.innerWidth <= 1000) setOpen(false);
   }, [setOpen]);
 
-  const iconsFiltered = icons?.filter((i) => !i.showInProfile);
+  const iconsFiltered = useMemo(
+    () => icons?.filter((i) => !i.showInProfile),
+    [icons],
+  );
 
   const handleSearchInput = useCallback(
     (query: string) => {
@@ -143,11 +138,14 @@ const ChannelBar = () => {
     [setSearchQuery],
   );
 
+  const isInChatContext = useMemo(
+    () => context === 'chat' || (isLoadingChats && !isInitialLoad),
+    [context, isLoadingChats, isInitialLoad],
+  );
+
   const chatsMemo = useMemo(() => {
-    return context === 'chat' || (isLoadingChats && !isInitialLoad)
-      ? chats
-      : recentChats;
-  }, [context, isLoadingChats, isInitialLoad, chats, recentChats]);
+    return isInChatContext ? chats : recentChats;
+  }, [isInChatContext, chats, recentChats]);
 
   useEffect(() => {
     const handleChatChange = () => {
@@ -182,10 +180,8 @@ const ChannelBar = () => {
   }, [refreshContext, refreshCurrentChatId, setCurrentChatId]);
 
   const title = useMemo(() => {
-    return context === 'chat' || (isLoadingChats && !isInitialLoad)
-      ? 'Chats'
-      : 'Recent Chats';
-  }, [context, isInitialLoad, isLoadingChats]);
+    return isInChatContext ? 'Chats' : 'Recent Chats';
+  }, [isInChatContext]);
 
   return (
     <ErrorBoundary>
@@ -204,7 +200,20 @@ const ChannelBar = () => {
           </div>
         </div>
         <div id="channel-divider" className="divider"></div>
-        <div className="section-header font-gg-sans-bold">{title}</div>
+        <div id="channel-header-title" className="flex flex-row items-center">
+          <div className="section-header font-gg-sans-bold grow self-center h-8 py-1">
+            {title}
+          </div>
+          {isInChatContext && (
+            <div
+              className="flex justify-center p-1 cursor-pointer rounded-md mr-2 hover:bg-base-discordia-lighter transition-colors"
+              onClick={handleNewChatClick}
+              title="Start a New Chat"
+            >
+              <PlusIcon />
+            </div>
+          )}
+        </div>
         <div id="channel-list">
           <div id="channels-list-container">
             {/* Skeleton Chats for loading */}
@@ -233,7 +242,6 @@ const ChannelBar = () => {
                 rowProps={{
                   onClick: handleChannelClick,
                   isSelectedChat,
-                  makeAvatar,
                   chats: chatsMemo,
                   currentChatId,
                 }}
@@ -249,13 +257,12 @@ const ChannelBar = () => {
                   isSelected={
                     currentChatId === chat.file_id || isSelectedChat(chat)
                   }
-                  avatar={makeAvatar({ chat })}
                 />
               ))
             )}
 
             {/* New Chat Button  */}
-            {!isLoadingChats && context === 'chat' && (
+            {isInChatContext && (
               <div className="flex justify-center px-1">
                 <NewChatButton onClick={handleNewChatClick} />
               </div>

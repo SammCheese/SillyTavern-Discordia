@@ -22,14 +22,12 @@ const OpenPage = ({ children, isVisible, onClose }: OpenPageProps) => {
       id="open-page-container"
       onClick={handleClick}
       className={`${
-        isVisible
-          ? 'bg-black/80 backdrop-blur-sm opacity-100'
-          : 'bg-black/0 backdrop-blur-none opacity-0 pointer-events-none'
-      } fixed inset-0 w-dvw h-dvh z-50 flex flex-col justify-center items-center text-white transition-all duration-200 ease-out`}
+        isVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'
+      } bg-black/80 backdrop-blur-sm fixed inset-0 w-dvw h-dvh z-50 flex flex-col justify-center items-center text-white transition-opacity duration-200 ease-out`}
     >
       <div
         className={`
-          transition-all duration-300 ease-out transform
+          transition-[transform,opacity] duration-300 ease-out transform
           ${
             isVisible
               ? 'scale-100 translate-y-0 opacity-100'

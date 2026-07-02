@@ -47,8 +47,7 @@ export const PersonaProvider = ({ children }: PersonaProviderProps) => {
     const persona = personas.find((p) => p.avatar === user_avatar);
     setCurrentPersona(persona || null);
     (SillyTavern.getContext().powerUserSettings.default_persona as
-      | string
-      | null) = persona?.avatar || 'user-default.png';
+      string | null) = persona?.avatar || 'user-default.png';
 
     saveSettingsDebounced();
   }, [personas]);

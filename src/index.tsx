@@ -13,7 +13,6 @@ import ContextMenuProvider from './providers/contextMenuProvider';
 import BackHandlerProvider from './providers/backHandlerProvider';
 import SearchProvider from './providers/searchProvider';
 import ExtensionProvider from './providers/contentProviders/extensionProvider';
-import PersonaProvider from './providers/contentProviders/personaProvider';
 import PlatformProvider from './providers/platformProvider';
 
 import Compose from './app/Compose';
@@ -78,7 +77,6 @@ const startApp = (safeStart: boolean = false) => {
       // Data Providers
       SidebarProvider,
       ExtensionProvider,
-      PersonaProvider,
       // UI Providers
       ErrorBoundary,
       PopupProvider,

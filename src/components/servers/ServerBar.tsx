@@ -15,7 +15,7 @@ import { DISCORDIA_EVENTS } from '../../events/eventTypes';
 import { useModal } from '../../providers/modalProvider';
 import CharacterModal from '../../modals/Character/CharacterModal';
 import Skeleton, { SkeletonTheme } from 'react-loading-skeleton';
-import { useSidebar } from '../../providers/contentProviders/sidebarStateProvider';
+import { useSidebarData } from '../../providers/contentProviders/sidebarStateProvider';
 
 const ServerIcon = lazy(() => import('./Icons/ServerIcon'));
 const AddCharacterIcon = lazy(() => import('./Icons/AddCharacterIcon'));
@@ -122,7 +122,7 @@ const ServerBar = () => {
   const latestSelectionRequestRef = useRef(0);
   const { searchQuery } = useSearch();
   const { openModal } = useModal();
-  const { entities, isInitialLoad } = useSidebar();
+  const { entities, isInitialLoad } = useSidebarData();
 
   const onHomeClickHandler = useCallback(() => {
     setSelectedIndex(null);
