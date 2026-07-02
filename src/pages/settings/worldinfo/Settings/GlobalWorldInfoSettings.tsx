@@ -3,8 +3,7 @@ import Checkbox from '../../../../components/common/Checkbox/Checkbox';
 import Select from '../../../../components/common/Select/Select';
 import Slider from '../../../../components/common/Slider/Slider';
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const { getWorldInfoSettings } = await imports('@scripts/worldInfo');
+import { getWorldInfoSettings } from '../../../../st/worldInfo';
 
 interface GlobalWorldInfoSettingsProps {
   settings: ReturnType<typeof getWorldInfoSettings>;

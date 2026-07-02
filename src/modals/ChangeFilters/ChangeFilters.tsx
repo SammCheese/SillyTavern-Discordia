@@ -2,8 +2,7 @@ import { memo, useEffect } from 'react';
 import Modal from '../../components/common/Modal/Modal';
 import { DISCORDIA_EVENTS } from '../../events/eventTypes';
 
-const { eventSource } = await imports('@script');
-
+import { eventSource } from '../../st/script';
 const ChangeFilters = () => {
   useEffect(() => {
     return () => {

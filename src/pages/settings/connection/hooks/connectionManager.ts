@@ -1,5 +1,11 @@
 import { useCallback, useState } from 'react';
 
+import {
+  changeMainAPI,
+  saveSettingsDebounced,
+  eventSource,
+  event_types,
+} from '../../../../st/script';
 const { lodash } = SillyTavern.libs;
 const _ = lodash;
 
@@ -35,9 +41,6 @@ export type MainAPIValues =
   'kobold' | 'openai' | 'novel' | 'textgenerationwebui' | 'koboldhorde';
 
 const { getContext } = SillyTavern;
-
-const { changeMainAPI, saveSettingsDebounced, eventSource, event_types } =
-  await imports('@script');
 
 export const useConnectionManager = () => {
   const [profilesState, setProfilesState] = useState<ConnectionProfile[]>(

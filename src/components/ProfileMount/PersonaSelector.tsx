@@ -1,7 +1,6 @@
 import { memo, useCallback, useMemo } from 'react';
 
-const { getThumbnailUrl } = await imports('@script');
-
+import { getThumbnailUrl } from '../../st/script';
 interface PersonaSelectorProps {
   personas: Persona[];
   onSelect?: (persona: Persona) => void;

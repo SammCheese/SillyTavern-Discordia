@@ -4,11 +4,12 @@ import { textgen_settings_schema } from '../data/samplers';
 import SettingsRow from '../components/SettingsRow';
 import Select from '../../../../components/common/Select/Select';
 
+import { amount_gen, max_context } from '../../../../st/script';
+import {
+  textgenerationwebui_preset_names,
+  textgenerationwebui_presets,
+} from '../../../../st/textGenSettings';
 const context = SillyTavern.getContext();
-
-const { amount_gen, max_context } = await imports('@script');
-const { textgenerationwebui_preset_names, textgenerationwebui_presets } =
-  await imports('@scripts/textGenSettings');
 
 const SCRIPT_SETTING_IDS = [
   'max_context',

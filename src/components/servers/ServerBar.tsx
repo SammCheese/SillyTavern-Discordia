@@ -1,12 +1,4 @@
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  lazy,
-  memo,
-  useRef,
-  useState,
-} from 'react';
+import { useCallback, useMemo, lazy, memo, useRef, useState } from 'react';
 import { List, type RowComponentProps } from 'react-window';
 import { selectCharacter, selectGroup } from '../../utils/utils';
 import { useSearch } from '../../providers/searchProvider';
@@ -16,13 +8,18 @@ import { useModal } from '../../providers/modalProvider';
 import CharacterModal from '../../modals/Character/CharacterModal';
 import Skeleton, { SkeletonTheme } from 'react-loading-skeleton';
 import { useSidebarData } from '../../providers/contentProviders/sidebarStateProvider';
+import { useSTEvents } from '../../hooks/useSTEvents';
 
+import {
+  characters,
+  closeCurrentChat,
+  eventSource,
+  event_types,
+  isGenerating,
+} from '../../st/script';
 const ServerIcon = lazy(() => import('./Icons/ServerIcon'));
 const AddCharacterIcon = lazy(() => import('./Icons/AddCharacterIcon'));
 const HomeIcon = lazy(() => import('./Icons/HomeIcon'));
-
-const { characters, closeCurrentChat, eventSource, event_types, isGenerating } =
-  await imports('@script');
 
 interface ServerRowProps {
   entity: Entity;
@@ -218,14 +215,15 @@ const ServerBar = () => {
     setSelectedIndex((prev) => (prev !== correctIndex ? correctIndex : prev));
   }, [getGlobalIndex]);
 
-  useEffect(() => {
-    eventSource.on(event_types.CHAT_CHANGED, syncIndex);
-    eventSource.on(event_types.CHAT_DELETED, syncIndex);
-    return () => {
-      eventSource.removeListener(event_types.CHAT_CHANGED, syncIndex);
-      eventSource.removeListener(event_types.CHAT_DELETED, syncIndex);
-    };
-  }, [entities, syncIndex]);
+  useSTEvents(
+    useMemo(
+      () => ({
+        [event_types.CHAT_CHANGED]: syncIndex,
+        [event_types.CHAT_DELETED]: syncIndex,
+      }),
+      [syncIndex],
+    ),
+  );
 
   const itemData = useMemo(
     () => ({ entities, selectedIndex, handleItemClick }),

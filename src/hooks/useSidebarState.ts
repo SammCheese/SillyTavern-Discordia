@@ -3,10 +3,15 @@ import { getRecentChats, invalidateEntityCache } from '../services/chatService';
 import { DISCORDIA_EVENTS } from '../events/eventTypes';
 import { getDiscordiaSettings } from '../services/extensionSettingService';
 
-const { getGroupPastChats } = await imports('@scripts/groupChats');
-const { getEntitiesList, eventSource, event_types, getPastCharacterChats } =
-  await imports('@script');
+import { useSTEvents } from './useSTEvents';
+import { useSwipeGesture } from './useSwipeGesture';
 
+import { getGroupPastChats } from '../st/groupChats';
+import {
+  getEntitiesList,
+  event_types,
+  getPastCharacterChats,
+} from '../st/script';
 type SidebarAction =
   | { type: 'SET_OPEN'; open: boolean }
   | { type: 'REFRESH_START' }
@@ -40,7 +45,11 @@ const sidebarReducer = (
     case 'REFRESH_SUCCESS':
       return {
         ...state,
-        ...action,
+        ...(action.chats !== undefined && { chats: action.chats }),
+        ...(action.entities !== undefined && { entities: action.entities }),
+        ...(action.recentChats !== undefined && {
+          recentChats: action.recentChats,
+        }),
         isLoadingChats: false,
       };
     case 'REFRESH_FAILURE':
@@ -279,108 +288,18 @@ export const useSidebarState = () => {
     refreshRecentChats,
   ]);
 
-  const registerListeners = useCallback(() => {
-    for (const [event, handler] of Object.entries(EventMap)) {
-      eventSource.on(event, handler);
-    }
-  }, [EventMap]);
+  useSTEvents(EventMap);
 
-  const unregisterListeners = useCallback(() => {
-    for (const [event, handler] of Object.entries(EventMap)) {
-      eventSource.removeListener(event, handler);
-    }
-  }, [EventMap]);
+  useSwipeGesture({
+    onSwipeRight: useCallback(() => setOpen(true), [setOpen]),
+    onSwipeLeft: useCallback(() => {
+      if (window.innerWidth <= 1000) setOpen(false);
+    }, [setOpen]),
+  });
 
   useEffect(() => {
     processMenuIcons();
-
-    registerListeners();
-
-    // Swipe listeners.
-    const THRESHOLD = 100;
-    const body = document.body;
-    let touchStartX = 0;
-    let touchEndX = 0;
-    let lastMove = 0;
-
-    const trackMove = (clientX: number) => {
-      const now = performance.now();
-      if (now - lastMove < 16) return;
-      lastMove = now;
-      touchEndX = clientX;
-    };
-
-    const onPointerMove = (e: PointerEvent) => trackMove(e.clientX ?? 0);
-    const onTouchMove = (e: TouchEvent) =>
-      trackMove(e.touches[0]?.clientX ?? 0);
-
-    const detachMoveListeners = () => {
-      body.removeEventListener('pointermove', onPointerMove);
-      body.removeEventListener('touchmove', onTouchMove);
-    };
-
-    const onPointerDown = (e: PointerEvent) => {
-      touchStartX = e.clientX ?? 0;
-      touchEndX = 0;
-      // eslint-disable-next-line @eslint-react/web-api/no-leaked-event-listener
-      body.addEventListener('pointermove', onPointerMove, { passive: true });
-    };
-
-    const onTouchStart = (e: TouchEvent) => {
-      touchStartX = e.touches[0]?.clientX ?? 0;
-      touchEndX = 0;
-      // eslint-disable-next-line @eslint-react/web-api/no-leaked-event-listener
-      body.addEventListener('touchmove', onTouchMove, { passive: true });
-    };
-
-    const onGestureEnd = () => {
-      detachMoveListeners();
-      if (touchStartX === 0 || touchEndX === 0) return;
-
-      if (touchEndX > touchStartX + THRESHOLD) setOpen(true);
-      else if (touchEndX < touchStartX - THRESHOLD) {
-        if (window.innerWidth <= 1000) setOpen(false);
-      }
-      touchStartX = 0;
-      touchEndX = 0;
-    };
-
-    const onPointerCancel = () => {
-      body.removeEventListener('pointermove', onPointerMove);
-    };
-    const onTouchCancel = () => {
-      body.removeEventListener('touchmove', onTouchMove);
-    };
-
-    body.addEventListener('pointerdown', onPointerDown, { passive: true });
-    body.addEventListener('touchstart', onTouchStart, { passive: true });
-    body.addEventListener('pointerup', onGestureEnd, { passive: true });
-    body.addEventListener('touchend', onGestureEnd, { passive: true });
-    body.addEventListener('pointercancel', onPointerCancel, { passive: true });
-    body.addEventListener('touchcancel', onTouchCancel, { passive: true });
-
-    return () => {
-      unregisterListeners();
-
-      detachMoveListeners();
-      body.removeEventListener('pointerdown', onPointerDown);
-      body.removeEventListener('touchstart', onTouchStart);
-      body.removeEventListener('pointerup', onGestureEnd);
-      body.removeEventListener('touchend', onGestureEnd);
-      body.removeEventListener('pointercancel', onPointerCancel);
-      body.removeEventListener('touchcancel', onTouchCancel);
-    };
-  }, [
-    handleFullRefresh,
-    processMenuIcons,
-    refreshChats,
-    refreshCharacters,
-    setOpen,
-    showRecentChats,
-    refreshRecentChats,
-    registerListeners,
-    unregisterListeners,
-  ]);
+  }, [processMenuIcons]);
 
   return {
     ...state,

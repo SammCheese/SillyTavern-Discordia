@@ -1,16 +1,18 @@
-import { lazy, memo, useCallback, useEffect, useMemo } from 'react';
+import { lazy, memo, useCallback, useMemo } from 'react';
 import { usePage } from '../../providers/pageProvider';
 import type { RowComponentProps } from 'react-window';
 import { List } from 'react-window';
 import { useSearch } from '../../providers/searchProvider';
 import ErrorBoundary from '../common/ErrorBoundary/ErrorBoundary';
 import { useOpenChat } from '../../hooks/useOpenChat';
+import { useSTEvents } from '../../hooks/useSTEvents';
 import Skeleton, { SkeletonTheme } from 'react-loading-skeleton';
 import NewChatButton from './components/NewChatButton';
 import ChannelHeaderEntry from './components/ChannelHeaderEntry';
 import { useSidebarData } from '../../providers/contentProviders/sidebarStateProvider';
 import PlusIcon from './components/PlusIcon';
 
+import { doNewChat, event_types } from '../../st/script';
 const Divider = lazy(() => import('../common/Divider/Divider'));
 const ChannelEntry = lazy(() => import('./components/ChannelEntry'));
 const SearchBar = lazy(() => import('../common/search/search'));
@@ -33,8 +35,6 @@ const CharacterSettings = lazy(
 const FormattingSettings = lazy(
   () => import('../../pages/settings/formatting/FormattingSettings'),
 );
-
-const { doNewChat, eventSource, event_types } = await imports('@script');
 
 const ChannelRow = ({
   index,
@@ -66,13 +66,8 @@ const ChannelRow = ({
 const ChannelBar = () => {
   const { openPage } = usePage();
   const { setSearchQuery } = useSearch();
-  const {
-    openChat,
-    isSelectedChat,
-    currentChatId,
-    setCurrentChatId,
-    refreshCurrentChatId,
-  } = useOpenChat();
+  const { openChat, isSelectedChat, currentChatId, refreshCurrentChatId } =
+    useOpenChat();
   const {
     chats,
     recentChats,
@@ -147,37 +142,23 @@ const ChannelBar = () => {
     return isInChatContext ? chats : recentChats;
   }, [isInChatContext, chats, recentChats]);
 
-  useEffect(() => {
-    const handleChatChange = () => {
-      refreshCurrentChatId();
-      refreshContext();
-    };
+  useSTEvents(
+    useMemo(() => {
+      const handleChatChange = () => {
+        refreshCurrentChatId();
+        refreshContext();
+      };
 
-    eventSource.on(event_types.CHAT_CHANGED, handleChatChange);
-    eventSource.on(event_types.CHAT_RENAMED, handleChatChange);
-    eventSource.on(event_types.CHAT_DELETED, handleChatChange);
-    eventSource.on(event_types.CHAT_CREATED, refreshCurrentChatId);
-    eventSource.on(event_types.GROUP_CHAT_DELETED, handleChatChange);
-    eventSource.on(event_types.GROUP_CHAT_CREATED, refreshCurrentChatId);
-
-    return () => {
-      eventSource.removeListener(event_types.CHAT_CHANGED, handleChatChange);
-      eventSource.removeListener(event_types.CHAT_RENAMED, handleChatChange);
-      eventSource.removeListener(event_types.CHAT_DELETED, handleChatChange);
-      eventSource.removeListener(
-        event_types.CHAT_CREATED,
-        refreshCurrentChatId,
-      );
-      eventSource.removeListener(
-        event_types.GROUP_CHAT_DELETED,
-        handleChatChange,
-      );
-      eventSource.removeListener(
-        event_types.GROUP_CHAT_CREATED,
-        refreshCurrentChatId,
-      );
-    };
-  }, [refreshContext, refreshCurrentChatId, setCurrentChatId]);
+      return {
+        [event_types.CHAT_CHANGED]: handleChatChange,
+        [event_types.CHAT_RENAMED]: handleChatChange,
+        [event_types.CHAT_DELETED]: handleChatChange,
+        [event_types.CHAT_CREATED]: refreshCurrentChatId,
+        [event_types.GROUP_CHAT_DELETED]: handleChatChange,
+        [event_types.GROUP_CHAT_CREATED]: refreshCurrentChatId,
+      };
+    }, [refreshContext, refreshCurrentChatId]),
+  );
 
   const title = useMemo(() => {
     return isInChatContext ? 'Chats' : 'Recent Chats';

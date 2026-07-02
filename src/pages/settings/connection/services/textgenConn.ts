@@ -1,10 +1,10 @@
-const {
+import {
   getTextGenServer,
   textgenerationwebui_settings,
   textgen_types,
   SERVER_INPUTS,
-} = await imports('@scripts/textGenSettings');
-const { getRequestHeaders } = await imports('@script');
+} from '../../../../st/textGenSettings';
+import { getRequestHeaders } from '../../../../st/script';
 
 export const getTextGenStatus = async (
   server?: string,

@@ -1,14 +1,13 @@
 import { DISCORDIA_EVENTS } from '../events/eventTypes';
 
-const {
+import {
   getRequestHeaders,
   getCharacters,
   eventSource,
   deleteCharacter,
   closeCurrentChat,
-} = await imports('@script');
-const { ensureImageFormatSupported } = await imports('@scripts/utils');
-
+} from '../st/script';
+import { ensureImageFormatSupported } from '../st/utils';
 export interface CharacterPayload {
   ch_name: string;
   avatar: File | string;

@@ -8,13 +8,16 @@ import Divider from '../../../../../components/common/Divider/Divider';
 import { useConnectionManager } from '../../hooks/connectionManager';
 import { getTextGenStatus } from '../../services/textgenConn';
 
+import {
+  saveSettingsDebounced,
+  setOnlineStatus,
+} from '../../../../../st/script';
+import { getSecretLabelById } from '../../../../../st/secrets';
 interface TextGenerationSettingsProps {
   entries: ApiBucket[];
 }
 
-const genSet = await imports('@scripts/textGenSettings');
-const { saveSettingsDebounced, setOnlineStatus } = await imports('@script');
-const { getSecretLabelById } = await imports('@scripts/secrets');
+import { textGenSettingsModule as genSet } from '../../../../../st/textGenSettings';
 const { getContext } = SillyTavern;
 
 const _ = SillyTavern.libs.lodash;

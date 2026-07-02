@@ -1,8 +1,7 @@
 import { lazy, useEffect } from 'react';
 
+import { saveSettingsDebounced } from '../../../st/script';
 const SettingsFrame = lazy(() => import('../base/Base'));
-
-const { saveSettingsDebounced } = await imports('@script');
 
 const CharacterSettings = () => {
   useEffect(() => {

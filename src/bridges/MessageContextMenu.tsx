@@ -4,8 +4,7 @@ import type { ContextMenuItem } from '../components/common/ContextMenuEntry/Cont
 import MessageEditingBridge from './MessageEditing';
 import { useSettings } from '../providers/discordiaSettingsProvider';
 
-const { deleteMessage, messageEdit } = await imports('@script');
-
+import { deleteMessage, messageEdit } from '../st/script';
 const allowedOriginalToolsTitle = [
   '[title]Translate message',
   '[title]Prompt',

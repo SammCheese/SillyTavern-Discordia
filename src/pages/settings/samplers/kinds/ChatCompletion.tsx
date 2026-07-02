@@ -9,6 +9,12 @@ import Select from '../../../../components/common/Select/Select';
 import SamplerSlider from '../components/SamplerSlider';
 import { generationSliders, samplerSliders } from '../data/openaiSamplers';
 
+import { saveSettingsDebounced } from '../../../../st/script';
+import {
+  oai_settings,
+  settingsToUpdate,
+  chat_completion_sources,
+} from '../../../../st/openai';
 type SettingValue = unknown;
 type LogitBiasEntry = {
   id?: string;
@@ -17,9 +23,6 @@ type LogitBiasEntry = {
 };
 
 const context = SillyTavern.getContext();
-const { saveSettingsDebounced } = await imports('@script');
-const { oai_settings, settingsToUpdate, chat_completion_sources } =
-  await imports('@scripts/openai');
 
 const ChatCompletionSamplerSettings = () => {
   const [settings, setSettings] = useState<Record<string, unknown>>(() => ({

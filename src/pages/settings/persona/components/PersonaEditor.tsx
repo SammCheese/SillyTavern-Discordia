@@ -11,6 +11,9 @@ import Select from '../../../../components/common/Select/Select';
 import IconButton from '../../../../components/common/IconButton/IconButton';
 import { updatePersonaAvatarImage, withCacheBust } from '../helper';
 
+import { persona_description_positions } from '../../../../st/powerUser';
+import { getThumbnailUrl } from '../../../../st/script';
+import { setUserAvatar } from '../../../../st/personas';
 interface PersonaEditorProps {
   personas: FullPersona[];
   setPersonas: React.Dispatch<React.SetStateAction<FullPersona[]>>;
@@ -20,10 +23,6 @@ interface PersonaEditorProps {
   avatarRefreshNonce: number;
   onAvatarUpdated: () => void;
 }
-
-const { persona_description_positions } = await imports('@scripts/powerUser');
-const { getThumbnailUrl } = await imports('@script');
-const { setUserAvatar } = await imports('@scripts/personas');
 
 const PersonaEditor = ({
   personas,

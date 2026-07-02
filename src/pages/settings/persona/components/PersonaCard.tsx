@@ -1,8 +1,7 @@
 import { memo, useCallback, useMemo } from 'react';
 import { withCacheBust } from '../helper';
 
-const { getThumbnailUrl } = await imports('@script');
-
+import { getThumbnailUrl } from '../../../../st/script';
 interface PersonaCardProps {
   persona: FullPersona;
   selected?: boolean;

@@ -1,4 +1,4 @@
-const {
+import {
   characters,
   getRequestHeaders,
   getThumbnailUrl,
@@ -7,9 +7,13 @@ const {
   eventSource,
   event_types,
   reloadCurrentChat,
-} = await imports('@script');
-const { groups } = await imports('@scripts/groupChats');
-const { sortMoments, timestampToMoment } = await imports('@scripts/utils');
+} from '../st/script';
+import { groups, renameGroupChat } from '../st/groupChats';
+import {
+  sortMoments,
+  timestampToMoment,
+  equalsIgnoreCaseAndAccents,
+} from '../st/utils';
 
 let cachedCharacterMap: Map<string, Character> | null = null;
 let cachedGroupMap: Map<string, GroupItem> | null = null;
@@ -109,9 +113,6 @@ export async function getRecentChats(entities?: Entity[], amount = 20) {
 
   return dataWithEntities;
 }
-
-const { renameGroupChat } = await imports('@scripts/groupChats');
-const { equalsIgnoreCaseAndAccents } = await imports('@scripts/utils');
 
 /**
  * Renames a group or character chat.

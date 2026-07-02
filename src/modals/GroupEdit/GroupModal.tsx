@@ -15,10 +15,12 @@ import { DISCORDIA_EVENTS } from '../../events/eventTypes';
 import CharacterModal from '../Character/CharacterModal';
 import IconButton from '../../components/common/IconButton/IconButton';
 
-const { deleteGroup, hideMutedSprites, is_group_automode_enabled } =
-  await imports('@scripts/groupChats');
-const { eventSource } = await imports('@script');
-
+import {
+  deleteGroup,
+  hideMutedSprites,
+  is_group_automode_enabled,
+} from '../../st/groupChats';
+import { eventSource } from '../../st/script';
 interface GroupEditModalProps {
   entity: Entity;
 }

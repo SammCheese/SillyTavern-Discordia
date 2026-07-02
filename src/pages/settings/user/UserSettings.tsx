@@ -9,9 +9,8 @@ import {
 } from './Tabs/Settings';
 import DesktopSettings from './Platform/DesktopSettings';
 
+import { saveSettingsDebounced } from '../../../st/script';
 const SettingsFrame = lazy(() => import('../base/Base'));
-
-const { saveSettingsDebounced } = await imports('@script');
 
 const toSearchableString = (item: UserSettingsItem) => {
   return [item.label, item.description, ...(item.searchTerms ?? [])]

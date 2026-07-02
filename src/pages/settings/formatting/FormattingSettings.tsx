@@ -3,9 +3,8 @@ import type { MainAPIValues } from '../connection/hooks/connectionManager';
 import TextCompletionFormatting from './API/textcompletion/TextCompletionFormatting/TextCompletionFormatting';
 import ChatCompletionFormatting from './API/chatcompletion/ChatCompletionFormatting/ChatCompletionFormatting';
 
+import { saveSettingsDebounced } from '../../../st/script';
 const SettingsFrame = lazy(() => import('../base/Base'));
-
-const { saveSettingsDebounced } = await imports('@script');
 
 const FormattingSettings = () => {
   const FormattingSettings = useMemo(() => {

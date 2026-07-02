@@ -1,4 +1,4 @@
-const { getRequestHeaders, getCharacters } = await imports('@script');
+import { getRequestHeaders, getCharacters } from '../st/script';
 
 export async function saveGroup(group: GroupItem, reload = true) {
   await fetch('/api/groups/edit', {

@@ -4,7 +4,6 @@ import {
   useSidebarData,
   useSidebarUi,
 } from '../../providers/contentProviders/sidebarStateProvider';
-import PersonaProvider from '../../providers/contentProviders/personaProvider';
 
 const ProfileMount = lazy(() => import('../ProfileMount/ProfileMount'));
 const ChannelBar = lazy(() => import('../channels/ChannelBar'));
@@ -31,9 +30,7 @@ const SideBar = () => {
         <ChannelBar />
       </div>
       <div id="user-container">
-        <PersonaProvider>
-          <ProfileMount icons={icons} />
-        </PersonaProvider>
+        <ProfileMount icons={icons} />
       </div>
     </div>
   );

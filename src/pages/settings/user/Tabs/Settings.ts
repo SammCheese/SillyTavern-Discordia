@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { logout } from '../../../../utils/userUtils';
+import { userModule } from '../../../../st/user';
 
 export type UserSettingsItemType = 'view' | 'action';
 export type UserSettingsItemVariant = 'default' | 'danger';
@@ -42,8 +43,7 @@ export const Settings: UserSettingsCategory[] = [
         description: 'Access administrative tools and settings.',
         searchTerms: ['admin', 'moderation', 'permissions'],
         visibilityCondition: async () => {
-          const { isAdmin } = await imports('@scripts/user');
-          return isAdmin();
+          return userModule.isAdmin();
         },
       },
     ],

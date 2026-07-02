@@ -1,4 +1,4 @@
-const { getRequestHeaders } = await imports('@script');
+import { getRequestHeaders } from '../st/script';
 
 export async function logout() {
   await fetch('/api/users/logout', {

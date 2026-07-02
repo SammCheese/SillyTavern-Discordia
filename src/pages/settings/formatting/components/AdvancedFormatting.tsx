@@ -6,6 +6,7 @@ import Input from '../../../../components/common/Input/Input';
 import Select from '../../../../components/common/Select/Select';
 import SectionTitle from './SectionTitle';
 
+import { saveSettingsDebounced } from '../../../../st/script';
 type SelectOption = {
   value: string;
   label: string;
@@ -16,8 +17,6 @@ type AdvancedFormattingMode = 'text' | 'chat';
 interface AdvancedFormattingProps {
   mode: AdvancedFormattingMode;
 }
-
-const { saveSettingsDebounced } = await imports('@script');
 
 const AdvancedFormatting = ({ mode }: AdvancedFormattingProps) => {
   const isChatCompletion = mode === 'chat';

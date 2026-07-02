@@ -1,10 +1,10 @@
 import { runTaskInIdle } from '../../../../utils/utils';
+import { extensionsModule } from '../../../../st/extensions';
 import { getOwner } from '../../../../patches/settingsHijack';
 import type { ExtensionInfo } from '../ExtensionSettings';
 import { specialExtensionHandling } from './extensionCompat';
 
-const { getRequestHeaders } = await imports('@script');
-
+import { getRequestHeaders } from '../../../../st/script';
 export async function discoverExtensions(): Promise<ExtensionInfo[]> {
   try {
     const response = await fetch('/api/extensions/discover');
@@ -26,7 +26,7 @@ export async function discoverExtensions(): Promise<ExtensionInfo[]> {
  * @returns {string} Type of the extension (global, local, system, or empty string if not found)
  */
 async function getExtensionType(externalId: string): Promise<string> {
-  const { extensionTypes } = await imports('@scripts/extensions');
+  const { extensionTypes } = extensionsModule;
 
   if (extensionTypes[externalId]) {
     return extensionTypes[externalId];

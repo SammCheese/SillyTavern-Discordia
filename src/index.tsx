@@ -14,6 +14,7 @@ import BackHandlerProvider from './providers/backHandlerProvider';
 import SearchProvider from './providers/searchProvider';
 import ExtensionProvider from './providers/contentProviders/extensionProvider';
 import PlatformProvider from './providers/platformProvider';
+import PersonaProvider from './providers/contentProviders/personaProvider';
 
 import Compose from './app/Compose';
 import ErrorBoundary from './components/common/ErrorBoundary/ErrorBoundary';
@@ -77,6 +78,7 @@ const startApp = (safeStart: boolean = false) => {
       // Data Providers
       SidebarProvider,
       ExtensionProvider,
+      PersonaProvider,
       // UI Providers
       ErrorBoundary,
       PopupProvider,

@@ -3,8 +3,7 @@ import GroupAvatar from '../../groupAvatar/GroupAvatar';
 import { useServerIconMenu } from '../hooks/ServerIconMenu';
 import Tooltip from '../../common/Tooltip/Tooltip';
 
-const { getThumbnailUrl } = await imports('@script');
-
+import { getThumbnailUrl } from '../../../st/script';
 interface ServerIconProps {
   entity: Entity;
   isSelected: boolean;

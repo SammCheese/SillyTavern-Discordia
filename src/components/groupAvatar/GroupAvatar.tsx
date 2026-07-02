@@ -2,15 +2,14 @@ import { useMemo, memo } from 'react';
 
 import './GroupAvatar.css';
 
-const {
+import {
   getThumbnailUrl,
   characters,
   default_avatar,
   eventSource,
   event_types,
-} = await imports('@script');
-const { isValidUrl } = await imports('@scripts/utils');
-
+} from '../../st/script';
+import { isValidUrl } from '../../st/utils';
 // One thumbnail map shared by all GroupAvatar instances. ST mutates the
 // `characters` array in place, so we invalidate on character events and
 // whenever the list length changes.

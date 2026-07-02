@@ -10,6 +10,7 @@ import {
   unpatchSpinner,
 } from './patches/unpatch';
 import { applyLowGfxMode, removeLowGfxMode } from './utils/gfx';
+import { runCompatSelfCheck } from './st/selfCheck';
 
 export type Patch = {
   name: string;
@@ -29,6 +30,7 @@ export const patches: Patch[] = [
     antipatch: () => $('#top-settings-holder').show(),
   },
   { name: 'hijackJquery', run: hijackJquery },
+  { name: 'st-compatSelfCheck', run: runCompatSelfCheck },
   {
     name: 'ui-lowGfxMode',
     run: applyLowGfxMode,

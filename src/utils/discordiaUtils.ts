@@ -1,7 +1,6 @@
 import { applyPatch, patches, revertPatch, unpatchAll } from '../patches';
 
-const { saveSettingsDebounced } = await imports('@script');
-
+import { saveSettingsDebounced } from '../st/script';
 const disableDiscordia = async (permanent = false) => {
   // First attempt to disable the extension the normal way
   try {

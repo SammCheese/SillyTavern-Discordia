@@ -9,16 +9,18 @@ import {
   updateDiscordiaSettings,
 } from '../../../services/extensionSettingService';
 
+import {
+  deleteCharacter,
+  eventSource,
+  closeCurrentChat,
+} from '../../../st/script';
+import { deleteGroup } from '../../../st/groupChats';
 const CharacterModal = lazy(
   () => import('../../../modals/Character/CharacterModal'),
 );
 const GroupEditModal = lazy(
   () => import('../../../modals/GroupEdit/GroupModal'),
 );
-
-const { deleteCharacter, eventSource, closeCurrentChat } =
-  await imports('@script');
-const { deleteGroup } = await imports('@scripts/groupChats');
 
 export const useServerIconMenu = (entity: Entity) => {
   const { showContextMenu } = useContextMenu();

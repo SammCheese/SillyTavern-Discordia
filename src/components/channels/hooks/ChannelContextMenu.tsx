@@ -5,16 +5,14 @@ import { usePopup } from '../../../providers/popupProvider';
 import RenamePopup from '../components/RenamePopup';
 import { DISCORDIA_EVENTS } from '../../../events/eventTypes';
 
-const {
+import {
   deleteCharacterChatByName,
   event_types,
   eventSource,
   openCharacterChat,
   clearChat,
-} = await imports('@script');
-const { deleteGroupChatByName, openGroupChat } = await imports(
-  '@scripts/groupChats',
-);
+} from '../../../st/script';
+import { deleteGroupChatByName, openGroupChat } from '../../../st/groupChats';
 
 export const useChannelContextMenu = (chat: Chat) => {
   const { showContextMenu } = useContextMenu();
