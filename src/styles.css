@@ -434,17 +434,6 @@ dialog.popup {
   border-radius: 0px !important;
 }
 
-#chat .mes {
-  content-visibility: auto;
-  contain-intrinsic-size: auto 120px;
-}
-
-/* Keep the newest messages fully rendered so autoscroll during streaming
-   generation is never anchored to a skipped element. */
-#chat .mes:nth-last-child(-n + 2) {
-  content-visibility: visible;
-}
-
 #channel-list {
   overflow-y: auto;
 }

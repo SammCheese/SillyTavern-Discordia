@@ -102,8 +102,10 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
             <button
               onClick={async () => {
                 try {
-                  const { disableExtension, findExtension } =
-                    await import('../../../st/extensions');
+                  const { disableExtension, findExtension } = await imports(
+                    '@scripts/extensions',
+                  );
+
                   const extension = findExtension('SillyTavern-Discordia');
                   if (!extension) {
                     toastr.error(
