@@ -17,6 +17,9 @@ import {
   event_types,
   isGenerating,
 } from '../../st/script';
+import CharacterLibraryButton from './Icons/CharacterLibraryButton';
+import { useExtensionState } from '../../providers/contentProviders/extensionProvider';
+import Tooltip from '../common/Tooltip/Tooltip';
 const ServerIcon = lazy(() => import('./Icons/ServerIcon'));
 const AddCharacterIcon = lazy(() => import('./Icons/AddCharacterIcon'));
 const HomeIcon = lazy(() => import('./Icons/HomeIcon'));
@@ -120,6 +123,7 @@ const ServerBar = () => {
   const { searchQuery } = useSearch();
   const { openModal } = useModal();
   const { entities, isInitialLoad } = useSidebarData();
+  const { extensions } = useExtensionState();
 
   const onHomeClickHandler = useCallback(() => {
     setSelectedIndex(null);
@@ -136,6 +140,12 @@ const ServerBar = () => {
         });
       });
   }, []);
+
+  const hasCharLib = useMemo(() => {
+    return extensions.some(
+      (ext) => ext.manifest?.display_name === 'Character Library',
+    );
+  }, [extensions]);
 
   const getGlobalIndex = useCallback(() => {
     const { characterId, groupId } = SillyTavern.getContext();
@@ -252,6 +262,11 @@ const ServerBar = () => {
         </div>
 
         <div id="characters-list" className="pt-0.5">
+          {hasCharLib && (
+            <Tooltip text="Character Library" direction="right">
+              <CharacterLibraryButton />
+            </Tooltip>
+          )}
           {/* Show skeletons while loading */}
           {isInitialLoad && (
             <div className="flex flex-col items-center w-full">
