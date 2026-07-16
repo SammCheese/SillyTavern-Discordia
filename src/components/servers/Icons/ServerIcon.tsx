@@ -4,32 +4,28 @@ import { useServerIconMenu } from '../hooks/ServerIconMenu';
 import Tooltip from '../../common/Tooltip/Tooltip';
 
 import { getThumbnailUrl } from '../../../st/script';
+import { isFavoriteEntity } from '../services/entitySelection';
+
 interface ServerIconProps {
   entity: Entity;
   isSelected: boolean;
-  onClick?: (entity: Entity, index: number) => void;
-  index: number;
+  onClick?: (entity: Entity) => void;
 }
 
-const ServerIcon = ({
-  entity,
-  isSelected,
-  onClick,
-  index,
-}: ServerIconProps) => {
+const ServerIcon = ({ entity, isSelected, onClick }: ServerIconProps) => {
   const { handleContextMenu: contextMenuHandler } = useServerIconMenu(entity);
 
   const handleClick = useCallback(() => {
-    onClick?.(entity, index);
-  }, [onClick, entity, index]);
+    onClick?.(entity);
+  }, [onClick, entity]);
 
-  const memoizedSrc = useMemo(() => {
-    return getThumbnailUrl('avatar', entity.item?.avatar || entity.id);
-  }, [entity]);
+  const avatarId = entity.item?.avatar || entity.id;
+  const memoizedSrc = useMemo(
+    () => getThumbnailUrl('avatar', avatarId),
+    [avatarId],
+  );
 
-  const isFavorite = useMemo(() => {
-    return entity.item?.fav || false;
-  }, [entity.item?.fav]);
+  const isFavorite = isFavoriteEntity(entity);
 
   const handleDragStart = useCallback(
     (e: React.DragEvent) => {
@@ -62,7 +58,7 @@ const ServerIcon = ({
       >
         <div className="absolute insert-s-0 top-0 w-2 justify-start items-center flex h-full">
           <span
-            className={`w-2 absolute block transition-all ease-in-out duration-200 -ms-1 bg-white rounded-r ${
+            className={`w-2 absolute block transition-[height] ease-in-out duration-200 -ms-1 bg-white rounded-r ${
               isSelected ? 'h-8' : 'h-0 group-hover:h-6'
             }`}
           />
@@ -70,7 +66,6 @@ const ServerIcon = ({
 
         <div
           className="cursor-pointer w-full h-fit flex justify-center items-center"
-          title={entity.item?.name || 'Character'}
           draggable={true}
           onDragStart={handleDragStart}
           onDragOver={handleDragOver}
@@ -83,7 +78,7 @@ const ServerIcon = ({
               draggable={false}
               loading="lazy"
               alt={entity.item?.name || 'Character'}
-              className={`rounded-xl h-12 w-12 object-cover transition-all ${
+              className={`rounded-xl h-12 w-12 object-cover ${
                 isSelected
                   ? 'outline-1 outline-white'
                   : 'group-hover:outline-1 group-hover:outline-white'

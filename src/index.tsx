@@ -7,6 +7,7 @@ import 'react-loading-skeleton/dist/skeleton.css';
 
 import PageProvider from './providers/pageProvider';
 import ModalProvider from './providers/modalProvider';
+import BottomSheetProvider from './providers/bottomSheetProvider';
 import PopupProvider from './providers/popupProvider';
 import MessageContextMenu from './bridges/MessageContextMenu';
 import ContextMenuProvider from './providers/contextMenuProvider';
@@ -84,6 +85,7 @@ const startApp = (safeStart: boolean = false) => {
       PopupProvider,
       PageProvider,
       ModalProvider,
+      BottomSheetProvider,
       ContextMenuProvider,
       SearchProvider,
     ];

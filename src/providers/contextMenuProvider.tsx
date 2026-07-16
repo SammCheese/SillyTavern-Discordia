@@ -14,6 +14,7 @@ import { createPortal } from 'react-dom';
 import { type ContextMenuItem } from '../components/common/ContextMenuEntry/ContextMenuEntry';
 import ContextMenuList from '../components/common/ContextMenuEntry/ContextMenuEntryList';
 import ErrorBoundary from '../components/common/ErrorBoundary/ErrorBoundary';
+import BottomSheet from '../components/common/BottomSheet/BottomSheet';
 import { useBackHandler } from '../hooks/useBackHandler';
 
 export const ContextMenuContext = createContext<{
@@ -90,7 +91,9 @@ export function ContextMenuProvider({ children }: { children: ReactNode }) {
   }, [isRendered, isMobile, clickPosition, menuItems]);
 
   useEffect(() => {
-    if (!isVisible) return;
+    // Mobile uses BottomSheet, which owns its backdrop/Escape/drag closing;
+    // these window-level listeners would close it while scrolling the sheet.
+    if (!isVisible || isMobile) return;
 
     const handleClick = () => isVisible && closeContextMenu();
     const handleResize = () => isVisible && closeContextMenu();
@@ -114,19 +117,10 @@ export function ContextMenuProvider({ children }: { children: ReactNode }) {
       window.removeEventListener('contextmenu', handleClick);
       window.removeEventListener('keydown', handleEscape);
     };
-  }, [isVisible, closeContextMenu]);
+  }, [isVisible, isMobile, closeContextMenu]);
 
-  const styles = {
-    mobile: {
-      container: `absolute h-fit z-70 border-t border-darker rounded-t-xl shadow-2xl p-4 pb-8
-        transform transition-transform duration-300 ease-in-out
-        ${isVisible ? 'translate-y-0' : 'translate-y-full'}`,
-    },
-    desktop: {
-      container:
-        'fixed z-70 min-w-[180px] max-w-[300px] border border-darker rounded-lg shadow-lg p-1 animate-in fade-in zoom-in-95 duration-100',
-    },
-  };
+  const desktopContainerClass =
+    'fixed z-70 min-w-[180px] max-w-[300px] border border-darker rounded-lg shadow-lg p-1 animate-in fade-in zoom-in-95 duration-100';
 
   const handleDefaultContextMenu = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
@@ -153,32 +147,28 @@ export function ContextMenuProvider({ children }: { children: ReactNode }) {
   return (
     <ErrorBoundary>
       <ContextMenuContext value={contextValue}>
+        {isRendered && isMobile && (
+          <BottomSheet open={isVisible} onClose={closeContextMenu}>
+            <div onContextMenu={handleDefaultContextMenu}>
+              <ContextMenuList items={menuItems || []} isMobile />
+            </div>
+          </BottomSheet>
+        )}
         {isRendered &&
+          !isMobile &&
           createPortal(
             <div
               id="context-menu-backdrop"
-              className={`z-60 fixed top-0 left-0 w-dvw h-dvh
-              ${isMobile ? (isVisible ? 'bg-black/60 backdrop-blur-[2px] opacity-100' : 'bg-black/0 opacity-0') : ''}`}
+              className="z-60 fixed top-0 left-0 w-dvw h-dvh"
             >
               <div
                 ref={menuRef}
-                style={
-                  isMobile
-                    ? {
-                        bottom: 0,
-                        left: 0,
-                        width: '100%',
-                        backgroundColor:
-                          'var(--SmartThemeBlurTintColor, #2a2a2a)',
-                      }
-                    : {
-                        position: 'fixed',
-                        opacity: isVisible ? 1 : 0,
-                        backgroundColor:
-                          'var(--SmartThemeBlurTintColor, #2a2a2a)',
-                      }
-                }
-                className={`discordia-context-menu ${isMobile ? styles.mobile.container : styles.desktop.container} `}
+                style={{
+                  position: 'fixed',
+                  opacity: isVisible ? 1 : 0,
+                  backgroundColor: 'var(--SmartThemeBlurTintColor, #2a2a2a)',
+                }}
+                className={`discordia-context-menu ${desktopContainerClass}`}
                 onClick={handleClick}
                 onContextMenu={handleDefaultContextMenu}
               >

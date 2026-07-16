@@ -17,6 +17,7 @@ interface Settings {
   behavior: {
     legacyEditing: boolean;
     closeChatOnHomeButton: boolean;
+    favoritesOnTop: boolean;
   };
 }
 
@@ -24,6 +25,7 @@ const DefaultSettings: Settings = {
   behavior: {
     legacyEditing: false,
     closeChatOnHomeButton: false,
+    favoritesOnTop: true,
   },
 };
 

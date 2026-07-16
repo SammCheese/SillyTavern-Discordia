@@ -295,3 +295,46 @@ export async function updateCharacter(
 
   return originalAvatarId;
 }
+
+export async function toggleCharacterFavorite(
+  characterAvatar: string,
+): Promise<void> {
+  const { characters } = SillyTavern.getContext();
+  const character = characters.find(
+    (c) => c.avatar?.toString() === characterAvatar,
+  );
+  if (!character) {
+    throw new Error('Character not found for toggling favorite.');
+  }
+
+  const newFavState = !character.data.extensions?.fav;
+
+  const data = {
+    name: character.name,
+    avatar: character.avatar,
+    data: {
+      extensions: {
+        fav: newFavState,
+      },
+    },
+    fav: newFavState,
+  };
+
+  const mergeResponse = await fetch('/api/characters/merge-attributes', {
+    method: 'POST',
+    headers: getRequestHeaders(),
+    body: JSON.stringify(data),
+  });
+
+  if (!mergeResponse.ok) {
+    mergeResponse
+      .json()
+      .then((json) =>
+        toastr.error(
+          `Character not saved. Error: ${json.message}. Field: ${json.error}`,
+        ),
+      );
+  }
+
+  await getCharacters();
+}

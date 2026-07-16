@@ -546,3 +546,10 @@ body.reduced-motion #context-menu-backdrop * {
 body.discordia-low-gfx .mes:hover {
   background-color: transparent;
 }
+
+/* ST ships html { transform: translateZ(0) } as a GPU-promotion hack. Under
+   software rendering it forces the whole document through a useless
+   compositing layer (and hijacks viewport-fixed positioning page-wide). */
+html:has(body.discordia-low-gfx) {
+  transform: none !important;
+}
