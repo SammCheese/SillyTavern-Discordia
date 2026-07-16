@@ -1,7 +1,6 @@
 import { useCallback, useState } from 'react';
 
-const { power_user } = await imports('@scripts/powerUser');
-
+import { power_user } from '../../../../st/powerUser';
 export const powerToAppearanceSettings = (settings: typeof power_user) => {
   return {
     theme: settings.theme,

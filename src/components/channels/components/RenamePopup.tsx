@@ -5,13 +5,12 @@ import { usePopup } from '../../../providers/popupProvider';
 import { renameGroupOrCharacterChatFixed } from '../../../services/chatService';
 import { DISCORDIA_EVENTS } from '../../../events/eventTypes';
 
+import { eventSource } from '../../../st/script';
 interface RenamePopupProps {
   currentName: string;
   charChatId?: string | number;
   groupChatId?: string;
 }
-
-const { eventSource } = await imports('@script');
 
 const RenamePopup = ({
   currentName,

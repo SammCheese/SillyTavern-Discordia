@@ -1,4 +1,4 @@
-const {
+import {
   getThumbnailUrl,
   system_avatar,
   openCharacterChat,
@@ -7,9 +7,9 @@ const {
   getCurrentChatId,
   saveSettingsDebounced,
   selectCharacterById,
-} = await imports('@script');
-const { openGroupById, openGroupChat } = await imports('@scripts/groupChats');
-const { isDataURL } = await imports('@scripts/utils');
+} from '../st/script';
+import { openGroupById, openGroupChat } from '../st/groupChats';
+import { isDataURL } from '../st/utils';
 
 export async function resetScrollHeight(element) {
   $(element).css('height', '0px');

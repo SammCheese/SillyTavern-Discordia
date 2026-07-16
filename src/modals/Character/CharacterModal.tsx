@@ -26,6 +26,7 @@ import Tooltip from '../../components/common/Tooltip/Tooltip';
 import { usePopup } from '../../providers/popupProvider';
 import { importCharacter } from './helpers/charImport';
 
+import { getThumbnailUrl, getOneCharacter } from '../../st/script';
 type Type = 'edit' | 'create';
 
 type CharacterModalProps<T extends Type = Type> = T extends 'create'
@@ -42,7 +43,6 @@ type CharacterModalProps<T extends Type = Type> = T extends 'create'
       avatarName: string;
     };
 
-const { getThumbnailUrl, getOneCharacter } = await imports('@script');
 const { getContext } = SillyTavern;
 
 interface BoundInputProps extends Omit<

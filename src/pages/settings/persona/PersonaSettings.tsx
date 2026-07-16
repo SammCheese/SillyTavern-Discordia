@@ -6,10 +6,9 @@ import Divider from '../../../components/common/Divider/Divider';
 import { savePersonasData } from './helper';
 import { DISCORDIA_EVENTS } from '../../../events/eventTypes';
 
+import { eventSource } from '../../../st/script';
+import { user_avatar } from '../../../st/personas';
 const SettingsFrame = lazy(() => import('../base/Base'));
-
-const { eventSource } = await imports('@script');
-const { user_avatar } = await imports('@scripts/personas');
 
 type SillyPersona = Record<string, string>;
 type SillyPersonaDescription = Record<

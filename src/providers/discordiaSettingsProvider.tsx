@@ -1,5 +1,6 @@
 import { createContext, use, useCallback, useMemo, useState } from 'react';
 
+import { saveSettingsDebounced } from '../st/script';
 const SettingsContext = createContext<SettingsContextType | null>(null);
 
 interface SettingsProviderProps {
@@ -16,6 +17,7 @@ interface Settings {
   behavior: {
     legacyEditing: boolean;
     closeChatOnHomeButton: boolean;
+    favoritesOnTop: boolean;
   };
 }
 
@@ -23,10 +25,9 @@ const DefaultSettings: Settings = {
   behavior: {
     legacyEditing: false,
     closeChatOnHomeButton: false,
+    favoritesOnTop: true,
   },
 };
-
-const { saveSettingsDebounced } = await imports('@script');
 
 export const SettingsProvider = ({ children }: SettingsProviderProps) => {
   const [discordiaSettings, setDiscordiaSettings] = useState<Settings>(() => {

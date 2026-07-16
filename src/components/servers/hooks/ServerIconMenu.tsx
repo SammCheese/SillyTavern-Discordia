@@ -9,16 +9,20 @@ import {
   updateDiscordiaSettings,
 } from '../../../services/extensionSettingService';
 
+import {
+  deleteCharacter,
+  eventSource,
+  closeCurrentChat,
+} from '../../../st/script';
+import { deleteGroup } from '../../../st/groupChats';
+import { toggleCharacterFavorite } from '../../../services/characterService';
+
 const CharacterModal = lazy(
   () => import('../../../modals/Character/CharacterModal'),
 );
 const GroupEditModal = lazy(
   () => import('../../../modals/GroupEdit/GroupModal'),
 );
-
-const { deleteCharacter, eventSource, closeCurrentChat } =
-  await imports('@script');
-const { deleteGroup } = await imports('@scripts/groupChats');
 
 export const useServerIconMenu = (entity: Entity) => {
   const { showContextMenu } = useContextMenu();
@@ -100,11 +104,23 @@ export const useServerIconMenu = (entity: Entity) => {
     eventSource.emit(DISCORDIA_EVENTS.ENTITY_CHANGED);
   }, [entity.item?.avatar]);
 
+  const handleFavoriteToggle = useCallback(async () => {
+    const avatarUrl = entity.item?.avatar?.toString();
+    if (!avatarUrl) return;
+    await toggleCharacterFavorite(avatarUrl);
+    eventSource.emit(DISCORDIA_EVENTS.ENTITY_CHANGED);
+  }, [entity.item?.avatar]);
+
   const menuOptions = useMemo(() => {
     return [
       {
         label: entity.item?.name || 'Character',
         disabled: true,
+      },
+      { label: '---', variant: 'separator' },
+      {
+        label: entity.item?.fav ? 'Unfavorite' : 'Favorite',
+        onClick: handleFavoriteToggle,
       },
       { label: '---', variant: 'separator' },
       {
@@ -125,7 +141,14 @@ export const useServerIconMenu = (entity: Entity) => {
         onClick: handleDelete,
       },
     ] as ContextMenuItem[];
-  }, [entity.item?.name, handleEdit, handleHideCharacter, handleDelete]);
+  }, [
+    entity.item?.name,
+    entity.item?.fav,
+    handleFavoriteToggle,
+    handleEdit,
+    handleHideCharacter,
+    handleDelete,
+  ]);
 
   const handleContextMenu = useCallback(
     (e: React.MouseEvent) => {

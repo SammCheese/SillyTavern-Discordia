@@ -2,10 +2,9 @@ import { memo, useCallback, useState } from 'react';
 import Select from '../../../../../../components/common/Select/Select';
 import Input from '../../../../../../components/common/Input/Input';
 
+import { saveSettingsDebounced } from '../../../../../../st/script';
+import { system_prompts } from '../../../../../../st/sysprompt';
 const context = SillyTavern.getContext();
-
-const { saveSettingsDebounced } = await imports('@script');
-const { system_prompts } = await imports('@scripts/sysprompt');
 
 const lodash = SillyTavern.libs.lodash;
 

@@ -17,10 +17,9 @@ import IconButton from '../../../components/common/IconButton/IconButton';
 import InstallPopup from './components/popups/InstallPopup';
 import { useBackHandlerBypass } from '../../../hooks/useBackHandler';
 
+import { saveSettingsDebounced } from '../../../st/script';
+import { deleteExtension } from '../../../st/extensions';
 const SettingsFrame = lazy(() => import('../base/Base'));
-
-const { saveSettingsDebounced } = await imports('@script');
-const { deleteExtension } = await imports('@scripts/extensions');
 
 export type Version = {
   isUpToDate: boolean;

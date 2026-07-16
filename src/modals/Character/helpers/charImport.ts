@@ -1,8 +1,11 @@
+import {
+  getRequestHeaders,
+  getThumbnailUrl,
+  this_chid,
+  getCharacters,
+} from '../../../st/script';
+import { tag_import_setting } from '../../../st/tags';
 // shamelessly copied from ST code
-
-const { getRequestHeaders, getThumbnailUrl, this_chid, getCharacters } =
-  await imports('@script');
-const { tag_import_setting } = await imports('@scripts/tags');
 
 /**
  * Imports a character from a file.

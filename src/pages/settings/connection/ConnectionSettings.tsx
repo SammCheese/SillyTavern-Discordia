@@ -6,6 +6,7 @@ import {
   type MainAPIValues,
 } from './hooks/connectionManager';
 
+import { CONNECT_API_MAP } from '../../../st/script';
 const SettingsFrame = lazy(() => import('../base/Base'));
 const TextGenerationSettings = lazy(
   () => import('./apis/TextCompletion/TextCompletion'),
@@ -13,8 +14,6 @@ const TextGenerationSettings = lazy(
 const ChatCompletion = lazy(
   () => import('./apis/ChatCompletion/ChatCompletion'),
 );
-
-const { CONNECT_API_MAP } = await imports('@script');
 
 export type ApiBucket = {
   name: string;

@@ -1,24 +1,28 @@
 import { lazy, memo, useCallback } from 'react';
 import { useBackHandler } from '../../hooks/useBackHandler';
-import { useSidebar } from '../../providers/contentProviders/sidebarStateProvider';
+import {
+  useSidebarData,
+  useSidebarUi,
+} from '../../providers/contentProviders/sidebarStateProvider';
 
 const ProfileMount = lazy(() => import('../ProfileMount/ProfileMount'));
 const ChannelBar = lazy(() => import('../channels/ChannelBar'));
 const ServerBar = lazy(() => import('../servers/ServerBar'));
 
 const SideBar = () => {
-  const state = useSidebar();
+  const { open, setOpen } = useSidebarUi();
+  const { icons } = useSidebarData();
   const handleBack = useCallback(() => {
-    state.setOpen(false);
-  }, [state]);
+    setOpen(false);
+  }, [setOpen]);
 
-  useBackHandler(state.open, handleBack, 200);
+  useBackHandler(open, handleBack, 200);
 
   return (
     <div
       id="sidebar-container"
       className={`fixed top-0 left-0 h-full z-50 transition-transform duration-150 ease-in-out ${
-        state.open ? 'translate-x-0' : '-translate-x-full'
+        open ? 'translate-x-0' : '-translate-x-full'
       }`}
     >
       <div id="server-container">
@@ -26,7 +30,7 @@ const SideBar = () => {
         <ChannelBar />
       </div>
       <div id="user-container">
-        <ProfileMount icons={state.icons} />
+        <ProfileMount icons={icons} />
       </div>
     </div>
   );

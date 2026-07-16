@@ -32,6 +32,12 @@ const DiscordiaSettingsContent: SettingsContentRenderer = ({ item }) => {
             checked={settings.behavior.legacyEditing}
             onChange={() => handleToggle('legacyEditing')}
           />
+
+          <Checkbox
+            label="Place Favorites on Top of the List"
+            checked={settings.behavior.favoritesOnTop}
+            onChange={() => handleToggle('favoritesOnTop')}
+          />
         </div>
       </div>
     </div>

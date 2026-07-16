@@ -6,8 +6,7 @@ import { usePopup } from '../../../../../providers/popupProvider';
 import Input from '../../../../../components/common/Input/Input';
 import Checkbox from '../../../../../components/common/Checkbox/Checkbox';
 
-const { installExtension } = await imports('@scripts/extensions');
-
+import { installExtension } from '../../../../../st/extensions';
 interface InstallPopupProps {
   onClose?: () => void;
   onInstall?: () => void;

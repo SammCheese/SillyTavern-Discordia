@@ -1,4 +1,3 @@
-// @ts-expect-error Video Import
 import video from '../../assets/cord.webm';
 import { disableDiscordia } from '../utils/discordiaUtils';
 

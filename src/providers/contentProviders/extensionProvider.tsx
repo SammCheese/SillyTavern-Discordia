@@ -17,11 +17,16 @@ import {
 } from '../../pages/settings/extensions/service/extensionService';
 import { DISCORDIA_EVENTS } from '../../events/eventTypes';
 
-const { enableExtension, disableExtension } = await imports(
-  '@scripts/extensions',
-);
-const { saveSettingsDebounced, eventSource, event_types } =
-  await imports('@script');
+import {
+  saveSettingsDebounced,
+  eventSource,
+  event_types,
+} from '../../st/script';
+import {
+  enableExtension,
+  disableExtension,
+  extensionsModule,
+} from '../../st/extensions';
 
 export interface ExtensionRecord {
   name: string;
@@ -107,7 +112,7 @@ export const ExtensionProvider = ({
 
   useEffect(() => {
     const init = async () => {
-      const { extension_settings } = await imports('@scripts/extensions');
+      const { extension_settings } = extensionsModule;
       setDisabledExtensions(extension_settings.disabledExtensions || []);
     };
     init();

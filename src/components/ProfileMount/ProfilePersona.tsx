@@ -4,8 +4,7 @@ import { usePersona } from '../../providers/contentProviders/personaProvider';
 
 import PersonaSelector from './PersonaSelector';
 
-const { getThumbnailUrl } = await imports('@script');
-
+import { getThumbnailUrl } from '../../st/script';
 const ProfilePersona = () => {
   const { personas, currentPersona, setPersona } = usePersona();
   const { handleContextMenu } = useProfileContextMenu();

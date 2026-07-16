@@ -1,14 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-const {
+import {
   messageEdit,
   setEditedMessageId,
   setSendButtonState,
   eventSource,
   event_types,
-} = await imports('@script');
-const { isMobile } = await imports('@scripts/rossMods');
-
+} from '../st/script';
+import { isMobile } from '../st/rossMods';
 type BridgeMessage = {
   id?: number | string;
   mesid?: number | string;

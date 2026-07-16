@@ -1,10 +1,9 @@
-import { memo } from 'react';
+import { memo, useCallback } from 'react';
 import Checkbox from '../../../../components/common/Checkbox/Checkbox';
 import Select from '../../../../components/common/Select/Select';
 import Slider from '../../../../components/common/Slider/Slider';
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const { getWorldInfoSettings } = await imports('@scripts/worldInfo');
+import { getWorldInfoSettings } from '../../../../st/worldInfo';
 
 interface GlobalWorldInfoSettingsProps {
   settings: ReturnType<typeof getWorldInfoSettings>;
@@ -20,10 +19,19 @@ const insertionStrategy = [
   { label: 'Global First', value: 2 },
 ];
 
+const _ = SillyTavern.libs.lodash;
+
 const GlobalWorldInfoSettings = ({
   settings,
   handleSettingsChange,
 }: GlobalWorldInfoSettingsProps) => {
+  const handleChange = useCallback(
+    (key: string, value: string | boolean | number | undefined) => {
+      _.debounce(handleSettingsChange, 300)(key, value);
+    },
+    [handleSettingsChange],
+  );
+
   return (
     <>
       <div className="mb-4">
@@ -32,7 +40,7 @@ const GlobalWorldInfoSettings = ({
           options={insertionStrategy}
           value={settings.world_info_character_strategy}
           onChange={(value) =>
-            handleSettingsChange('world_info_character_strategy', value)
+            handleChange('world_info_character_strategy', value)
           }
         />
       </div>
@@ -42,7 +50,7 @@ const GlobalWorldInfoSettings = ({
           label="Include Names"
           checked={settings.world_info_include_names}
           onChange={(checked) => {
-            handleSettingsChange('world_info_include_names', checked);
+            handleChange('world_info_include_names', checked);
           }}
         />
       </div>
@@ -51,7 +59,7 @@ const GlobalWorldInfoSettings = ({
           label="Recursive Scan"
           checked={settings.world_info_recursive}
           onChange={(checked) => {
-            handleSettingsChange('world_info_recursive', checked);
+            handleChange('world_info_recursive', checked);
           }}
         />
       </div>
@@ -60,7 +68,7 @@ const GlobalWorldInfoSettings = ({
           label="Case-sensitive"
           checked={settings.world_info_case_sensitive}
           onChange={(checked) => {
-            handleSettingsChange('world_info_case_sensitive', checked);
+            handleChange('world_info_case_sensitive', checked);
           }}
         />
       </div>
@@ -69,7 +77,7 @@ const GlobalWorldInfoSettings = ({
           label="Match Whole Words"
           checked={settings.world_info_match_whole_words}
           onChange={(checked) => {
-            handleSettingsChange('world_info_match_whole_words', checked);
+            handleChange('world_info_match_whole_words', checked);
           }}
         />
       </div>
@@ -78,7 +86,7 @@ const GlobalWorldInfoSettings = ({
           label="Use Group Scoring"
           checked={settings.world_info_use_group_scoring}
           onChange={(checked) => {
-            handleSettingsChange('world_info_use_group_scoring', checked);
+            handleChange('world_info_use_group_scoring', checked);
           }}
         />
       </div>
@@ -87,7 +95,7 @@ const GlobalWorldInfoSettings = ({
           label="Alert on Overflow"
           checked={settings.world_info_overflow_alert}
           onChange={(checked) => {
-            handleSettingsChange('world_info_overflow_alert', checked);
+            handleChange('world_info_overflow_alert', checked);
           }}
         />
       </div>
@@ -99,7 +107,7 @@ const GlobalWorldInfoSettings = ({
           max={1000}
           step={1}
           value={settings.world_info_depth}
-          onChange={(value) => handleSettingsChange('world_info_depth', value)}
+          onChange={(value) => handleChange('world_info_depth', value)}
         />
       </div>
       <div className="mb-4">
@@ -109,7 +117,7 @@ const GlobalWorldInfoSettings = ({
           max={100}
           step={1}
           value={settings.world_info_budget}
-          onChange={(value) => handleSettingsChange('world_info_budget', value)}
+          onChange={(value) => handleChange('world_info_budget', value)}
         />
       </div>
       <div className="mb-4">
@@ -119,9 +127,7 @@ const GlobalWorldInfoSettings = ({
           max={65536}
           step={1}
           value={settings.world_info_budget_cap}
-          onChange={(value) =>
-            handleSettingsChange('world_info_budget_cap', value)
-          }
+          onChange={(value) => handleChange('world_info_budget_cap', value)}
         />
       </div>
       <div className="mb-4">
@@ -132,7 +138,7 @@ const GlobalWorldInfoSettings = ({
           step={1}
           value={settings.world_info_min_activations}
           onChange={(value) =>
-            handleSettingsChange('world_info_min_activations', value)
+            handleChange('world_info_min_activations', value)
           }
         />
       </div>
@@ -144,7 +150,7 @@ const GlobalWorldInfoSettings = ({
           step={1}
           value={settings.world_info_min_activations_depth_max}
           onChange={(value) =>
-            handleSettingsChange('world_info_min_activations_depth_max', value)
+            handleChange('world_info_min_activations_depth_max', value)
           }
         />
       </div>
@@ -156,7 +162,7 @@ const GlobalWorldInfoSettings = ({
           step={1}
           value={settings.world_info_max_recursion_steps}
           onChange={(value) =>
-            handleSettingsChange('world_info_max_recursion_steps', value)
+            handleChange('world_info_max_recursion_steps', value)
           }
         />
       </div>

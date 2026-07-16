@@ -105,6 +105,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
                   const { disableExtension, findExtension } = await imports(
                     '@scripts/extensions',
                   );
+
                   const extension = findExtension('SillyTavern-Discordia');
                   if (!extension) {
                     toastr.error(

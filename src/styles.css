@@ -55,21 +55,21 @@
   font-family: 'gg-sans-medium';
   src: url('../assets/fonts/gg-sans-Medium.ttf') format('truetype');
   font-weight: 500;
-  font-size: 26px;
+  font-display: swap;
 }
 
 @font-face {
   font-family: 'gg-sans';
   src: url('../assets/fonts/gg-sans-Regular.ttf') format('truetype');
   font-weight: 400;
-  font-size: 26px;
+  font-display: swap;
 }
 
 @font-face {
   font-family: 'gg-sans-bold';
   src: url('../assets/fonts/gg-sans-Bold.ttf') format('truetype');
-  font-weight: 400;
-  font-size: 26px;
+  font-weight: 700;
+  font-display: swap;
 }
 
 body {
@@ -271,13 +271,12 @@ dialog.popup {
   z-index: 31;
   width: var(--sidebar-width);
   position: relative;
-  backdrop-filter: blur(var(--SmartThemeBlurStrength), 10px);
+  backdrop-filter: blur(var(--SmartThemeBlurStrength, 10px));
   background-color: var(--SmartThemeBlurTintColor);
   border-right: rgba(255, 255, 255, 0.1) 1px solid;
 }
 
 #server-container {
-  backdrop-filter: blur(20px);
   height: calc(100% - var(--profile-container-height));
   display: flex;
   flex-direction: row;
@@ -486,7 +485,8 @@ dialog.popup {
   }
 }
 
-#home-button {
+#home-button,
+#char-lib-button {
   border: gray 1px solid !important;
   border-radius: 15px !important;
   display: flex;
@@ -517,4 +517,39 @@ dialog.popup {
 
 .drawer-content {
   z-index: 32 !important;
+}
+
+/*
+ * Low graphics mode.
+ * Applies when SillyTavern's "No Blur Effect (Fast UI)" is enabled (body.no-blur),
+ * ST's reduced motion is on (body.reduced-motion), or Discordia detected a
+ * software renderer (body.discordia-low-gfx, see utils/gfx.ts).
+ *
+ * backdrop-filter and animated transforms over blurred layers are re-rasterized
+ * on the CPU every frame without GPU compositing — these overrides remove them.
+ */
+body.no-blur #discordia-root *,
+body.discordia-low-gfx #discordia-root *,
+body.no-blur #context-menu-backdrop,
+body.discordia-low-gfx #context-menu-backdrop {
+  backdrop-filter: none !important;
+}
+
+body.discordia-low-gfx #discordia-root *,
+body.discordia-low-gfx #context-menu-backdrop *,
+body.reduced-motion #discordia-root *,
+body.reduced-motion #context-menu-backdrop * {
+  transition-duration: 0s !important;
+  animation-duration: 0s !important;
+}
+
+body.discordia-low-gfx .mes:hover {
+  background-color: transparent;
+}
+
+/* ST ships html { transform: translateZ(0) } as a GPU-promotion hack. Under
+   software rendering it forces the whole document through a useless
+   compositing layer (and hijacks viewport-fixed positioning page-wide). */
+html:has(body.discordia-low-gfx) {
+  transform: none !important;
 }

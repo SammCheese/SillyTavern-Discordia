@@ -1,12 +1,16 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useRef } from 'react';
 
 import { selectCharacter, selectGroup } from '../utils/utils';
+import { createStore, useStore } from '../utils/store';
 
-const { openCharacterChat, isGenerating } = await imports('@script');
-const { openGroupChat } = await imports('@scripts/groupChats');
+import { openCharacterChat, isGenerating } from '../st/script';
+import { openGroupChat } from '../st/groupChats';
+
+const currentChatIdStore = createStore<string | null>(null);
+const setCurrentChatId = currentChatIdStore.set;
 
 export function useOpenChat() {
-  const [currentChatId, setCurrentChatId] = useState<string | null>(null);
+  const currentChatId = useStore(currentChatIdStore);
   const latestOpenRequestRef = useRef(0);
 
   const isSelectedChat = useCallback((chat: Chat): boolean => {

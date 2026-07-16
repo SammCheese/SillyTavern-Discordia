@@ -4,8 +4,7 @@ import Button, {
 import { SECTION_CARD_CLASS } from '../shared/shared';
 import type { SettingsContentRenderer } from '../shared/types';
 
-const { isAdmin, currentUser } = await imports('@scripts/user');
-
+import { isAdmin, currentUser } from '../../../../../st/user';
 const AccountSettingsContent: SettingsContentRenderer = () => {
   return (
     <div className={SECTION_CARD_CLASS}>

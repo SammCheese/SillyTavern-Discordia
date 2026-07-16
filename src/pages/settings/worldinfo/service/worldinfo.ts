@@ -1,14 +1,13 @@
 import { saveWISettingsViaDOM } from './legacy';
+import { worldInfoModule } from '../../../../st/worldInfo';
 
 export async function getAllWorldInfos() {
-  const { world_names } = await imports('@scripts/worldInfo');
-  return world_names;
+  return worldInfoModule.world_names;
 }
 
 export async function saveWorldInfo(settings, active_worldinfo: string[]) {
   try {
-    const { updateWorldInfoSettings } = await imports('@scripts/worldInfo');
-    updateWorldInfoSettings(settings, active_worldinfo);
+    worldInfoModule.updateWorldInfoSettings(settings, active_worldinfo);
   } catch {
     console.warn(
       'Error importing updateWorldInfoSettings, falling back to DOM',

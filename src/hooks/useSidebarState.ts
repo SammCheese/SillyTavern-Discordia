@@ -3,10 +3,15 @@ import { getRecentChats, invalidateEntityCache } from '../services/chatService';
 import { DISCORDIA_EVENTS } from '../events/eventTypes';
 import { getDiscordiaSettings } from '../services/extensionSettingService';
 
-const { getGroupPastChats } = await imports('@scripts/groupChats');
-const { getEntitiesList, eventSource, event_types, getPastCharacterChats } =
-  await imports('@script');
+import { useSTEvents } from './useSTEvents';
+import { useSwipeGesture } from './useSwipeGesture';
 
+import { getGroupPastChats } from '../st/groupChats';
+import {
+  getEntitiesList,
+  event_types,
+  getPastCharacterChats,
+} from '../st/script';
 type SidebarAction =
   | { type: 'SET_OPEN'; open: boolean }
   | { type: 'REFRESH_START' }
@@ -40,7 +45,11 @@ const sidebarReducer = (
     case 'REFRESH_SUCCESS':
       return {
         ...state,
-        ...action,
+        ...(action.chats !== undefined && { chats: action.chats }),
+        ...(action.entities !== undefined && { entities: action.entities }),
+        ...(action.recentChats !== undefined && {
+          recentChats: action.recentChats,
+        }),
         isLoadingChats: false,
       };
     case 'REFRESH_FAILURE':
@@ -279,90 +288,18 @@ export const useSidebarState = () => {
     refreshRecentChats,
   ]);
 
-  const registerListeners = useCallback(() => {
-    for (const [event, handler] of Object.entries(EventMap)) {
-      eventSource.on(event, handler);
-    }
-  }, [EventMap]);
+  useSTEvents(EventMap);
 
-  const unregisterListeners = useCallback(() => {
-    for (const [event, handler] of Object.entries(EventMap)) {
-      eventSource.removeListener(event, handler);
-    }
-  }, [EventMap]);
+  useSwipeGesture({
+    onSwipeRight: useCallback(() => setOpen(true), [setOpen]),
+    onSwipeLeft: useCallback(() => {
+      if (window.innerWidth <= 1000) setOpen(false);
+    }, [setOpen]),
+  });
 
   useEffect(() => {
     processMenuIcons();
-
-    registerListeners();
-
-    // Swipe Listeners
-    const THRESHOLD = 100;
-    const body = $('body');
-    let touchStartX = 0;
-    let touchEndX = 0;
-    let lastMove = 0;
-
-    const onPointerDown = (e) => {
-      touchStartX = e.clientX ?? 0;
-    };
-    const onPointerMove = (e) => {
-      const now = performance.now();
-      if (now - lastMove < 16) return;
-      lastMove = now;
-      touchEndX = e.clientX ?? 0;
-    };
-    const onTouchStart = (e) => {
-      touchStartX = e.originalEvent?.touches[0]?.clientX ?? 0;
-    };
-    const onTouchMove = (e) => {
-      const now = performance.now();
-      if (now - lastMove < 16) return;
-      lastMove = now;
-      touchEndX = e.originalEvent?.touches[0]?.clientX ?? 0;
-    };
-
-    const onPointerUp = () => {
-      if (touchStartX === 0 || touchEndX === 0) return;
-
-      if (touchEndX > touchStartX + THRESHOLD) setOpen(true);
-      else if (touchEndX < touchStartX - THRESHOLD) {
-        if (window.innerWidth <= 1000) setOpen(false);
-      }
-      touchStartX = 0;
-      touchEndX = 0;
-    };
-
-    if (body) {
-      body.on('pointerdown', onPointerDown);
-      body.on('pointermove', onPointerMove);
-      body.on('touchstart', onTouchStart);
-      body.on('touchmove', onTouchMove);
-      body.on('touchend pointerup', onPointerUp);
-    }
-
-    return () => {
-      unregisterListeners();
-
-      if (body) {
-        body.off('pointerdown', onPointerDown);
-        body.off('pointermove', onPointerMove);
-        body.off('touchstart', onTouchStart);
-        body.off('touchmove', onTouchMove);
-        body.off('touchend pointerup', onPointerUp);
-      }
-    };
-  }, [
-    handleFullRefresh,
-    processMenuIcons,
-    refreshChats,
-    refreshCharacters,
-    setOpen,
-    showRecentChats,
-    refreshRecentChats,
-    registerListeners,
-    unregisterListeners,
-  ]);
+  }, [processMenuIcons]);
 
   return {
     ...state,

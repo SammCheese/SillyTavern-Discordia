@@ -1,8 +1,10 @@
-import { useCallback, lazy, useState, useEffect, useMemo, memo } from 'react';
+import { useCallback, lazy, useState, useMemo, memo } from 'react';
 import { usePage } from '../../providers/pageProvider';
 import ProfilePersona from './ProfilePersona';
 import ProfileIcon from './ProfileIcon';
+import { useSTEvents } from '../../hooks/useSTEvents';
 
+import { event_types } from '../../st/script';
 const UserSettings = lazy(
   () => import('../../pages/settings/user/UserSettings'),
 );
@@ -12,8 +14,6 @@ const SamplerSettings = lazy(
 const ConnectionSettings = lazy(
   () => import('../../pages/settings/connection/ConnectionSettings'),
 );
-
-const { eventSource, event_types } = await imports('@script');
 
 interface ProfileMountProps {
   icons?: Icon[] | null;
@@ -31,16 +31,12 @@ const ProfileMount = ({ icons = null }: ProfileMountProps) => {
     }
   }, []);
 
-  useEffect(() => {
-    eventSource.on(event_types.ONLINE_STATUS_CHANGED, handleConnectionChange);
-
-    return () => {
-      eventSource.removeListener(
-        event_types.ONLINE_STATUS_CHANGED,
-        handleConnectionChange,
-      );
-    };
-  }, [handleConnectionChange]);
+  useSTEvents(
+    useMemo(
+      () => ({ [event_types.ONLINE_STATUS_CHANGED]: handleConnectionChange }),
+      [handleConnectionChange],
+    ),
+  );
 
   const handleIconClick = useCallback(
     (icon: Icon) => {

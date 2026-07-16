@@ -385,9 +385,99 @@ const guessOwnerForInsert = (
   return getRuntimeOwnerHint(true);
 };
 
+const isElementInTargetContainer = (el: Node): el is Element => {
+  if (!(el instanceof Element)) return false;
+  if (el.id && TARGET_CONTAINER_IDS.includes(el.id)) return true;
+
+  const containers = getContainers();
+  for (let i = 0; i < containers.length; i++) {
+    if (containers[i]?.contains(el)) return true;
+  }
+
+  return false;
+};
+
+const runNativeInsert = <R>(
+  target: Node,
+  nodes: unknown[],
+  invoke: () => R,
+): R => {
+  let ownedTarget: Element | null = null;
+  try {
+    if (isElementInTargetContainer(target)) ownedTarget = target;
+  } catch {
+    // ignore
+  }
+
+  if (!ownedTarget) return invoke();
+
+  const firstElement =
+    (nodes.find((n) => n instanceof Element) as Element | undefined) ?? null;
+  const owner = guessOwnerForInsert(ownedTarget, firstElement);
+
+  const result = owner ? runWithOwner(owner, invoke) : invoke();
+
+  const elements = nodes.filter((n): n is Element => n instanceof Element);
+  if (elements.length > 0) {
+    enqueueOwnershipJob({ targets: elements, ownerHint: owner });
+  }
+
+  return result;
+};
+
+const hijackNativeInserts = () => {
+  const originalAppendChild = Node.prototype.appendChild;
+  Node.prototype.appendChild = function <T extends Node>(
+    this: Node,
+    node: T,
+  ): T {
+    return runNativeInsert(this, [node], () =>
+      originalAppendChild.call(this, node),
+    ) as T;
+  };
+  restoreFns.push(() => {
+    Node.prototype.appendChild = originalAppendChild;
+  });
+
+  const originalInsertBefore = Node.prototype.insertBefore;
+  Node.prototype.insertBefore = function <T extends Node>(
+    this: Node,
+    node: T,
+    child: Node | null,
+  ): T {
+    return runNativeInsert(this, [node], () =>
+      originalInsertBefore.call(this, node, child),
+    ) as T;
+  };
+  restoreFns.push(() => {
+    Node.prototype.insertBefore = originalInsertBefore;
+  });
+
+  const originalElementAppend = Element.prototype.append;
+  Element.prototype.append = function (this: Element, ...nodes) {
+    return runNativeInsert(this, nodes, () =>
+      originalElementAppend.apply(this, nodes),
+    );
+  };
+  restoreFns.push(() => {
+    Element.prototype.append = originalElementAppend;
+  });
+
+  const originalElementPrepend = Element.prototype.prepend;
+  Element.prototype.prepend = function (this: Element, ...nodes) {
+    return runNativeInsert(this, nodes, () =>
+      originalElementPrepend.apply(this, nodes),
+    );
+  };
+  restoreFns.push(() => {
+    Element.prototype.prepend = originalElementPrepend;
+  });
+};
+
 export const hijackJquery = () => {
   try {
     patchRuntimeContext();
+    hijackNativeInserts();
 
     const originalAppend = $.fn.append;
     const originalAppendTo = $.fn.appendTo;
@@ -636,7 +726,23 @@ export const poolDOMExtensions = async () => {
     }, DEBOUNCE_DELAY_MS);
   };
 
+  const stopObserving = () => {
+    if (observer) {
+      observer.disconnect();
+      observer = null;
+    }
+
+    eventSource.removeListener(
+      event_types.EXTENSION_SETTINGS_LOADED,
+      idleCapture,
+    );
+
+    eventSource.emit(DISCORDIA_EVENTS.EXTENSION_HTML_POPULATED);
+  };
+
   const startObserving = () => {
+    if (observer) return;
+
     eventSource.emit(DISCORDIA_EVENTS.EXTENSION_HTML_POPULATED);
 
     const containers = getContainers();
@@ -672,23 +778,10 @@ export const poolDOMExtensions = async () => {
         subtree: true,
       });
     }
-
-    setTimeout(() => {
-      if (observer) {
-        observer.disconnect();
-        observer = null;
-      }
-
-      eventSource.removeListener(
-        event_types.EXTENSION_SETTINGS_LOADED,
-        idleCapture,
-      );
-
-      eventSource.emit(DISCORDIA_EVENTS.EXTENSION_HTML_POPULATED);
-    }, LATELOADER_LEEWAY_MS);
   };
 
   captureExtensions(true);
+  startObserving();
 
   const idleCapture = () => {
     dislog.log('Hijack completed load in ' + (Date.now() - timerStart) + 'ms');
@@ -698,6 +791,7 @@ export const poolDOMExtensions = async () => {
         () => {
           captureExtensions(true);
           startObserving();
+          setTimeout(stopObserving, LATELOADER_LEEWAY_MS);
         },
         { timeout: 1000 },
       );
@@ -705,9 +799,13 @@ export const poolDOMExtensions = async () => {
       setTimeout(() => {
         captureExtensions(true);
         startObserving();
+        setTimeout(stopObserving, LATELOADER_LEEWAY_MS);
       }, 100);
     }
   };
 
   eventSource.on(event_types.EXTENSION_SETTINGS_LOADED, idleCapture);
+
+  // Hard-Abort the hijack after a while.
+  setTimeout(stopObserving, LATELOADER_DEADLINE_MS);
 };

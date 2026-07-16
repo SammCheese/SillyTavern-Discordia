@@ -1,7 +1,6 @@
-const { getRequestHeaders } = await imports('@script');
-const { chat_completion_sources, oai_settings } =
-  await imports('@scripts/openai');
-const { isValidUrl } = await imports('@scripts/utils');
+import { getRequestHeaders } from '../../../../st/script';
+import { chat_completion_sources, oai_settings } from '../../../../st/openai';
+import { isValidUrl } from '../../../../st/utils';
 
 type StatusResponse = {
   result?: string;

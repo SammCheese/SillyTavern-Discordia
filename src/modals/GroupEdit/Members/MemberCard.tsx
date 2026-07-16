@@ -1,5 +1,6 @@
 import { memo, useCallback, useMemo } from 'react';
 
+import { getThumbnailUrl } from '../../../st/script';
 interface MemberCardProps {
   character: Character;
   onRemove?: (member: Character) => void;
@@ -8,8 +9,6 @@ interface MemberCardProps {
   onGroupAdd?: (member: Character) => void;
   type?: 'member' | 'character';
 }
-
-const { getThumbnailUrl } = await imports('@script');
 
 export const MemberCard = ({
   character,

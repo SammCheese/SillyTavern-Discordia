@@ -3,6 +3,7 @@ import { saveWorldInfo } from './service/worldinfo';
 import StackPusher from '../../../components/common/StackPusher/StackPusher';
 import GlobalWorldInfoSettings from './Settings/GlobalWorldInfoSettings';
 
+import { getWorldInfoSettings, world_names } from '../../../st/worldInfo';
 const SettingsFrame = lazy(() => import('../base/Base'));
 const Accordion = lazy(
   () => import('../../../components/common/Accordion/Accordion'),
@@ -10,9 +11,6 @@ const Accordion = lazy(
 const Divider = lazy(
   () => import('../../../components/common/Divider/Divider'),
 );
-
-const { getWorldInfoSettings, world_names } =
-  await imports('@scripts/worldInfo');
 
 const WorldInfoSettings = () => {
   const worldInfoSettings = useMemo(() => getWorldInfoSettings(), []);

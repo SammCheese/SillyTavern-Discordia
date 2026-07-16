@@ -9,6 +9,19 @@ import {
 } from 'react';
 import { DISCORDIA_EVENTS } from '../../events/eventTypes';
 
+import {
+  eventSource,
+  event_types,
+  getThumbnailUrl,
+  saveSettingsDebounced,
+} from '../../st/script';
+import {
+  getUserAvatars,
+  setUserAvatar,
+  user_avatar,
+  personasModule,
+} from '../../st/personas';
+import { power_user } from '../../st/powerUser';
 export const PersonaContext = createContext<{
   personas: Persona[];
   currentPersona?: Persona | null;
@@ -18,12 +31,6 @@ export const PersonaContext = createContext<{
   currentPersona: null,
   setPersona: () => {},
 });
-
-const { eventSource, event_types, getThumbnailUrl, saveSettingsDebounced } =
-  await imports('@script');
-const { getUserAvatars, setUserAvatar, user_avatar } =
-  await imports('@scripts/personas');
-const { power_user } = await imports('@scripts/powerUser');
 
 interface PersonaProviderProps {
   children: ReactNode;
@@ -43,12 +50,11 @@ export const PersonaProvider = ({ children }: PersonaProviderProps) => {
   });
 
   const handlePersonaUpdate = useCallback(async () => {
-    const { user_avatar } = await imports('@scripts/personas');
+    const { user_avatar } = personasModule;
     const persona = personas.find((p) => p.avatar === user_avatar);
     setCurrentPersona(persona || null);
     (SillyTavern.getContext().powerUserSettings.default_persona as
-      | string
-      | null) = persona?.avatar || 'user-default.png';
+      string | null) = persona?.avatar || 'user-default.png';
 
     saveSettingsDebounced();
   }, [personas]);

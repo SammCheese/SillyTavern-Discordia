@@ -1,7 +1,10 @@
-const { getRequestHeaders, getThumbnailUrl, saveSettingsDebounced } =
-  await imports('@script');
-const { ensureImageFormatSupported } = await imports('@scripts/utils');
-const { getUserAvatar, getUserAvatars } = await imports('@scripts/personas');
+import {
+  getRequestHeaders,
+  getThumbnailUrl,
+  saveSettingsDebounced,
+} from '../../../st/script';
+import { ensureImageFormatSupported } from '../../../st/utils';
+import { getUserAvatar, getUserAvatars } from '../../../st/personas';
 
 export const deletePersona = (avatarName: string) => {
   const context = SillyTavern.getContext();

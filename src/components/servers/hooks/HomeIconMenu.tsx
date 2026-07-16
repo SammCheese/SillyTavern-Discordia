@@ -9,8 +9,7 @@ import {
   updateDiscordiaSettings,
 } from '../../../services/extensionSettingService';
 
-const { eventSource } = await imports('@script');
-
+import { eventSource } from '../../../st/script';
 export const useHomeIconMenu = () => {
   const { showContextMenu } = useContextMenu();
   const { openModal } = useModal();

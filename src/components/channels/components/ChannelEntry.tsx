@@ -1,25 +1,24 @@
-import { memo, useCallback } from 'react';
-import { useChannelContextMenu } from './hooks/ChannelContextMenu';
-import GroupAvatar from '../groupAvatar/GroupAvatar';
+import { memo, useCallback, useMemo } from 'react';
+import { useChannelContextMenu } from '../hooks/ChannelContextMenu';
+import GroupAvatar from '../../groupAvatar/GroupAvatar';
+import { makeAvatar } from '../../../utils/utils';
 
 interface ChannelEntryProps {
-  avatar?: string;
   chat: Chat;
   isSelected: boolean;
   onClick?: (chat: Chat) => void;
 }
 
-const ChannelEntry = ({
-  avatar,
-  chat,
-  isSelected,
-  onClick,
-}: ChannelEntryProps) => {
+const ChannelEntry = ({ chat, isSelected, onClick }: ChannelEntryProps) => {
   const { handleContextMenu } = useChannelContextMenu(chat);
 
   const handleClick = useCallback(() => {
     onClick?.(chat);
   }, [onClick, chat]);
+
+  const avatar = useMemo(() => {
+    return makeAvatar({ chat });
+  }, [chat]);
 
   return (
     <li

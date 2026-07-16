@@ -7,13 +7,16 @@ import { useConnectionManager } from '../../hooks/connectionManager';
 import Select from '../../../../../components/common/Select/Select';
 import { getChatCompletionStatus } from '../../services/chatCompletion';
 
-const { saveSettingsDebounced, setOnlineStatus } = await imports('@script');
-const { getSecretLabelById } = await imports('@scripts/secrets');
-const {
+import {
+  saveSettingsDebounced,
+  setOnlineStatus,
+} from '../../../../../st/script';
+import { getSecretLabelById } from '../../../../../st/secrets';
+import {
   chat_completion_sources,
   oai_settings,
   custom_prompt_post_processing_types,
-} = await imports('@scripts/openai');
+} from '../../../../../st/openai';
 const { getContext } = SillyTavern;
 
 const ChatCompletionSettings = () => {

@@ -2,9 +2,41 @@ import { useMemo, memo } from 'react';
 
 import './GroupAvatar.css';
 
-const { getThumbnailUrl, characters, default_avatar } =
-  await imports('@script');
-const { isValidUrl } = await imports('@scripts/utils');
+import {
+  getThumbnailUrl,
+  characters,
+  default_avatar,
+  eventSource,
+  event_types,
+} from '../../st/script';
+import { isValidUrl } from '../../st/utils';
+// One thumbnail map shared by all GroupAvatar instances. ST mutates the
+// `characters` array in place, so we invalidate on character events and
+// whenever the list length changes.
+let thumbnailCache: Map<string, string> | null = null;
+let thumbnailCacheLength = -1;
+
+const invalidateThumbnailCache = () => {
+  thumbnailCache = null;
+};
+
+eventSource.on(event_types.CHARACTER_EDITED, invalidateThumbnailCache);
+eventSource.on(event_types.CHARACTER_RENAMED, invalidateThumbnailCache);
+eventSource.on(event_types.CHARACTER_DELETED, invalidateThumbnailCache);
+
+const getCharacterThumbMap = (): Map<string, string> => {
+  if (!thumbnailCache || thumbnailCacheLength !== characters.length) {
+    const map = new Map<string, string>();
+    characters.forEach((c) => {
+      if (c.avatar && c.avatar !== 'none') {
+        map.set(c.avatar, getThumbnailUrl('avatar', c.avatar));
+      }
+    });
+    thumbnailCache = map;
+    thumbnailCacheLength = characters.length;
+  }
+  return thumbnailCache;
+};
 
 interface GroupAvatarProps {
   /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
@@ -22,15 +54,7 @@ const GroupAvatar = ({
   height = 48,
   rounded = false,
 }: GroupAvatarProps) => {
-  const characterThumbByAvatar = useMemo(() => {
-    const map = new Map<string, string>();
-    characters.forEach((c) => {
-      if (c.avatar && c.avatar !== 'none') {
-        map.set(c.avatar, getThumbnailUrl('avatar', c.avatar));
-      }
-    });
-    return map;
-  }, []);
+  const characterThumbByAvatar = getCharacterThumbMap();
 
   const roundedStyle = useMemo(
     () =>

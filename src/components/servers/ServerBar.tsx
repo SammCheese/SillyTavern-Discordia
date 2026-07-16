@@ -1,71 +1,57 @@
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  lazy,
-  memo,
-  useRef,
-  useState,
-} from 'react';
+import { useCallback, useMemo, lazy, memo } from 'react';
 import { List, type RowComponentProps } from 'react-window';
-import { selectCharacter, selectGroup } from '../../utils/utils';
 import { useSearch } from '../../providers/searchProvider';
 import ErrorBoundary from '../common/ErrorBoundary/ErrorBoundary';
 import { DISCORDIA_EVENTS } from '../../events/eventTypes';
 import { useModal } from '../../providers/modalProvider';
 import CharacterModal from '../../modals/Character/CharacterModal';
 import Skeleton, { SkeletonTheme } from 'react-loading-skeleton';
-import { useSidebar } from '../../providers/contentProviders/sidebarStateProvider';
+import { useSidebarData } from '../../providers/contentProviders/sidebarStateProvider';
+import { useEntitySelection } from './hooks/useEntitySelection';
+import {
+  entityKey,
+  isFavoriteEntity,
+  sortAndFilterEntities,
+} from './services/entitySelection';
+
+import { closeCurrentChat, eventSource } from '../../st/script';
+import CharacterLibraryButton from './Icons/CharacterLibraryButton';
+import { useExtensionState } from '../../providers/contentProviders/extensionProvider';
+import Tooltip from '../common/Tooltip/Tooltip';
+import { useSettings } from '../../providers/discordiaSettingsProvider';
 
 const ServerIcon = lazy(() => import('./Icons/ServerIcon'));
 const AddCharacterIcon = lazy(() => import('./Icons/AddCharacterIcon'));
 const HomeIcon = lazy(() => import('./Icons/HomeIcon'));
 
-const { characters, closeCurrentChat, eventSource, event_types, isGenerating } =
-  await imports('@script');
-
 interface ServerRowProps {
   entity: Entity;
-  index: number;
   isSelected: boolean;
   style?: React.CSSProperties;
-  onClick: (entity: Entity, index: number) => void;
+  onClick: (entity: Entity) => void;
 }
 
 const ServerRow = memo(
-  function ServerRow({
-    entity,
-    index,
-    isSelected,
-    style,
-    onClick,
-  }: ServerRowProps) {
+  function ServerRow({ entity, isSelected, style, onClick }: ServerRowProps) {
     return (
       <div
         style={style}
         className="discord-entity-item character-button w-full h-fit flex justify-center py-1"
         id={`character-button-${entity.id}`}
-        title={entity.item?.name || entity.id}
       >
-        <ServerIcon
-          entity={entity}
-          index={index}
-          isSelected={isSelected}
-          onClick={onClick}
-        />
+        <ServerIcon entity={entity} isSelected={isSelected} onClick={onClick} />
       </div>
     );
   },
   (prevProps, nextProps) => {
-    const avatar =
-      prevProps.entity.item?.avatar ?? prevProps.entity.item?.avatar_url;
-    const nextAvatar =
-      nextProps.entity.item?.avatar ?? nextProps.entity.item?.avatar_url;
-    const name = prevProps.entity.item?.name;
-    const nextName = nextProps.entity.item?.name;
+    const prevItem = prevProps.entity.item;
+    const nextItem = nextProps.entity.item;
     return (
-      avatar === nextAvatar &&
-      name === nextName &&
+      (prevItem?.avatar ?? prevItem?.avatar_url) ===
+        (nextItem?.avatar ?? nextItem?.avatar_url) &&
+      prevItem?.name === nextItem?.name &&
+      isFavoriteEntity(prevProps.entity) ===
+        isFavoriteEntity(nextProps.entity) &&
       prevProps.isSelected === nextProps.isSelected &&
       prevProps.onClick === nextProps.onClick
     );
@@ -75,21 +61,15 @@ const ServerRow = memo(
 interface RowData {
   data: {
     entities: Entity[];
-    selectedIndex: number | null;
-    handleItemClick: (entity: Entity, index: number) => void;
+    selectedKey: string | null;
+    onSelect: (entity: Entity) => void;
   };
 }
 
 const Row = ({ index, style, data }: RowComponentProps<RowData>) => {
-  const { entities, selectedIndex, handleItemClick } = data;
+  const { entities, selectedKey, onSelect } = data;
   const { openModal } = useModal();
   const entity = entities[index];
-
-  const handleClick = useCallback(() => {
-    if (entity) {
-      handleItemClick(entity, index);
-    }
-  }, [entity, handleItemClick, index]);
 
   const handleAddCharacterClick = useCallback(() => {
     openModal(<CharacterModal type="create" />);
@@ -108,24 +88,24 @@ const Row = ({ index, style, data }: RowComponentProps<RowData>) => {
 
   return (
     <ServerRow
-      index={index}
       entity={entity}
       style={style}
-      isSelected={selectedIndex === index}
-      onClick={handleClick}
+      isSelected={selectedKey === entityKey(entity)}
+      onClick={onSelect}
     />
   );
 };
 
 const ServerBar = () => {
-  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
-  const latestSelectionRequestRef = useRef(0);
   const { searchQuery } = useSearch();
   const { openModal } = useModal();
-  const { entities, isInitialLoad } = useSidebar();
+  const { entities, isInitialLoad } = useSidebarData();
+  const { extensions } = useExtensionState();
+  const { getSettings } = useSettings();
+  const { selectedKey, selectEntity, clearSelection } = useEntitySelection();
 
   const onHomeClickHandler = useCallback(() => {
-    setSelectedIndex(null);
+    clearSelection();
     void Promise.resolve(closeCurrentChat())
       .catch((error) => {
         dislog.error('Error closing current chat:', error);
@@ -138,108 +118,28 @@ const ServerBar = () => {
           dislog.error('Error emitting home click event:', error);
         });
       });
-  }, []);
+  }, [clearSelection]);
 
-  const getGlobalIndex = useCallback(() => {
-    const { characterId, groupId } = SillyTavern.getContext();
+  const hasCharLib = useMemo(() => {
+    return extensions.some(
+      (ext) => ext.manifest?.display_name === 'Character Library',
+    );
+  }, [extensions]);
 
-    if (groupId !== null && typeof groupId !== 'undefined') {
-      const idx = entities.findIndex(
-        (e) => e.type === 'group' && e.id.toString() === groupId.toString(),
-      );
-      return idx !== -1 ? idx : null;
-    }
-
-    if (
-      characterId !== null &&
-      typeof characterId !== 'undefined' &&
-      parseInt(characterId) >= 0
-    ) {
-      const idx = entities.findIndex(
-        (e) =>
-          e.type === 'character' && e.id.toString() === characterId.toString(),
-      );
-      return idx !== -1 ? idx : null;
-    }
-
-    return null;
-  }, [entities]);
-
-  const runOptimisticEntitySelect = useCallback(
-    (index: number, selectAction: () => unknown) => {
-      const requestId = ++latestSelectionRequestRef.current;
-      setSelectedIndex(index);
-
-      void Promise.resolve(selectAction()).catch((error) => {
-        dislog.error('Error selecting entity:', error);
-
-        if (latestSelectionRequestRef.current === requestId) {
-          setSelectedIndex(getGlobalIndex());
-        }
-      });
-    },
-    [getGlobalIndex],
+  const visibleEntities = useMemo(
+    () =>
+      sortAndFilterEntities(
+        entities,
+        searchQuery,
+        getSettings().behavior.favoritesOnTop,
+      ),
+    [entities, searchQuery, getSettings],
   );
-
-  const handleItemClick = useCallback(
-    (entity: Entity, index: number) => {
-      if (isGenerating()) {
-        toastr.warning(
-          'Please wait or abort the current generation before switching chats.',
-        );
-        return;
-      }
-
-      if (entity.type === 'group') {
-        const groupId = entity.id.toString();
-        const group = SillyTavern.getContext().groups.find(
-          (g) => g.id.toString() === groupId,
-        );
-
-        if (!group) return;
-
-        runOptimisticEntitySelect(index, () => selectGroup({ group: entity }));
-        return;
-      }
-
-      const char_id = characters.findIndex(
-        (c) => c.avatar === entity?.item?.avatar,
-      );
-
-      if (char_id === -1) return;
-
-      runOptimisticEntitySelect(index, () => selectCharacter(char_id));
-    },
-    [runOptimisticEntitySelect],
-  );
-
-  const syncIndex = useCallback(() => {
-    const correctIndex = getGlobalIndex();
-    setSelectedIndex((prev) => (prev !== correctIndex ? correctIndex : prev));
-  }, [getGlobalIndex]);
-
-  useEffect(() => {
-    eventSource.on(event_types.CHAT_CHANGED, syncIndex);
-    eventSource.on(event_types.CHAT_DELETED, syncIndex);
-    return () => {
-      eventSource.removeListener(event_types.CHAT_CHANGED, syncIndex);
-      eventSource.removeListener(event_types.CHAT_DELETED, syncIndex);
-    };
-  }, [entities, syncIndex]);
 
   const itemData = useMemo(
-    () => ({ entities, selectedIndex, handleItemClick }),
-    [entities, selectedIndex, handleItemClick],
+    () => ({ entities: visibleEntities, selectedKey, onSelect: selectEntity }),
+    [visibleEntities, selectedKey, selectEntity],
   );
-
-  const filteredEntities = useMemo(() => {
-    const withIndex = entities.map((entity, index) => ({ entity, index }));
-    if (!searchQuery) return withIndex;
-    return withIndex.filter(({ entity }) => {
-      const name = entity.item?.name || '';
-      return name.toLowerCase().includes(searchQuery.toLowerCase());
-    });
-  }, [entities, searchQuery]);
 
   const handleAddCharacterClick = useCallback(() => {
     openModal(<CharacterModal type="create" />);
@@ -254,6 +154,11 @@ const ServerBar = () => {
         </div>
 
         <div id="characters-list" className="pt-0.5">
+          {hasCharLib && (
+            <Tooltip text="Character Library" direction="right">
+              <CharacterLibraryButton />
+            </Tooltip>
+          )}
           {/* Show skeletons while loading */}
           {isInitialLoad && (
             <div className="flex flex-col items-center w-full">
@@ -276,26 +181,23 @@ const ServerBar = () => {
           )}
 
           {/* A little trickery in performance */}
-          {filteredEntities.length < 50 ? (
+          {visibleEntities.length < 50 ? (
             <>
-              {filteredEntities.map(({ entity, index: actualIndex }) => {
-                return (
-                  <ServerRow
-                    key={entity.id}
-                    entity={entity}
-                    index={actualIndex}
-                    isSelected={selectedIndex === actualIndex}
-                    onClick={handleItemClick}
-                  />
-                );
-              })}
+              {visibleEntities.map((entity) => (
+                <ServerRow
+                  key={entityKey(entity)}
+                  entity={entity}
+                  isSelected={selectedKey === entityKey(entity)}
+                  onClick={selectEntity}
+                />
+              ))}
               <div id="characters-divider" className="divider" />
               <AddCharacterIcon onClick={handleAddCharacterClick} />
             </>
           ) : (
             <List
               rowComponent={Row}
-              rowCount={filteredEntities.length + 1}
+              rowCount={visibleEntities.length + 1}
               rowHeight={60}
               rowProps={{ data: itemData }}
               style={{ width: '100%' }}

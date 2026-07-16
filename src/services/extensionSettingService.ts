@@ -1,4 +1,4 @@
-const { saveSettingsDebounced } = await imports('@script');
+import { saveSettingsDebounced } from '../st/script';
 
 export interface DiscordiaSettings {
   hiddenCharacters: string[];
