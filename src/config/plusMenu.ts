@@ -38,24 +38,28 @@ export const plusMenuConfig: PlusMenuConfigItem[] = [
   // Root level: the frequent actions
   { id: 'option_continue' },
   { id: 'option_regenerate' },
-  { id: 'option_impersonate' },
+  {
+    id: 'attachFile',
+    name: 'Attach File',
+  },
   {
     category: true,
     category_name: 'Chat',
     subentries: [
-      { id: 'option_start_new_chat' },
-      { id: 'option_select_chat', name: 'Manage Chats' },
-      { id: 'option_new_bookmark', name: 'Create Checkpoint' },
-      { id: 'option_back_to_main' },
-      { id: 'option_convert_to_group' },
-      { id: 'option_close_chat' },
       { id: 'option_delete_mes' },
+      { id: 'option_select_chat', name: 'Manage Chats' },
+      { id: 'option_start_new_chat' },
+      { id: 'option_new_bookmark', name: 'Create Checkpoint' },
+      { id: 'option_convert_to_group' },
+      { id: 'option_back_to_main' },
+      { id: 'option_close_chat' },
     ],
   },
   {
     category: true,
     category_name: 'Tools',
     subentries: [
+      { id: 'option_impersonate' },
       { id: 'option_toggle_AN' },
       { id: 'option_toggle_CFG' },
       { id: 'option_toggle_logprobs' },
@@ -65,9 +69,5 @@ export const plusMenuConfig: PlusMenuConfigItem[] = [
     category: true,
     category_name: 'Extensions',
     subentries: [REST_ENTRIES],
-  },
-  {
-    id: 'attachFile',
-    name: 'Attach File',
   },
 ];
