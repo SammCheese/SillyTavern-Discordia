@@ -392,6 +392,21 @@ body:has(#extras_menu_button) #extensionsMenuButton {
   border-radius: 0px !important;
 }
 
+/*
+ * SSE streaming cost reduction.
+ *
+ * On every streaming tick ST re-runs messageFormatting() and assigns the
+ * result to `.mes_text.innerHTML`, replacing the whole subtree. `contain:
+ * layout` on the message being streamed (always the last one) isolates that
+ * subtree's reflow to the message box, so the browser doesn't re-lay-out the
+ * entire #chat flow each tick. No `size`/`paint` containment: the box must
+ * still grow with the text and overflowing action buttons/menus must remain
+ * visible. Pure win on every renderer; helps software rendering the most.
+ */
+#chat .mes.last_mes {
+  contain: layout;
+}
+
 #channel-list {
   overflow-y: auto;
 }

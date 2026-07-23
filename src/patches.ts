@@ -15,6 +15,10 @@ import {
   applyTouchContextMenu,
   removeTouchContextMenu,
 } from './patches/touchContextMenu';
+import {
+  applyStreamOptimizer,
+  removeStreamOptimizer,
+} from './services/streamOptimizer';
 
 export type Patch = {
   name: string;
@@ -39,6 +43,11 @@ export const patches: Patch[] = [
     name: 'ui-touchContextMenu',
     run: applyTouchContextMenu,
     antipatch: removeTouchContextMenu,
+  },
+  {
+    name: 'perf-streamMorph',
+    run: applyStreamOptimizer,
+    antipatch: removeStreamOptimizer,
   },
   {
     name: 'ui-lowGfxMode',
