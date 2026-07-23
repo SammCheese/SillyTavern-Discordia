@@ -1,5 +1,6 @@
 import video from '../../assets/cord.webm';
 import { disableDiscordia } from '../utils/discordiaUtils';
+import { plusMenuOpenStore } from '../services/plusMenuService';
 
 const splashTexts = [
   'Gathering your Characters...',
@@ -80,103 +81,31 @@ export const angleSendButton = () => {
   }
 };
 
-type DetachedElement = {
-  anchor: Comment;
-  element: JQuery<HTMLElement>;
-};
-
-const detachedChatMenuElements: DetachedElement[] = [];
-
-const detachWithAnchor = (
-  $el: JQuery<HTMLElement>,
-): JQuery<HTMLElement> | null => {
-  const el = $el[0];
-  if (!el?.parentNode) return null;
-
-  const anchor = document.createComment('discordia-chat-menu-anchor');
-  el.parentNode.insertBefore(anchor, el);
-  const detached = $el.detach();
-  detachedChatMenuElements.push({ anchor, element: detached });
-  return detached;
-};
-
-export const restoreChatMenu = () => {
-  while (detachedChatMenuElements.length) {
-    const backup = detachedChatMenuElements.pop();
-    const el = backup?.element[0];
-    if (el && backup.anchor.parentNode) {
-      backup.anchor.parentNode.replaceChild(el, backup.anchor);
-    }
-  }
-};
-
-// Group Both Chat Icons into one
+/**
+ * Replaces ST's "options" and "wand" buttons with a single "+" button that
+ * opens Discordia's React menu (components/plusMenu). The original menus
+ * stay in the DOM, hidden — the React menu parses their entries and
+ * re-dispatches clicks to them (services/plusMenuService).
+ */
 export const combineChatMenu = () => {
   try {
     const leftSendForm = $('#leftSendForm');
-    if (leftSendForm.length) {
-      const extensionsMenu = detachWithAnchor(
-        $('#extensionsMenu') as JQuery<HTMLElement>,
-      )?.addClass('font-family-reset');
-      const optionsMenu = detachWithAnchor(
-        $('#options') as JQuery<HTMLElement>,
-      )?.addClass('font-family-reset');
-      detachWithAnchor($('#options_button') as JQuery<HTMLElement>);
-      detachWithAnchor($('#extensionsMenuButton') as JQuery<HTMLElement>);
+    if (!leftSendForm.length) return;
 
-      if (!extensionsMenu || !optionsMenu) return;
+    $('#options_button').hide();
+    $('#extensionsMenuButton').hide();
 
-      const extrasMenu = $(`
-        <div id="extras_menu_button" class="fa-solid fa-plus">
-          <div id="unified_extras_menu" class="extras_menu_dropdown">
-          </div>
-        </div>
-      `);
+    const extrasButton = $(
+      '<div id="extras_menu_button" class="fa-solid fa-plus interactable" title="Open menu"></div>',
+    );
 
-      extrasMenu
-        .find('#unified_extras_menu')
-        .append(optionsMenu, extensionsMenu);
+    extrasButton.on('click', (event) => {
+      event.stopPropagation();
+      plusMenuOpenStore.set(!plusMenuOpenStore.get());
+    });
 
-      extrasMenu.on('click', () => {
-        const liveExtensionsMenu = $('#extensionsMenu');
-        const liveOptionsMenu = $('#options');
-
-        if (
-          liveExtensionsMenu.is(':visible') ||
-          liveOptionsMenu.is(':visible')
-        ) {
-          liveExtensionsMenu.hide();
-          liveOptionsMenu.hide();
-          return;
-        }
-        window.removeEventListener('click', toggleCombinedChatMenu);
-
-        window.addEventListener('click', toggleCombinedChatMenu);
-        liveExtensionsMenu.show();
-        liveOptionsMenu.show();
-      });
-
-      leftSendForm.append(extrasMenu);
-    }
+    leftSendForm.append(extrasButton);
   } catch (error) {
     dislog.error('Failed to Apply Combine Chat Menu Patch:', error);
-  }
-};
-
-export const toggleCombinedChatMenu = (event: MouseEvent) => {
-  try {
-    const extensionsMenu = $('#extensionsMenu');
-    const optionsMenu = $('#options');
-
-    if (
-      !(event?.target as HTMLElement).closest('#extras_menu_button') &&
-      !(event?.target as HTMLElement).closest('#extensionsMenu') &&
-      !(event?.target as HTMLElement).closest('#options')
-    ) {
-      extensionsMenu.hide();
-      optionsMenu.hide();
-    }
-  } catch (error) {
-    dislog.error('Failed to Handle Extra Listener:', error);
   }
 };

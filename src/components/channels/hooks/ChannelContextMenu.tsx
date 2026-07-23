@@ -13,6 +13,7 @@ import {
   clearChat,
 } from '../../../st/script';
 import { deleteGroupChatByName, openGroupChat } from '../../../st/groupChats';
+import { selectCharacter, selectGroup } from '../../../utils/utils';
 
 export const useChannelContextMenu = (chat: Chat) => {
   const { showContextMenu } = useContextMenu();
@@ -69,17 +70,29 @@ export const useChannelContextMenu = (chat: Chat) => {
     if (!chat) return;
 
     const openAction = () => {
-      // If the chat is a character chat
-      if (chat?.char_id) {
-        return openCharacterChat(chat.file_id);
+      const { groupId, characterId, characters } = SillyTavern.getContext();
+
+      // Group chat from the recents list
+      if (chat.group) {
+        return selectGroup({
+          id: chat.group.toString(),
+          chat_name: chat.file_id,
+        });
       }
 
-      const { groupId, characterId } = SillyTavern.getContext();
-      if (groupId !== null && !characterId) {
-        return openGroupChat(groupId, chat?.file_id);
+      // Chat list of the currently open group
+      if (groupId !== null && typeof characterId === 'undefined') {
+        return openGroupChat(groupId, chat.file_id);
       }
 
-      return openCharacterChat(chat?.file_id);
+      // Character chat: select the character first (recents may be clicked
+      // with no or another character open; char_id 0 is a valid id)
+      const charIndex = characters.findIndex((c) => c.avatar === chat.avatar);
+      if (charIndex !== -1) {
+        return selectCharacter(charIndex, chat.file_id);
+      }
+
+      return openCharacterChat(chat.file_id);
     };
 
     void Promise.resolve(openAction()).catch((error) => {

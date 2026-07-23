@@ -11,6 +11,10 @@ import {
 } from './patches/unpatch';
 import { applyLowGfxMode, removeLowGfxMode } from './utils/gfx';
 import { runCompatSelfCheck } from './st/selfCheck';
+import {
+  applyTouchContextMenu,
+  removeTouchContextMenu,
+} from './patches/touchContextMenu';
 
 export type Patch = {
   name: string;
@@ -31,6 +35,11 @@ export const patches: Patch[] = [
   },
   { name: 'hijackJquery', run: hijackJquery },
   { name: 'st-compatSelfCheck', run: runCompatSelfCheck },
+  {
+    name: 'ui-touchContextMenu',
+    run: applyTouchContextMenu,
+    antipatch: removeTouchContextMenu,
+  },
   {
     name: 'ui-lowGfxMode',
     run: applyLowGfxMode,
