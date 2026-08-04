@@ -107,6 +107,10 @@ export const getChatCompletionStatus = async (
       return data.result;
     }
 
+    if ('data' in data && data.data) {
+      return `Available Models: ${JSON.stringify(data.data)}`;
+    }
+
     return 'Valid';
   } catch (err) {
     console.error('Error checking chat completion server status:', err);

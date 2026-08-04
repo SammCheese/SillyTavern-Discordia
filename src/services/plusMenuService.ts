@@ -58,7 +58,7 @@ const parseEntry = (
   const label = (el.textContent ?? '').replace(/\s+/g, ' ').trim();
   if (!label) return null;
 
-  const icon = el.querySelector('i[class*="fa-"]');
+  const icon = el.querySelector('*[class*="fa-"]');
   return {
     key: el.id || `label:${label.toLowerCase()}`,
     label,

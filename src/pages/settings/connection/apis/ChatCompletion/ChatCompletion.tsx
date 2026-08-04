@@ -1,8 +1,6 @@
 import { memo, useState, useMemo, useCallback } from 'react';
 import Input from '../../../../../components/common/Input/Input';
 import Checkbox from '../../../../../components/common/Checkbox/Checkbox';
-import Button from '../../../../../components/common/Button/Button';
-import Divider from '../../../../../components/common/Divider/Divider';
 import { useConnectionManager } from '../../hooks/connectionManager';
 import Select from '../../../../../components/common/Select/Select';
 import { getChatCompletionStatus } from '../../services/chatCompletion';
@@ -17,10 +15,16 @@ import {
   oai_settings,
   custom_prompt_post_processing_types,
 } from '../../../../../st/openai';
+import Divider from '../../../../../components/common/Divider/Divider';
+import Button from '../../../../../components/common/Button/Button';
+//import { useModal } from '../../../../../providers/modalProvider';
+//import RequestHeaderModal from '../../modals/RequestHeaderModal';
 const { getContext } = SillyTavern;
 
 const ChatCompletionSettings = () => {
   const { selectedProfile, updateCurrentProfile } = useConnectionManager();
+  //const { openModal } = useModal();
+
   const [openAISettings, setOpenAISettings] = useState(
     () => getContext().chatCompletionSettings || oai_settings,
   );
@@ -116,6 +120,16 @@ const ChatCompletionSettings = () => {
   const [bypassStatusCheck, setBypassStatusCheck] = useState(
     () => getContext().chatCompletionSettings.bypass_status_check,
   );
+  const [availableModels, setAvailableModels] = useState<string[]>([]);
+
+  const modelOptions = useMemo(
+    () =>
+      availableModels.map((model) => ({
+        value: model,
+        label: model,
+      })),
+    [availableModels],
+  );
 
   const handleTypeChange = (value: string | number) => {
     updateCurrentProfile({ api: value as string });
@@ -154,6 +168,7 @@ const ChatCompletionSettings = () => {
   };
 
   const handleConnectClick = async () => {
+    setAvailableModels([]);
     setConnectionStatus(undefined);
     setIsConnecting(true);
 
@@ -164,20 +179,35 @@ const ChatCompletionSettings = () => {
     try {
       const status = await getChatCompletionStatus(url);
 
-      setConnectionStatus(status);
-      setOnlineStatus(status ? status : 'no_connection');
-
+      // Router Mode
       if (
+        status &&
         typeof status === 'string' &&
-        ![
-          'Valid',
-          'Status check bypassed',
-          'Key saved; press "Test Message" to verify.',
-          'Invalid endpoint URL. Requests may fail.',
-          'Invalid Azure endpoint URL. Requests may fail.',
-        ].includes(status)
+        status.startsWith('Available Models: ')
       ) {
-        updateCurrentProfile({ model: status });
+        const modelsStr = status.replace('Available Models: ', '');
+        const models = JSON.parse(modelsStr);
+
+        setAvailableModels(models.map((model) => model?.id ?? ''));
+        setConnectionStatus('Valid');
+        setOnlineStatus('Valid');
+        // Default parsing
+      } else {
+        setConnectionStatus(status);
+        setOnlineStatus(status ? status : 'no_connection');
+
+        if (
+          typeof status === 'string' &&
+          ![
+            'Valid',
+            'Status check bypassed',
+            'Key saved; press "Test Message" to verify.',
+            'Invalid endpoint URL. Requests may fail.',
+            'Invalid Azure endpoint URL. Requests may fail.',
+          ].includes(status)
+        ) {
+          updateCurrentProfile({ model: status });
+        }
       }
     } finally {
       setIsConnecting(false);
@@ -193,6 +223,11 @@ const ChatCompletionSettings = () => {
   const handleBypassStatusCheck = (value: boolean) => {
     setBypassStatusCheck(value);
     updateGlobalSetting('bypass_status_check', value);
+  };
+
+  const handleCustomModelIdChange = (value: string | number) => {
+    updateGlobalSetting('custom_model', value);
+    updateCurrentProfile({ model: value as string });
   };
 
   return (
@@ -243,8 +278,6 @@ const ChatCompletionSettings = () => {
         </>
       )}
 
-      <Divider />
-
       <Input
         label="API KEY"
         placeholder={getSecretLabelById(
@@ -255,6 +288,31 @@ const ChatCompletionSettings = () => {
         type="password"
         disabled={true}
       />
+
+      {isCustomSource && availableModels.length > 0 && (
+        <>
+          <Divider />
+
+          <Input
+            label="Model-ID (Optional)"
+            placeholder="Enter your Model-ID"
+            value={openAISettings.custom_model}
+            onChange={handleCustomModelIdChange}
+            type="text"
+          />
+
+          <div className="flex flex-col gap-2">
+            <h3>Available Models</h3>
+            <Select
+              options={modelOptions}
+              onChange={handleCustomModelIdChange}
+              value={openAISettings.custom_model || ''}
+            />
+          </div>
+        </>
+      )}
+
+      <Divider />
 
       <div className="flex flex-col gap-2">
         <h3>Prompt Post-Processing</h3>
@@ -286,7 +344,9 @@ const ChatCompletionSettings = () => {
           onClick={handleConnectClick}
           disabled={isConnecting}
         />
+      </div>
 
+      <div className="flex flex-col gap-2">
         {connectionStatus !== undefined && (
           <div
             className={`text-sm font-medium rounded-md p-2 bg-black/20 ${statusTone}`}

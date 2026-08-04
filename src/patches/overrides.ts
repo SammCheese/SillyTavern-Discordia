@@ -34,8 +34,7 @@ export const overrideSpinner = () => {
       const newSpinner = $(`
       <div id="load-spinner">
         <div id="disable-discordia" style="position: absolute; top: 20px; right: 20px; cursor: pointer; display: flex; align-items: center; gap: 8px; padding: 8px 12px; transition: background-color 0.3s;">
-          <span>X</span>
-          <span>Temporarily Disable Discordia</span>
+          <span>🗙</span>
         </div>
         <video autoplay loop muted playsinline  style="width: 300px; height: 300px; object-fit: cover; border-radius: 12px;">
           <source src="${video}" type="video/webm" />

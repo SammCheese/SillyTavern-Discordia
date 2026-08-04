@@ -15,6 +15,7 @@ import {
   settingsToUpdate,
   chat_completion_sources,
 } from '../../../../st/openai';
+import Accordion from '../../../../components/common/Accordion/Accordion';
 type SettingValue = unknown;
 type LogitBiasEntry = {
   id?: string;
@@ -216,10 +217,6 @@ const ChatCompletionSamplerSettings = () => {
 
   return (
     <div className="flex flex-col gap-4">
-      <div>
-        <h2 className="text-2xl font-bold mb-1 text-center">Chat Completion</h2>
-      </div>
-
       <div className="flex flex-col gap-2">
         <h3 className="text-lg font-semibold">Presets</h3>
         <Select
@@ -255,11 +252,6 @@ const ChatCompletionSamplerSettings = () => {
             onClick={() => triggerNativeButton('#delete_oai_preset')}
           />
         </div>
-        <Checkbox
-          label="Bind preset to connection"
-          checked={Boolean(settings.bind_preset_to_connection)}
-          onChange={(value) => applySetting('bind_preset_to_connection', value)}
-        />
       </div>
 
       <Divider />
@@ -429,135 +421,140 @@ const ChatCompletionSamplerSettings = () => {
       <Divider />
 
       {showRequestImageFields && Boolean(settings.request_images) && (
-        <div className="flex flex-col gap-3">
-          <h3 className="text-lg font-semibold">Inline Images</h3>
-          <Checkbox
-            label="Request inline images"
-            checked={Boolean(settings.request_images)}
-            onChange={(value) => applySetting('request_images', value)}
-          />
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium">Resolution</label>
-              <Select
-                options={[
-                  { value: '', label: 'Auto' },
-                  { value: '1K', label: '1K' },
-                  { value: '2K', label: '2K' },
-                  { value: '4K', label: '4K' },
-                ]}
-                value={String(settings.request_image_resolution || '')}
-                onChange={(value) =>
-                  applySetting('request_image_resolution', String(value))
-                }
-              />
-            </div>
-
-            <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium">Aspect Ratio</label>
-              <Select
-                options={[
-                  { value: '', label: 'Auto' },
-                  { value: '1:1', label: '1:1' },
-                  { value: '9:16', label: '9:16' },
-                  { value: '16:9', label: '16:9' },
-                  { value: '3:4', label: '3:4' },
-                  { value: '4:3', label: '4:3' },
-                  { value: '3:2', label: '3:2' },
-                  { value: '2:3', label: '2:3' },
-                  { value: '5:4', label: '5:4' },
-                  { value: '4:5', label: '4:5' },
-                  { value: '21:9', label: '21:9' },
-                ]}
-                value={String(settings.request_image_aspect_ratio || '')}
-                onChange={(value) =>
-                  applySetting('request_image_aspect_ratio', String(value))
-                }
-              />
-            </div>
-          </div>
-        </div>
-      )}
-
-      <Divider />
-
-      <div className="flex flex-col gap-3">
-        <h3 className="text-lg font-semibold">Logit Bias</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium">Preset</label>
-            <Select
-              options={biasPresetOptions}
-              value={selectedBiasPreset}
-              onChange={handleBiasPresetChange}
+        <>
+          <div className="flex flex-col gap-3">
+            <h3 className="text-lg font-semibold">Inline Images</h3>
+            <Checkbox
+              label="Request inline images"
+              checked={Boolean(settings.request_images)}
+              onChange={(value) => applySetting('request_images', value)}
             />
-          </div>
-          <div className="grid grid-cols-2 gap-2 self-end">
-            <Button
-              label="New"
-              onClick={() =>
-                triggerNativeButton('#openai_logit_bias_new_preset')
-              }
-            />
-            <Button
-              label="Import"
-              onClick={() =>
-                triggerNativeButton('#openai_logit_bias_import_preset')
-              }
-            />
-            <Button
-              label="Export"
-              onClick={() =>
-                triggerNativeButton('#openai_logit_bias_export_preset')
-              }
-            />
-            <Button
-              label="Delete"
-              onClick={() =>
-                triggerNativeButton('#openai_logit_bias_delete_preset')
-              }
-            />
-          </div>
-        </div>
 
-        <Button
-          label="Add bias entry"
-          onClick={() => triggerNativeButton('#openai_logit_bias_new_entry')}
-        />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="flex flex-col gap-1">
+                <label className="text-sm font-medium">Resolution</label>
+                <Select
+                  options={[
+                    { value: '', label: 'Auto' },
+                    { value: '1K', label: '1K' },
+                    { value: '2K', label: '2K' },
+                    { value: '4K', label: '4K' },
+                  ]}
+                  value={String(settings.request_image_resolution || '')}
+                  onChange={(value) =>
+                    applySetting('request_image_resolution', String(value))
+                  }
+                />
+              </div>
 
-        <div className="flex flex-col gap-2">
-          {biasEntries.length === 0 && (
-            <p className="text-xs text-gray-400">
-              No bias entries in this preset.
-            </p>
-          )}
-          {biasEntries.map((entry, index) => (
-            <div
-              key={`${entry.id || index}-${entry.text || ''}-${String(entry.value ?? 0)}`}
-              className="grid grid-cols-1 md:grid-cols-[1fr_120px_100px] gap-2 bg-black/20 p-2 rounded"
-            >
-              <Input
-                label="Token/Text"
-                value={String(entry.text || '')}
-                onChange={(value) => updateBiasEntry(index, 'text', value)}
-                type="text"
-              />
-              <Input
-                label="Bias"
-                value={Number(entry.value ?? 0)}
-                onChange={(value) =>
-                  updateBiasEntry(index, 'value', Number(value))
-                }
-                type="number"
-              />
-              <div className="flex items-end">
-                <Button label="Remove" onClick={() => removeBiasEntry(index)} />
+              <div className="flex flex-col gap-1">
+                <label className="text-sm font-medium">Aspect Ratio</label>
+                <Select
+                  options={[
+                    { value: '', label: 'Auto' },
+                    { value: '1:1', label: '1:1' },
+                    { value: '9:16', label: '9:16' },
+                    { value: '16:9', label: '16:9' },
+                    { value: '3:4', label: '3:4' },
+                    { value: '4:3', label: '4:3' },
+                    { value: '3:2', label: '3:2' },
+                    { value: '2:3', label: '2:3' },
+                    { value: '5:4', label: '5:4' },
+                    { value: '4:5', label: '4:5' },
+                    { value: '21:9', label: '21:9' },
+                  ]}
+                  value={String(settings.request_image_aspect_ratio || '')}
+                  onChange={(value) =>
+                    applySetting('request_image_aspect_ratio', String(value))
+                  }
+                />
               </div>
             </div>
-          ))}
+          </div>
+          <Divider />
+        </>
+      )}
+
+      <Accordion title="Logit Bias" isOpen={false}>
+        <div className="flex flex-col gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-medium">Preset</label>
+              <Select
+                options={biasPresetOptions}
+                value={selectedBiasPreset}
+                onChange={handleBiasPresetChange}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-2 self-end">
+              <Button
+                label="New"
+                onClick={() =>
+                  triggerNativeButton('#openai_logit_bias_new_preset')
+                }
+              />
+              <Button
+                label="Import"
+                onClick={() =>
+                  triggerNativeButton('#openai_logit_bias_import_preset')
+                }
+              />
+              <Button
+                label="Export"
+                onClick={() =>
+                  triggerNativeButton('#openai_logit_bias_export_preset')
+                }
+              />
+              <Button
+                label="Delete"
+                onClick={() =>
+                  triggerNativeButton('#openai_logit_bias_delete_preset')
+                }
+              />
+            </div>
+          </div>
+
+          <Button
+            label="Add bias entry"
+            onClick={() => triggerNativeButton('#openai_logit_bias_new_entry')}
+          />
+
+          <div className="flex flex-col gap-2">
+            {biasEntries.length === 0 && (
+              <p className="text-xs text-gray-400">
+                No bias entries in this preset.
+              </p>
+            )}
+            {biasEntries.map((entry, index) => (
+              <div
+                key={`${entry.id || index}-${entry.text || ''}-${String(entry.value ?? 0)}`}
+                className="grid grid-cols-1 md:grid-cols-[1fr_120px_100px] gap-2 bg-black/20 p-2 rounded"
+              >
+                <Input
+                  label="Token/Text"
+                  value={String(entry.text || '')}
+                  onChange={(value) => updateBiasEntry(index, 'text', value)}
+                  type="text"
+                />
+                <Input
+                  label="Bias"
+                  value={Number(entry.value ?? 0)}
+                  onChange={(value) =>
+                    updateBiasEntry(index, 'value', Number(value))
+                  }
+                  type="number"
+                />
+                <div className="flex items-end">
+                  <Button
+                    label="Remove"
+                    onClick={() => removeBiasEntry(index)}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
+      </Accordion>
     </div>
   );
 };

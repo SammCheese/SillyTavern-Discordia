@@ -67,7 +67,7 @@ export const plusMenuConfig: PlusMenuConfigItem[] = [
   },
   {
     category: true,
-    category_name: 'Extensions',
+    category_name: 'Miscellaneous',
     subentries: [REST_ENTRIES],
   },
 ];

@@ -153,7 +153,10 @@ const ServerBar = () => {
           <div id="characters-divider" className="divider"></div>
         </div>
 
-        <div id="characters-list" className="pt-0.5">
+        <div
+          id="characters-list"
+          className="pt-0.5 flex flex-col items-center overflow-y-auto scrollbar-none"
+        >
           {hasCharLib && (
             <Tooltip text="Character Library" direction="right">
               <CharacterLibraryButton />

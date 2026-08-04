@@ -18,7 +18,7 @@ import {
 import {
   applyStreamOptimizer,
   removeStreamOptimizer,
-} from './services/streamOptimizer';
+} from './patches/streamOptimizer';
 
 export type Patch = {
   name: string;

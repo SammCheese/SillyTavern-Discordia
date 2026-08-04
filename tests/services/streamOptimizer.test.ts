@@ -38,7 +38,7 @@ vi.mock('../../src/st/powerUser', () => ({
   log: vi.fn(),
 };
 
-import { __test } from '../../src/services/streamOptimizer';
+import { __test } from '../../src/patches/streamOptimizer';
 
 const buildChat = () => {
   document.body.innerHTML = `
@@ -46,9 +46,7 @@ const buildChat = () => {
       <div class="mes"><div class="mes_text">old</div></div>
       <div class="mes last_mes"><div class="mes_text">start</div></div>
     </div>`;
-  return document.querySelector(
-    '#chat .mes.last_mes .mes_text',
-  ) as HTMLElement;
+  return document.querySelector('#chat .mes.last_mes .mes_text') as HTMLElement;
 };
 
 describe('streamOptimizer', () => {
@@ -115,7 +113,9 @@ describe('streamOptimizer', () => {
     expect(__test.getCurrentTarget()).toBe(first);
 
     // ST rebuilds the message DOM; a fresh .mes_text appears.
-    const lastMes = document.querySelector('#chat .mes.last_mes') as HTMLElement;
+    const lastMes = document.querySelector(
+      '#chat .mes.last_mes',
+    ) as HTMLElement;
     lastMes.innerHTML = '<div class="mes_text">reset</div>';
     const second = lastMes.querySelector('.mes_text') as HTMLElement;
 

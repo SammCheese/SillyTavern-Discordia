@@ -293,7 +293,6 @@ dialog.popup {
 }
 
 #characters-list {
-  overflow-y: scroll;
   width: var(--character-container-width);
   gap: 10px;
   display: flex;
@@ -308,10 +307,6 @@ dialog.popup {
   flex-direction: column;
   margin: 0px;
   width: 50%;
-}
-
-#channels-list-container {
-  overflow-y: scroll;
 }
 
 #sheld {
@@ -405,10 +400,6 @@ body:has(#extras_menu_button) #extensionsMenuButton {
  */
 #chat .mes.last_mes {
   contain: layout;
-}
-
-#channel-list {
-  overflow-y: auto;
 }
 
 .truncate {
