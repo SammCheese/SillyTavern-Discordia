@@ -195,8 +195,14 @@ const ChannelBar = () => {
             </div>
           )}
         </div>
-        <div id="channel-list">
-          <div id="channels-list-container">
+        <div
+          id="channel-list"
+          className="flex flex-col items-center overflow-hidden"
+        >
+          <div
+            id="channels-list-container"
+            className="w-full overflow-y-auto scrollbar-none"
+          >
             {/* Skeleton Chats for loading */}
             {isInitialLoad && (
               <SkeletonTheme

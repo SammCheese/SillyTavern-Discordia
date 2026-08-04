@@ -35,6 +35,7 @@ export function ContextMenuProvider({ children }: { children: ReactNode }) {
   } | null>(null);
   const [menuItems, setMenuItems] = useState<ContextMenuItem[] | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
+  const openedAtRef = useRef(0);
 
   const isMobile = window.innerWidth <= 768;
 
@@ -57,6 +58,7 @@ export function ContextMenuProvider({ children }: { children: ReactNode }) {
       const clickX = e.clientX;
       const clickY = e.clientY;
 
+      openedAtRef.current = Date.now();
       setClickPosition({ x: clickX, y: clickY });
       setMenuItems(items);
       setIsRendered(true);
@@ -95,9 +97,15 @@ export function ContextMenuProvider({ children }: { children: ReactNode }) {
     // these window-level listeners would close it while scrolling the sheet.
     if (!isVisible || isMobile) return;
 
-    const handleClick = () => isVisible && closeContextMenu();
+    // A touch long-press releases after the menu opened — the click/scroll
+    // that release produces must not instantly dismiss the menu.
+    const pastGracePeriod = () => Date.now() - openedAtRef.current > 400;
+
+    const handleClick = () =>
+      isVisible && pastGracePeriod() && closeContextMenu();
     const handleResize = () => isVisible && closeContextMenu();
-    const handleScroll = () => isVisible && closeContextMenu();
+    const handleScroll = () =>
+      isVisible && pastGracePeriod() && closeContextMenu();
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         if (isVisible) closeContextMenu();

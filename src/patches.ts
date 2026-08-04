@@ -11,6 +11,14 @@ import {
 } from './patches/unpatch';
 import { applyLowGfxMode, removeLowGfxMode } from './utils/gfx';
 import { runCompatSelfCheck } from './st/selfCheck';
+import {
+  applyTouchContextMenu,
+  removeTouchContextMenu,
+} from './patches/touchContextMenu';
+import {
+  applyStreamOptimizer,
+  removeStreamOptimizer,
+} from './patches/streamOptimizer';
 
 export type Patch = {
   name: string;
@@ -31,6 +39,16 @@ export const patches: Patch[] = [
   },
   { name: 'hijackJquery', run: hijackJquery },
   { name: 'st-compatSelfCheck', run: runCompatSelfCheck },
+  {
+    name: 'ui-touchContextMenu',
+    run: applyTouchContextMenu,
+    antipatch: removeTouchContextMenu,
+  },
+  {
+    name: 'perf-streamMorph',
+    run: applyStreamOptimizer,
+    antipatch: removeStreamOptimizer,
+  },
   {
     name: 'ui-lowGfxMode',
     run: applyLowGfxMode,

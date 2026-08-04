@@ -204,16 +204,6 @@ input[type='range'].discordia-slider {
   display: block !important;
 }
 
-#extensionsMenu,
-#options {
-  a.interactable {
-    padding: 10px !important;
-  }
-  .interactable {
-    padding: 10px !important;
-  }
-}
-
 input.file-picker {
   display: block !important;
 }
@@ -303,7 +293,6 @@ dialog.popup {
 }
 
 #characters-list {
-  overflow-y: scroll;
   width: var(--character-container-width);
   gap: 10px;
   display: flex;
@@ -318,10 +307,6 @@ dialog.popup {
   flex-direction: column;
   margin: 0px;
   width: 50%;
-}
-
-#channels-list-container {
-  overflow-y: scroll;
 }
 
 #sheld {
@@ -387,44 +372,12 @@ dialog.popup {
   }
 }
 
-#extensionsMenu,
-#options {
-  transform: translateX(0px) !important;
-  position: relative !important;
-  box-shadow: none !important;
-  padding: 0px !important;
-}
-
-#options .options-content {
-  border-bottom-right-radius: 0px !important;
-  border-bottom-left-radius: 0px !important;
-  border-bottom: none !important;
-}
-
-#options {
-  border-radius: 0px !important;
-}
-
-#extensionsMenu.options-content {
-  border-top-right-radius: 0px;
-  border-top-left-radius: 0px;
-  border-top: none;
-}
-
-#unified_extras_menu {
-  bottom: 20px;
-  left: -5px;
-  position: absolute;
-  max-height: 90dvh;
-  overflow: scroll;
-}
-
-#options_button {
-  margin-left: 0px;
-  width: unset;
-}
-#extensionsMenuButton {
-  padding: 0px;
+/* ST appends these buttons asynchronously, after the plus-menu patch runs —
+   hide them via CSS, but only while Discordia's "+" button is present so
+   safe mode gets the vanilla buttons back. */
+body:has(#extras_menu_button) #options_button,
+body:has(#extras_menu_button) #extensionsMenuButton {
+  display: none !important;
 }
 
 #chat,
@@ -434,8 +387,19 @@ dialog.popup {
   border-radius: 0px !important;
 }
 
-#channel-list {
-  overflow-y: auto;
+/*
+ * SSE streaming cost reduction.
+ *
+ * On every streaming tick ST re-runs messageFormatting() and assigns the
+ * result to `.mes_text.innerHTML`, replacing the whole subtree. `contain:
+ * layout` on the message being streamed (always the last one) isolates that
+ * subtree's reflow to the message box, so the browser doesn't re-lay-out the
+ * entire #chat flow each tick. No `size`/`paint` containment: the box must
+ * still grow with the text and overflowing action buttons/menus must remain
+ * visible. Pure win on every renderer; helps software rendering the most.
+ */
+#chat .mes.last_mes {
+  contain: layout;
 }
 
 .truncate {

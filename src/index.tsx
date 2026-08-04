@@ -10,6 +10,7 @@ import ModalProvider from './providers/modalProvider';
 import BottomSheetProvider from './providers/bottomSheetProvider';
 import PopupProvider from './providers/popupProvider';
 import MessageContextMenu from './bridges/MessageContextMenu';
+import PlusMenu from './components/plusMenu/PlusMenu';
 import ContextMenuProvider from './providers/contextMenuProvider';
 import BackHandlerProvider from './providers/backHandlerProvider';
 import SearchProvider from './providers/searchProvider';
@@ -96,6 +97,7 @@ const startApp = (safeStart: boolean = false) => {
       <StrictMode>
         <Compose components={providers}>
           <MessageContextMenu />
+          <PlusMenu />
           <App />
         </Compose>
       </StrictMode>,

@@ -153,7 +153,10 @@ const ServerBar = () => {
           <div id="characters-divider" className="divider"></div>
         </div>
 
-        <div id="characters-list" className="pt-0.5">
+        <div
+          id="characters-list"
+          className="pt-0.5 flex flex-col items-center overflow-y-auto scrollbar-none"
+        >
           {hasCharLib && (
             <Tooltip text="Character Library" direction="right">
               <CharacterLibraryButton />
@@ -200,7 +203,11 @@ const ServerBar = () => {
               rowCount={visibleEntities.length + 1}
               rowHeight={60}
               rowProps={{ data: itemData }}
-              style={{ width: '100%' }}
+              style={{
+                width: '100%',
+                scrollbarWidth: 'none',
+                overflowY: 'auto',
+              }}
               overscanCount={5}
             />
           )}

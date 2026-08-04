@@ -102,12 +102,6 @@ const TextCompletionSamplerSettings = () => {
 
   return (
     <>
-      <div>
-        <h2 className="text-2xl font-bold mb-4 text-center">
-          Text Completion{' '}
-        </h2>
-      </div>
-
       <div className="mb-4 w-full flex flex-col gap-2">
         <Select
           options={presets}
