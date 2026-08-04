@@ -203,7 +203,11 @@ const ServerBar = () => {
               rowCount={visibleEntities.length + 1}
               rowHeight={60}
               rowProps={{ data: itemData }}
-              style={{ width: '100%' }}
+              style={{
+                width: '100%',
+                scrollbarWidth: 'none',
+                overflowY: 'auto',
+              }}
               overscanCount={5}
             />
           )}
