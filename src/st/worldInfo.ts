@@ -8,4 +8,9 @@ const mod = await imports('@scripts/worldInfo');
 /** Live module namespace — use to read ST bindings that get reassigned at runtime. */
 export const worldInfoModule = mod;
 
-export const { getWorldInfoSettings, world_names } = mod;
+export const {
+  getWorldInfoSettings,
+  world_names,
+  deleteWorldInfoEntry,
+  deleteWorldInfo,
+} = mod;

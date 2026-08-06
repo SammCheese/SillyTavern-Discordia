@@ -1,22 +1,26 @@
 import { lazy, useCallback, useMemo, useState } from 'react';
 import { saveWorldInfo } from './service/worldinfo';
-import StackPusher from '../../../components/common/StackPusher/StackPusher';
 import GlobalWorldInfoSettings from './Settings/GlobalWorldInfoSettings';
 
-import { getWorldInfoSettings, world_names } from '../../../st/worldInfo';
+import {
+  deleteWorldInfo,
+  getWorldInfoSettings,
+  world_names,
+} from '../../../st/worldInfo';
+import WIEntryContainer from './components/WIEntryContainer';
+import { usePopup } from '../../../providers/popupProvider';
+
+import Divider from '../../../components/common/Divider/Divider';
+import Accordion from '../../../components/common/Accordion/Accordion';
+
 const SettingsFrame = lazy(() => import('../base/Base'));
-const Accordion = lazy(
-  () => import('../../../components/common/Accordion/Accordion'),
-);
-const Divider = lazy(
-  () => import('../../../components/common/Divider/Divider'),
-);
 
 const WorldInfoSettings = () => {
+  const { openPopup, closePopup } = usePopup();
   const worldInfoSettings = useMemo(() => getWorldInfoSettings(), []);
   const availableWorldInfos = world_names;
 
-  const [selectedWorldInfo, setSelectedWorldInfo] = useState(
+  const [globalWorldInfo, setGlobalWorldInfo] = useState(
     worldInfoSettings.world_info.globalSelect,
   );
   const [settings, setSettings] = useState(worldInfoSettings);
@@ -32,59 +36,90 @@ const WorldInfoSettings = () => {
     setSettings(updatedSettings);
   };
 
-  const handleStackChange = useCallback(
-    (active: string[]) => {
-      setSelectedWorldInfo(active);
-      setSettings((prevSettings) => ({
-        ...prevSettings,
-        world_info: { globalSelect: active },
-      }));
-    },
-    [setSelectedWorldInfo, setSettings],
+  const handleClose = useCallback(() => {
+    saveWorldInfo(settings, globalWorldInfo);
+  }, [settings, globalWorldInfo]);
+
+  const activeEntries = useMemo(
+    () => availableWorldInfos.filter((info) => globalWorldInfo.includes(info)),
+    [availableWorldInfos, globalWorldInfo],
   );
 
-  const handleClose = useCallback(() => {
-    saveWorldInfo(settings, selectedWorldInfo);
-  }, [settings, selectedWorldInfo]);
+  const inactiveEntries = useMemo(
+    () => availableWorldInfos.filter((info) => !globalWorldInfo.includes(info)),
+    [availableWorldInfos, globalWorldInfo],
+  );
+
+  const handleActiveChange = useCallback(
+    (entry: string, isActive: boolean) => {
+      let updatedGlobalWorldInfo = [...globalWorldInfo];
+      if (isActive) {
+        updatedGlobalWorldInfo.push(entry);
+      } else {
+        updatedGlobalWorldInfo = updatedGlobalWorldInfo.filter(
+          (info) => info !== entry,
+        );
+      }
+      setGlobalWorldInfo(updatedGlobalWorldInfo);
+      saveWorldInfo(settings, updatedGlobalWorldInfo);
+    },
+    [globalWorldInfo, settings],
+  );
+
+  const handleDelete = useCallback(
+    (entry: string) => {
+      openPopup(null, {
+        title: 'Confirm Deletion',
+        description: `Are you sure you want to delete the world info entry "${entry}"? This action cannot be undone.`,
+        confirmVariant: 'danger',
+        confirmText: 'Delete',
+        onConfirm: async () => {
+          await deleteWorldInfo(entry);
+          closePopup();
+        },
+        onCancel: () => closePopup(),
+      });
+    },
+    [openPopup, closePopup],
+  );
 
   return (
     <SettingsFrame title="World Info Settings" onClose={handleClose}>
       <div className="settings-section overflow-auto">
         <div className="mb-6">
           <div className="mb-4">
-            <h2 className="text-xl font-bold">Manage Global Entries</h2>
-            <p className="text-sm text-gray-400">
-              Select which world info entries are globally active.
-            </p>
+            <Accordion title="Global World Info Settings">
+              <GlobalWorldInfoSettings
+                settings={settings}
+                handleSettingsChange={handleSettingsChange}
+              />
+            </Accordion>
           </div>
 
-          <div>
-            <StackPusher
-              inactiveEntries={availableWorldInfos.filter(
-                (info) => !selectedWorldInfo.includes(info),
-              )}
-              activeEntries={availableWorldInfos.filter((info) =>
-                selectedWorldInfo.includes(info),
-              )}
-              onStackChange={handleStackChange}
-              activeLabel="Global Entries"
-              inactiveLabel="Inactive Entries"
+          <Divider />
+
+          <div className="mb-4">
+            <WIEntryContainer
+              title="Active World Info Entries"
+              entries={activeEntries}
+              isActiveContainer={true}
+              onEdit={() => {}}
+              onDelete={handleDelete}
+              onChangeActive={handleActiveChange}
+            />
+          </div>
+
+          <div className="mb-4">
+            <WIEntryContainer
+              title="Inactive World Info Entries"
+              entries={inactiveEntries}
+              isActiveContainer={false}
+              onEdit={() => {}}
+              onDelete={handleDelete}
+              onChangeActive={handleActiveChange}
             />
           </div>
         </div>
-
-        <Divider />
-
-        <Accordion title="Global World Info Settings">
-          <GlobalWorldInfoSettings
-            settings={settings}
-            handleSettingsChange={handleSettingsChange}
-          />
-        </Accordion>
-
-        <Divider />
-
-        <div></div>
       </div>
     </SettingsFrame>
   );
