@@ -13,4 +13,5 @@ export const {
   world_names,
   deleteWorldInfoEntry,
   deleteWorldInfo,
+  selected_world_info,
 } = mod;
